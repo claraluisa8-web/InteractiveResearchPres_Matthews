@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" font-family="system-ui, -apple-system, sans-serif">
+  <!-- Placeholder ecosystem map. Replace with an export from Figma/Illustrator.
+       Groups with an id listed under "hotspots" in data.js become clickable. -->
+  <text x="20" y="32" font-size="13" fill="#6b6b66">Placeholder: replace with your ecosystem map</text>
+
+  <!-- Connections (drawn first so they sit behind the nodes) -->
+  <g stroke="#b9b9b2" stroke-width="1.5" fill="none">
+    <path d="M320 215 L320 105"/>
+    <path d="M320 215 L500 140"/>
+    <path d="M320 215 L520 290"/>
+    <path d="M320 215 L320 345"/>
+    <path d="M320 215 L130 290"/>
+    <path d="M320 215 L140 140"/>
+  </g>
+
+  <g id="engineer">
+    <circle cx="320" cy="215" r="52" fill="#c2410c"/>
+    <text x="320" y="220" text-anchor="middle" font-size="14" font-weight="600" fill="#fff">Engineer</text>
+  </g>
+
+  <g id="agent">
+    <circle cx="320" cy="85" r="34" fill="#fff" stroke="#1d1d1b" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <text x="320" y="90" text-anchor="middle" font-size="13" fill="#1d1d1b">Agent</text>
+  </g>
+
+  <g id="ide">
+    <circle cx="520" cy="130" r="34" fill="#efe1d4" stroke="#d1b49b" stroke-width="1.5"/>
+    <text x="520" y="135" text-anchor="middle" font-size="13" fill="#1d1d1b">IDE</text>
+  </g>
+
+  <g id="ci">
+    <circle cx="540" cy="295" r="34" fill="#efe1d4" stroke="#d1b49b" stroke-width="1.5"/>
+    <text x="540" y="291" text-anchor="middle" font-size="13" fill="#1d1d1b">CI /</text>
+    <text x="540" y="307" text-anchor="middle" font-size="13" fill="#1d1d1b">tests</text>
+  </g>
+
+  <g id="code-review">
+    <circle cx="320" cy="365" r="34" fill="#efe1d4" stroke="#d1b49b" stroke-width="1.5"/>
+    <text x="320" y="361" text-anchor="middle" font-size="13" fill="#1d1d1b">Code</text>
+    <text x="320" y="377" text-anchor="middle" font-size="13" fill="#1d1d1b">review</text>
+  </g>
+
+  <g id="version-control">
+    <circle cx="110" cy="295" r="34" fill="#efe1d4" stroke="#d1b49b" stroke-width="1.5"/>
+    <text x="110" y="291" text-anchor="middle" font-size="13" fill="#1d1d1b">Version</text>
+    <text x="110" y="307" text-anchor="middle" font-size="13" fill="#1d1d1b">control</text>
+  </g>
+
+  <g id="production">
+    <circle cx="120" cy="130" r="34" fill="#f5efe9" stroke="#d6c7b8" stroke-width="1.5"/>
+    <text x="120" y="135" text-anchor="middle" font-size="13" fill="#1d1d1b">Production</text>
+  </g>
+</svg>

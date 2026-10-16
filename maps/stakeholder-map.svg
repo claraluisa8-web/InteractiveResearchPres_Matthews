@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" font-family="system-ui, -apple-system, sans-serif">
+  <!-- Placeholder stakeholder map. Replace with an export from Figma/Illustrator.
+       Groups with an id listed under "hotspots" in data.js become clickable. -->
+  <text x="20" y="32" font-size="13" fill="#6b6b66">Placeholder: replace with your stakeholder map</text>
+
+  <g id="organization">
+    <circle cx="320" cy="225" r="180" fill="#f5efe9" stroke="#d6c7b8" stroke-width="1.5"/>
+    <text x="320" y="70" text-anchor="middle" font-size="14" fill="#1d1d1b">Organization</text>
+  </g>
+
+  <g id="team">
+    <circle cx="320" cy="225" r="120" fill="#efe1d4" stroke="#d1b49b" stroke-width="1.5"/>
+    <text x="320" y="130" text-anchor="middle" font-size="14" fill="#1d1d1b">Engineering team</text>
+  </g>
+
+  <g id="senior-engineer">
+    <circle cx="320" cy="225" r="58" fill="#c2410c"/>
+    <text x="320" y="221" text-anchor="middle" font-size="14" font-weight="600" fill="#fff">Senior</text>
+    <text x="320" y="239" text-anchor="middle" font-size="14" font-weight="600" fill="#fff">engineer</text>
+  </g>
+
+  <g id="agent">
+    <circle cx="550" cy="225" r="40" fill="#fff" stroke="#1d1d1b" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <text x="550" y="230" text-anchor="middle" font-size="14" fill="#1d1d1b">Agent</text>
+  </g>
+
+  <path d="M378 225 H510" stroke="#1d1d1b" stroke-width="1.5" stroke-dasharray="4 3" fill="none"/>
+</svg>
