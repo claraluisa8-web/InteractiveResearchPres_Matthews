@@ -9,38 +9,37 @@
 
 * { box-sizing: border-box; }
 
+/* Full-window app: sidebar on the left, the tree fills everything else. */
+html, body { height: 100%; }
+
 body {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
   margin: 0;
-  padding: 24px;
-  background: var(--bg);
+  overflow: hidden;
+  background: var(--panel);
   color: var(--text);
   font-family: system-ui, -apple-system, "Helvetica Neue", sans-serif;
 }
 
-header h1 { margin: 0 0 4px; font-size: 1.6rem; }
-.hint { margin: 0 0 24px; color: var(--muted); font-size: 0.9rem; }
 kbd { font: inherit; padding: 0 4px; border: 1px solid var(--line); border-radius: 3px; }
-
-main {
-  display: grid;
-  grid-template-columns: 260px minmax(0, 1fr) 280px;
-  gap: 24px;
-  align-items: start;
-}
 
 /* Left sidebar */
 #sidebar {
-  position: sticky;
-  top: 24px;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-height: calc(100vh - 48px);
-  padding: 16px;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  height: 100vh;
+  padding: 20px 16px 12px;
+  background: var(--bg);
+  border-right: 1px solid var(--line);
 }
+#sidebar h1 { margin: 0; font-size: 1.05rem; line-height: 1.3; }
+
+.help { color: var(--muted); font-size: 0.8rem; }
+.help summary { cursor: pointer; }
+.help summary:hover { color: var(--text); }
+.help ul { margin: 8px 0 0; padding-left: 18px; line-height: 1.5; }
 
 #search {
   width: 100%;
@@ -48,7 +47,7 @@ main {
   font: inherit;
   font-size: 0.9rem;
   color: var(--text);
-  background: var(--bg);
+  background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 6px;
 }
@@ -60,6 +59,7 @@ main {
   padding: 0;
   overflow-y: auto;
   list-style: none;
+  background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 6px;
 }
@@ -89,7 +89,7 @@ main {
 mark { color: inherit; background: color-mix(in srgb, var(--accent) 22%, transparent); border-radius: 2px; }
 
 #progress-text { margin: 0 0 6px; color: var(--muted); font-size: 0.8rem; }
-.progress-bar { height: 4px; background: var(--bg); border-radius: 2px; overflow: hidden; }
+.progress-bar { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
 #progress-fill { width: 0; height: 100%; background: var(--accent); transition: width 0.4s ease; }
 
 .stepper { display: flex; gap: 8px; margin-top: 12px; }
@@ -99,7 +99,7 @@ mark { color: inherit; background: color-mix(in srgb, var(--accent) 22%, transpa
   font: inherit;
   font-size: 0.85rem;
   color: var(--text);
-  background: var(--bg);
+  background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 6px;
   cursor: pointer;
@@ -116,56 +116,95 @@ mark { color: inherit; background: color-mix(in srgb, var(--accent) 22%, transpa
   overflow-y: auto;
   list-style: none;
 }
-#outline button {
+#outline li {
+  display: flex;
+  align-items: center;
+  padding-left: calc(var(--depth) * 12px);
+  border-radius: 4px;
+}
+#outline li[hidden] { display: none; }
+#outline li:hover { background: var(--panel); }
+#outline li:has(.current) { background: var(--panel); }
+
+/* Open/close arrow for categories; an empty spacer keeps end topics aligned. */
+#outline .toggle {
+  flex: none;
+  width: 20px;
+  height: 26px;
+  padding: 0;
+  background: none;
+  border: 0;
+}
+#outline button.toggle { cursor: pointer; }
+#outline button.toggle::before {
+  content: "";
+  display: block;
+  width: 0;
+  height: 0;
+  margin: 0 auto;
+  border-left: 5px solid var(--muted);
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transition: transform 0.15s ease;
+}
+#outline button.toggle[aria-expanded="true"]::before { transform: rotate(90deg); }
+#outline button.toggle:hover::before { border-left-color: var(--accent); }
+
+/* Label: one line, cut off with an ellipsis; the full name shows on hover. */
+#outline .label {
   position: relative;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
-  width: 100%;
-  padding: 5px 8px 5px calc(24px + var(--depth) * 14px);
+  padding: 5px 8px 5px 16px;
   font: inherit;
   font-size: 0.85rem;
   line-height: 1.35;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   text-align: left;
   color: var(--muted);
   background: none;
   border: 0;
-  border-radius: 4px;
   cursor: pointer;
 }
 /* Status dot: hollow until visited, filled once visited. */
-#outline button::before {
+#outline .label::before {
   content: "";
   position: absolute;
-  left: calc(8px + var(--depth) * 14px);
-  top: 0.7em;
+  left: 2px;
+  top: calc(50% - 4px);
   width: 7px;
   height: 7px;
   border: 1.5px solid var(--line);
   border-radius: 50%;
 }
-#outline button:hover { background: var(--bg); color: var(--text); }
-#outline button.visited { color: var(--text); }
-#outline button.response { font-style: italic; }
-#outline button.response::before { border-style: dashed; }
-#outline button.visited::before { background: var(--muted); border-color: var(--muted); }
-#outline button.current { background: var(--bg); font-weight: 600; }
-#outline button.current::before { background: var(--accent); border-color: var(--accent); }
+#outline .label:hover { color: var(--text); }
+#outline .label.visited { color: var(--text); }
+#outline .label.response { font-style: italic; }
+#outline .label.response::before { border-style: dashed; }
+#outline .label.visited::before { background: var(--muted); border-color: var(--muted); }
+#outline .label.current { font-weight: 600; }
+#outline .label.current::before { background: var(--accent); border-color: var(--accent); }
+#outline .map-mark { flex: none; padding-right: 8px; font-size: 0.85rem; }
 
+/* The stage: the tree fills it, with controls and the notes card floating on top.
+   --panel-space is the width the notes card covers on the right; zooming frames topics
+   in the space to its left (read by script.js). */
 #chart {
+  --panel-space: 352px;
   position: relative;
+  height: 100vh;
   min-width: 0;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 8px;
   overflow: hidden;
+  background: var(--panel);
 }
 
 #reset {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  bottom: 16px;
+  left: 16px;
+  z-index: 1;
   padding: 6px 12px;
   font: inherit;
   font-size: 0.85rem;
@@ -178,7 +217,7 @@ mark { color: inherit; background: color-mix(in srgb, var(--accent) 22%, transpa
 #reset:hover { border-color: var(--accent); color: var(--accent); }
 
 /* Tree */
-.tree { display: block; width: 100%; height: auto; font-size: 13px; user-select: none; cursor: grab; }
+.tree { position: absolute; inset: 0; display: block; width: 100%; height: 100%; font-size: 13px; user-select: none; cursor: grab; }
 .tree:active { cursor: grabbing; }
 .tree .links path { fill: none; stroke: var(--line); stroke-width: 1.5; }
 .tree .nodes g { cursor: pointer; }
@@ -204,9 +243,10 @@ mark { color: inherit; background: color-mix(in srgb, var(--accent) 22%, transpa
 .tree .map-badge { fill: var(--accent); font-weight: 700; font-size: 15px; cursor: zoom-in; }
 .tree .map-badge:hover { fill: var(--text); }
 
+/* The map viewer covers the stage up to the notes card, which stays visible for hotspot notes. */
 #map-viewer {
   position: absolute;
-  inset: 0;
+  inset: 0 var(--panel-space) 0 0;
   z-index: 2;
   display: flex;
   flex-direction: column;
@@ -222,7 +262,7 @@ mark { color: inherit; background: color-mix(in srgb, var(--accent) 22%, transpa
   display: flex;
   align-items: baseline;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 16px;
   border-bottom: 1px solid var(--bg);
 }
 .map-header h2 { margin: 0; font-size: 1rem; }
@@ -277,29 +317,39 @@ mark { color: inherit; background: color-mix(in srgb, var(--accent) 22%, transpa
 #detail-map:hover, #detail-open-all:hover { border-color: var(--accent); }
 #detail-map[hidden], #detail-open-all[hidden] { display: none; }
 
-/* Side panel */
+/* Notes card, floating top-right over the tree. */
 #details {
-  position: sticky;
-  top: 24px;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 3;
+  width: calc(var(--panel-space) - 32px);
+  max-height: calc(100% - 32px);
+  overflow-y: auto;
   padding: 20px;
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgb(0 0 0 / 0.06);
 }
 #detail-path { margin: 0; color: var(--muted); font-size: 0.8rem; min-height: 1em; }
 #detail-title { margin: 4px 0 12px; font-size: 1.3rem; }
 #detail-note { margin: 0; line-height: 1.5; }
 
-/* Medium screens: the notes panel moves under the chart. */
+/* Medium screens: narrower sidebar and notes card. */
 @media (max-width: 1100px) {
-  main { grid-template-columns: 240px minmax(0, 1fr); }
-  #sidebar { grid-row: span 2; }
-  #details { position: static; }
+  body { grid-template-columns: 240px minmax(0, 1fr); }
+  #chart { --panel-space: 296px; }
 }
 
+/* Phones: the page scrolls, sidebar on top, the tree below with the notes card along
+   its bottom edge. */
 @media (max-width: 760px) {
-  body { padding: 16px; }
-  main { grid-template-columns: 1fr; }
-  #sidebar { position: static; grid-row: auto; max-height: none; }
-  #outline { max-height: 240px; }
+  body { display: block; height: auto; overflow: auto; }
+  #sidebar { height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+  #outline { max-height: 200px; }
+  #chart { --panel-space: 0px; height: 80vh; }
+  #map-viewer { inset: 0; }
+  #details { top: auto; bottom: 12px; left: 12px; right: 12px; width: auto; max-height: 40%; }
+  #reset { top: 12px; bottom: auto; }
 }

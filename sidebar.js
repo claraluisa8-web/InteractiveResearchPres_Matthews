@@ -14,28 +14,61 @@ function createSidebar(chart) {
   const input = document.getElementById("search");
   const resultList = document.getElementById("search-results");
 
-  // Outline: one button per topic, indented by depth.
+  // Outline: one row per topic, indented by depth, mirroring what's open in the tree.
+  // Categories get an arrow that opens/closes them (in the tree too); clicking a label
+  // jumps to the topic. Labels are one line; hovering shows the full name.
   const items = new Map();
+  const rows = new Map();
+  const toggles = new Map();
   for (const d of nodes) {
     const li = document.createElement("li");
+    li.style.setProperty("--depth", d.depth);
+
+    if (d._children) {
+      const toggle = document.createElement("button");
+      toggle.type = "button";
+      toggle.className = "toggle";
+      toggle.setAttribute("aria-label", `Open or close ${d.data.short || d.data.name}`);
+      toggle.addEventListener("click", event => chart.toggle(d, event));
+      li.append(toggle);
+      toggles.set(d, toggle);
+    } else {
+      const spacer = document.createElement("span");
+      spacer.className = "toggle";
+      li.append(spacer);
+    }
+
     const button = document.createElement("button");
     button.type = "button";
-    button.style.setProperty("--depth", d.depth);
-    button.textContent = d.data.name;
+    button.className = "label";
+    button.textContent = d.data.short || d.data.name;
     button.title = d.data.name;
     if (d.data.response) button.classList.add("response");
+    button.addEventListener("click", event => chart.goTo(d, event));
+    li.append(button);
+
     if (d.data.map) {
       const mark = document.createElement("span");
       mark.className = "map-mark";
-      mark.textContent = " ✱";
+      mark.textContent = "✱";
       mark.title = "Has a map";
-      button.append(mark);
+      li.append(mark);
     }
-    button.addEventListener("click", event => chart.goTo(d, event));
-    li.append(button);
+
     outline.append(li);
     items.set(d, button);
+    rows.set(d, li);
   }
+
+  // Show only topics visible in the tree, and point each arrow open or closed.
+  function refresh() {
+    for (const d of nodes) {
+      rows.get(d).hidden = !d.ancestors().slice(1).every(a => a.children);
+      toggles.get(d)?.setAttribute("aria-expanded", !!d.children);
+    }
+    if (current) scrollOutlineTo(items.get(current));
+  }
+  refresh();
 
   // Called by the chart whenever a node is selected, however it got selected.
   function setCurrent(d) {
@@ -200,7 +233,7 @@ function createSidebar(chart) {
     }
   });
 
-  return {setCurrent};
+  return {setCurrent, refresh};
 }
 
 // Wrap each occurrence of the search terms in <mark>, building nodes instead of HTML so

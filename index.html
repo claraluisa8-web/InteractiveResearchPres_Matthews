@@ -7,43 +7,51 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
+  <nav id="sidebar" aria-label="Topics">
     <h1>Interactive Research Presentation</h1>
-    <p class="hint">Click a category to open it and zoom in; click again to close everything beneath it. <kbd>Shift</kbd>-click opens all. Scroll to zoom, drag to pan. <kbd>←</kbd> <kbd>→</kbd> step through topics, <kbd>/</kbd> searches. Hold <kbd>Alt</kbd>/<kbd>Option</kbd> while clicking to slow the animation.</p>
-  </header>
 
-  <main>
-    <nav id="sidebar" aria-label="Topics">
-      <div class="search">
-        <input id="search" type="search" placeholder="Search topics…" autocomplete="off"
-               aria-label="Search topics" aria-controls="search-results">
-        <ul id="search-results" role="listbox" hidden></ul>
-      </div>
+    <div class="search">
+      <input id="search" type="search" placeholder="Search topics…" autocomplete="off"
+             aria-label="Search topics" aria-controls="search-results">
+      <ul id="search-results" role="listbox" hidden></ul>
+    </div>
 
-      <div class="progress">
-        <p id="progress-text"></p>
-        <div class="progress-bar"><div id="progress-fill"></div></div>
-        <div class="stepper">
-          <button id="prev" type="button">‹ Previous</button>
-          <button id="next" type="button">Next ›</button>
-        </div>
-      </div>
-
-      <ol id="outline"></ol>
-    </nav>
-
-    <div id="chart">
-      <button id="reset" type="button">Show all</button>
-
-      <div id="map-viewer" role="dialog" aria-labelledby="map-title" hidden>
-        <div class="map-header">
-          <h2><span class="map-mark" aria-hidden="true">✱</span> <span id="map-title"></span></h2>
-          <p class="map-hint">Click a highlighted area for notes. Drag to pan, scroll to zoom.</p>
-          <button id="map-close" type="button" aria-label="Close map (Esc)">×</button>
-        </div>
-        <div id="map-canvas"></div>
+    <div class="progress">
+      <p id="progress-text"></p>
+      <div class="progress-bar"><div id="progress-fill"></div></div>
+      <div class="stepper">
+        <button id="prev" type="button">‹ Previous</button>
+        <button id="next" type="button">Next ›</button>
       </div>
     </div>
+
+    <ol id="outline"></ol>
+
+    <details class="help">
+      <summary>Controls</summary>
+      <ul>
+        <li>Click a category to open it and zoom in; click again to close everything beneath it.</li>
+        <li><kbd>Shift</kbd>-click opens everything beneath a topic.</li>
+        <li>Scroll to zoom, drag to pan.</li>
+        <li><kbd>←</kbd> <kbd>→</kbd> step through visible topics.</li>
+        <li><kbd>/</kbd> jumps to search.</li>
+        <li>Hold <kbd>Alt</kbd>/<kbd>Option</kbd> while clicking to slow the animation.</li>
+      </ul>
+    </details>
+  </nav>
+
+  <main id="chart">
+    <button id="reset" type="button">Show all</button>
+
+    <div id="map-viewer" role="dialog" aria-labelledby="map-title" hidden>
+      <div class="map-header">
+        <h2><span class="map-mark" aria-hidden="true">✱</span> <span id="map-title"></span></h2>
+        <p class="map-hint">Click a highlighted area for notes. Drag to pan, scroll to zoom.</p>
+        <button id="map-close" type="button" aria-label="Close map (Esc)">×</button>
+      </div>
+      <div id="map-canvas"></div>
+    </div>
+
     <aside id="details">
       <p id="detail-path"></p>
       <h2 id="detail-title"></h2>

@@ -1,11 +1,11 @@
 // Collapsible research tree, adapted from D3's Observable "collapsible tree" example
 // to run as a plain web page. Data comes from data.js.
 
-function createTree(data, onSelect, onOpenMap) {
-  // Specify the chart's dimensions. This is a fixed viewing window; zooming moves the tree
-  // around inside it.
-  const width = 928;
-  const height = 560;
+function createTree(data, {onSelect, onOpenMap, onChange = () => {}, insetRight = () => 0}) {
+  // The chart fills its container; width and height are measured from it (see measure()).
+  // insetRight is space on the right covered by the notes card, which focus() frames around.
+  let width = 0;
+  let height = 0;
 
   // Room around a focused group of nodes, and how far the view can zoom in on it.
   const pad = 24;
@@ -33,7 +33,6 @@ function createTree(data, onSelect, onOpenMap) {
   // Create the SVG container, a zoomable layer, and inside it a layer for the links and
   // a layer for the nodes.
   const svg = d3.create("svg")
-      .attr("viewBox", [0, 0, width, height])
       .attr("class", "tree");
 
   const gZoom = svg.append("g");
@@ -70,13 +69,8 @@ function createTree(data, onSelect, onOpenMap) {
         .attr("stroke-opacity", 0)
         .on("click", (event, d) => {
           // Shift-click opens everything beneath the node; a plain click toggles it.
-          if (event.shiftKey) return openAll(d, event);
-          if (d._children) {
-            if (d.children) collapse(d);
-            else d.children = d._children;
-            update(event, d);
-          }
-          select(d, event);
+          if (event.shiftKey) openAll(d, event);
+          else toggle(d, event);
         })
         .each(function(d) { d.element = this; });
 
@@ -152,13 +146,36 @@ function createTree(data, onSelect, onOpenMap) {
       d.x0 = d.x;
       d.y0 = d.y;
     });
+
+    onChange();
   }
+
+  // Open a closed node, or close an open one along with everything beneath it, then select it.
+  function toggle(d, event) {
+    if (d._children) {
+      if (d.children) collapse(d);
+      else d.children = d._children;
+      update(event, d);
+    }
+    select(d, event);
+  }
+
+  let selected = root;
 
   // Highlight the clicked node, zoom to it, and pass it to the side panel.
   function select(d, event) {
+    selected = d;
     gNode.selectAll("g").classed("selected", n => n === d);
     focus(d, event);
     onSelect(d);
+  }
+
+  // Match the SVG's coordinate system to its size on screen.
+  function measure() {
+    const rect = svg.node().getBoundingClientRect();
+    width = rect.width;
+    height = rect.height;
+    svg.attr("viewBox", [0, 0, width, height]);
   }
 
   // Zoom and pan so the node and its open subtopics fill the view, with the parent's dot
@@ -185,9 +202,11 @@ function createTree(data, onSelect, onOpenMap) {
     const boxWidth = x1 - x0;
     const boxHeight = y1 - y0;
 
-    const scale = Math.min(maxFocusScale, width / boxWidth, height / boxHeight);
+    // Fit the box into the part of the chart not covered by the notes card.
+    const viewWidth = Math.max(width - insetRight(), width / 2);
+    const scale = Math.min(maxFocusScale, viewWidth / boxWidth, height / boxHeight);
     const transform = d3.zoomIdentity
-        .translate(width / 2, height / 2)
+        .translate(viewWidth / 2, height / 2)
         .scale(scale)
         .translate(-(x0 + x1) / 2, -(y0 + y1) / 2);
 
@@ -270,10 +289,21 @@ function createTree(data, onSelect, onOpenMap) {
   svg.node().nodes = allNodes;
   svg.node().goTo = goTo;
   svg.node().openAll = openAll;
+  svg.node().toggle = toggle;
 
   // Selects the root and fits the whole tree. Used for the "Show all" button, and once the
   // chart is on the page (labels can't be measured before then).
-  svg.node().reset = event => select(root, event);
+  svg.node().reset = event => {
+    measure();
+    select(root, event);
+  };
+
+  // Keep the current topic framed when the window (and so the chart) changes size.
+  new ResizeObserver(() => {
+    if (!svg.node().isConnected) return;
+    measure();
+    focus(selected);
+  }).observe(svg.node());
 
   return svg.node();
 }
@@ -306,14 +336,23 @@ const mapViewer = createMapViewer({
   onClose: () => showDetails(selected)
 });
 
-const chart = createTree(data, d => {
-  selected = d;
-  mapViewer.close(); // moving to another topic closes any open map
-  showDetails(d);
-  sidebar?.setCurrent(d);
-}, d => mapViewer.open(d));
+const stage = document.getElementById("chart");
 
-document.getElementById("chart").append(chart);
+const chart = createTree(data, {
+  onSelect: d => {
+    selected = d;
+    mapViewer.close(); // moving to another topic closes any open map
+    showDetails(d);
+    sidebar?.setCurrent(d);
+  },
+  onOpenMap: d => mapViewer.open(d),
+  onChange: () => sidebar?.refresh(),
+  // Width the notes card covers on the right, set in style.css as --panel-space.
+  insetRight: () => parseFloat(getComputedStyle(stage).getPropertyValue("--panel-space")) || 0
+});
+
+// First in the stage, so the buttons, map viewer and notes card sit on top of it.
+stage.prepend(chart);
 sidebar = createSidebar(chart);
 chart.reset();
 
