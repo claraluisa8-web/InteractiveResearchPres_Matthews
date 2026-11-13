@@ -98,6 +98,9 @@ interface ScenarioState {
   allClearOpen: boolean;
   /** Stage width in design pixels (1440 or wider; the height is always 900). */
   stageWidth: number;
+  /** The team rail's rendered height (0 when hidden), so the layout keeps orbs clear of it. */
+  railHeight: number;
+  setRailHeight: (h: number) => void;
   /** Right-docked panel for frames 08, 09 and 11. */
   rightPanel: RightPanel;
   commentOpen: boolean;
@@ -142,6 +145,8 @@ interface ScenarioState {
   acceptFix: (issue: number) => void;
   rejectIssue: (issue: number) => void;
   verifySection: (id: string) => void;
+  /** Round 8: verify every section that only needed an overview, once the errors are verified. */
+  verifyMany: (ids: string[]) => void;
   setLinkIds: (ids: string[] | null) => void;
   setCardNote: (role: string, text: string) => void;
   setRightPanel: (p: RightPanel) => void;
@@ -323,6 +328,8 @@ export const useScenario = create<ScenarioState>()(
       allClearOpen: false,
       composerTarget: 'team',
       draftFor: null,
+      railHeight: 0,
+      setRailHeight: (h) => set({ railHeight: h }),
       prevComposerTarget: null,
       attachments: [],
       commentWith: null,
@@ -555,6 +562,10 @@ export const useScenario = create<ScenarioState>()(
           if (kids.every((k) => sections[k].status === 'verified')) sections[parent] = { ...sections[parent], status: 'verified' };
         }
         set({ sections });
+      },
+
+      verifyMany: (ids) => {
+        for (const id of ids) get().verifySection(id);
       },
 
       setLinkIds: (ids) => set({ linkIds: ids }),

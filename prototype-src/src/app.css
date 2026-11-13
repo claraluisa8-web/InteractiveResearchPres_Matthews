@@ -336,7 +336,10 @@ button { cursor: pointer; }
 /* World coordinates are stage coordinates, so offset back up by the title bar. */
 .world { position: absolute; left: 0; top: -36px; width: 100%; height: 900px; transform-origin: 0 0; }
 .stage.is-fitting .world { transition: transform var(--pmr-t-panel) var(--pmr-ease); }
-.world__layout { position: absolute; inset: 0; transition: transform var(--pmr-t-layout) var(--pmr-ease-move); }
+.world__layout { position: absolute; inset: 0; }
+/* Round 8: nothing moves on first open (the stage measuring its width used to slide You and the spec
+   card); the layout eases only once someone has been added. */
+.world__layout.is-animated { transition: transform var(--pmr-t-layout) var(--pmr-ease-move); }
 
 /* ---------- Orbs ---------- */
 
@@ -744,7 +747,9 @@ button.chip:hover { border-color: rgba(255, 255, 255, 0.32); }
   left: 16px;
   top: 52px;
   width: 230px;
-  max-height: 230px; /* frame 05's height; longer teams scroll so the rail never covers the teammate slot */
+  /* Round 8: the rail grows with the team (it used to stop at frame 05's 230px and scroll); it only
+     scrolls past the legend's top. The layout moves right to keep orbs clear of it (geometry.ts). */
+  max-height: 678px;
   display: flex;
   flex-direction: column;
   padding: 16px 8px 14px;
@@ -1569,7 +1574,7 @@ textarea.input::placeholder { color: var(--pmr-text-2); opacity: 1; }
 .right-panel { max-height: 716px; overflow-y: auto; }
 
 /* Feedback round 5: new orbs and lines arrive softly instead of popping in. */
-.node { animation: node-in var(--pmr-t-layout) var(--pmr-ease-move) backwards; }
+.node:not(.node--you) { animation: node-in var(--pmr-t-layout) var(--pmr-ease-move) backwards; }
 @keyframes node-in { from { opacity: 0; transform: scale(0.6); } }
 .line-group { animation: fade-in var(--pmr-t-layout) var(--pmr-ease-move) backwards; }
 
@@ -1592,3 +1597,20 @@ textarea.input::placeholder { color: var(--pmr-text-2); opacity: 1; }
 .comment-card { display: flex; flex-direction: column; overflow: hidden; }
 .comment-card__header, .comment-card__actions { flex: none; }
 .comment-card__thread { flex: 1 1 auto; min-height: 0; }
+
+/* Round 8: urgency-coded progress. Red only for real errors; lavender for overview-only sections. */
+.urgency { margin-top: 8px; }
+.urgency__track { display: flex; gap: 2px; height: 6px; }
+.urgency__seg { flex: 1; border-radius: 2px; transition: background var(--pmr-t-panel) var(--pmr-ease); }
+.urgency__seg--error { background: var(--pmr-issue); }
+.urgency__seg--fixed { background: var(--pmr-issue-pill-stroke); }
+.urgency__seg--overview { background: rgba(138, 130, 253, 0.45); }
+.urgency__seg--done { background: var(--pmr-cleared); }
+.urgency__legend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 6px 0 0; padding: 0; list-style: none; font-size: 11px; line-height: 15px; color: var(--pmr-text-2); }
+.urgency__legend li { display: inline-flex; align-items: center; gap: 5px; }
+.urgency__swatch { display: inline-block; width: 8px; height: 8px; border-radius: 2px; }
+.section-editor__progress .urgency__track { height: 5px; }
+.section-editor__bulk { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--pmr-divider); }
+.section-editor__bulk-button, .sections-panel__primary[data-verify-rest] { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.section-editor__bulk-button { width: 100%; }
+.section-editor__bulk .section-editor__help { margin-top: 6px; }

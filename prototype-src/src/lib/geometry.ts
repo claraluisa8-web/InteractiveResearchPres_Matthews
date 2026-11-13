@@ -41,12 +41,18 @@ export interface Geometry {
 
 // Configure panel's left edge in the 1440 design (frame 03); it's anchored to the right edge.
 const PANEL_LEFT = 880;
+// Team rail: 16px from the top-left of the canvas (below the 52px title bar), 230px wide.
+const RAIL_TOP = 52;
+const RAIL_RIGHT = 16 + 230;
+// Half an orb label's width, so names clear the rail too.
+const LABEL_HALF = 70;
 
 export function computeGeometry(
   collaborators: Collaborator[],
   configureId: string | null,
   flow: FlowState = { buildStarted: false, suggestion: false },
   stageWidth = 1440,
+  railHeight = 0,
 ): Geometry {
   const dx = (stageWidth - 1440) / 2;
   // Work flows You to builder and builder to reviewer once the build starts (frame 04).
@@ -95,6 +101,24 @@ export function computeGeometry(
   } else if (flow.allClear) {
     shift = { x: Math.min(0, -140 + dx), y: 0 };
   }
+  // Round 8: the team rail grows with the team instead of scrolling. If it would cover an orb or its
+  // label, the team moves right just enough to clear it, as far as the right-hand panel allows.
+  if (railHeight > 0) {
+    const railBottom = RAIL_TOP + railHeight + 12;
+    let need = 0;
+    let maxRight = -Infinity;
+    for (const n of [you, ...nodes]) {
+      const half = Math.max(n.size / 2, LABEL_HALF);
+      const x = n.point.x + dx + shift.x;
+      maxRight = Math.max(maxRight, x + half);
+      const top = n.point.y + shift.y - n.size / 2;
+      if (top < railBottom) need = Math.max(need, RAIL_RIGHT + 12 - (x - half));
+    }
+    // While configuring, the configure panel wins (the new orb must stay visible beside it). Otherwise
+    // the rail wins: it's always on screen, while the receipt or sections panel can be closed.
+    const room = target ? PANEL_LEFT + dx - 20 - maxRight : Infinity;
+    if (need > 0) shift = { ...shift, x: shift.x + Math.max(0, Math.min(need, room)) };
+  }
   // Alone, the + sits right of You (frame 01). With a team, You's label takes that side and lines
   // leave You downward, so the + moves to the upper left where nothing is drawn.
   const plus = collaborators.length > 0 ? { x: youP.x - 50, y: youP.y - 44 } : { x: youP.x + 64, y: youP.y };
@@ -112,11 +136,12 @@ export function useGeometry(): Geometry {
   const sectionsOpen = useScenario((s) => !!s.sectionsLine);
   const allClear = useScenario((s) => s.milestones.allSectionsVerified);
   const stageWidth = useScenario((s) => s.stageWidth);
+  const railHeight = useScenario((s) => s.railHeight);
   const suggestion = recommendation === 'shown' || recommendation === 'dismissed';
   const openIssues = issueRaised ? countOpen(issues) : 0;
   return useMemo(
-    () => computeGeometry(collaborators, configureId, { buildStarted, suggestion, openIssues, sectionsOpen, allClear }, stageWidth),
-    [collaborators, configureId, buildStarted, suggestion, openIssues, sectionsOpen, allClear, stageWidth],
+    () => computeGeometry(collaborators, configureId, { buildStarted, suggestion, openIssues, sectionsOpen, allClear }, stageWidth, railHeight),
+    [collaborators, configureId, buildStarted, suggestion, openIssues, sectionsOpen, allClear, stageWidth, railHeight],
   );
 }
 

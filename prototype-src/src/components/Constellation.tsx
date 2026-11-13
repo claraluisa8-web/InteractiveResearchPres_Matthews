@@ -123,7 +123,7 @@ export function Constellation({ scale, onLineHover }: ConstellationProps) {
       onPointerCancel={onPointerUp}
     >
       <div className="world" style={{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.k})` }}>
-        <div className="world__layout" style={{ transform: `translate(${g.shift.x + g.dx}px, ${g.shift.y}px)` }}>
+        <div className={`world__layout${alone ? '' : ' is-animated'}`} style={{ transform: `translate(${g.shift.x + g.dx}px, ${g.shift.y}px)` }}>
           <svg className="lines" width="1440" height="900">
             {alone && !configure && <line className="line line--attach" x1={642} y1={500} x2={692} y2={452} />}
             {showCoach && <line className="line line--attach" x1={g.plus.x + 15} y1={g.plus.y - 9} x2={834} y2={392} />}

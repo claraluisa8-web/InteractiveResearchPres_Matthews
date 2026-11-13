@@ -1,7 +1,9 @@
+import { useEffect, useRef } from 'react';
 import { copy, t } from '../lib/copy';
 import { displayName, mateTone, subtitleFor } from '../lib/status';
 import { SUGGESTED_ID, countOpen } from '../lib/geometry';
 import { firstOf, useScenario } from '../lib/store';
+import type { Role } from '../lib/types';
 import { Icon } from './Icon';
 import { Orb } from './Orb';
 import { RailFooter } from './SessionHistory';
@@ -9,11 +11,7 @@ import { RailFooter } from './SessionHistory';
 /** Team rail (from frame 05 on): appears once three or more are in the constellation, You included. */
 export function TeamRail({ showFit, onFit, onToast }: { showFit: boolean; onFit: () => void; onToast: (message: string) => void }) {
   const collaborators = useScenario((s) => s.collaborators);
-  const popover = useScenario((s) => s.popover);
-  const openPopover = useScenario((s) => s.openPopover);
-  const setHoverId = useScenario((s) => s.setHoverId);
   const recommendation = useScenario((s) => s.recommendation);
-  const setRecCardOpen = useScenario((s) => s.setRecCardOpen);
   const suggestion = recommendation === 'shown' || recommendation === 'dismissed';
   const issueRaised = useScenario((s) => s.milestones.issueRaised);
   const issues = useScenario((s) => s.issues);
@@ -40,11 +38,45 @@ export function TeamRail({ showFit, onFit, onToast }: { showFit: boolean; onFit:
   const merged = useScenario((s) => s.milestones.merged);
   // After the merge the rail always shows, since it holds Start a new session.
   if (rows.length < 3 && !merged) {
-    return showFit ? <FitButton onFit={onFit} standalone /> : null;
+    return <RailHidden showFit={showFit} onFit={onFit} />;
   }
+  return <RailBody rows={rows} showFit={showFit} onFit={onFit} onToast={onToast} checkedRow={checkedRow} flagged={flagged} suggestion={suggestion} reviewerId={reviewer?.id} />;
+}
+
+/** Below three people there's no rail; report a zero height so the layout doesn't make room for one. */
+function RailHidden({ showFit, onFit }: { showFit: boolean; onFit: () => void }) {
+  const setRailHeight = useScenario((s) => s.setRailHeight);
+  useEffect(() => setRailHeight(0), [setRailHeight]);
+  return showFit ? <FitButton onFit={onFit} standalone /> : null;
+}
+
+type Row = { id: string; role: Role; name: string; sub: string; draft: boolean; otherType?: string };
+
+function RailBody({ rows, showFit, onFit, onToast, checkedRow, flagged, suggestion, reviewerId }: {
+  rows: Row[]; showFit: boolean; onFit: () => void; onToast: (message: string) => void;
+  checkedRow: (id: string) => boolean; flagged: Set<string | undefined>; suggestion: boolean; reviewerId?: string;
+}) {
+  const collaborators = useScenario((s) => s.collaborators);
+  const popover = useScenario((s) => s.popover);
+  const openPopover = useScenario((s) => s.openPopover);
+  const setHoverId = useScenario((s) => s.setHoverId);
+  const setRecCardOpen = useScenario((s) => s.setRecCardOpen);
+  const setRailHeight = useScenario((s) => s.setRailHeight);
+  const ref = useRef<HTMLElement>(null);
+  // The rail grows with the team; the layout reads its height to keep orbs out from under it.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const report = () => setRailHeight(el.offsetHeight);
+    report();
+    const ro = new ResizeObserver(report);
+    ro.observe(el);
+    return () => { ro.disconnect(); setRailHeight(0); };
+  }, [setRailHeight]);
+  const reviewer = { id: reviewerId };
 
   return (
-    <nav className="pmr-glass rail" aria-label={t(copy.constellation.teamLabel, { n: rows.length })}>
+    <nav ref={ref} className="pmr-glass rail" aria-label={t(copy.constellation.teamLabel, { n: rows.length })}>
       <div className="rail__header">
         <span className="pmr-label">{t(copy.constellation.teamLabel, { n: rows.length })}</span>
         {showFit && <FitButton onFit={onFit} />}

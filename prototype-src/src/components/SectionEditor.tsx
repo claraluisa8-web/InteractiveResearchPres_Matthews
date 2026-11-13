@@ -14,6 +14,7 @@ import { Icon } from './Icon';
 import { Orb } from './Orb';
 import { SaveButton } from './SaveButton';
 import { issueOpen, lineIds, walkOrder } from './SectionsPanel';
+import { UrgencyProgress, remainingOverview } from './UrgencyProgress';
 
 const ed = copy.editor;
 const SPEC = 'recurring-investments.yaml';
@@ -50,6 +51,7 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
   const setEditorTab = useScenario((s) => s.setEditorTab);
   const setFileDraft = useScenario((s) => s.setFileDraft);
   const verifySection = useScenario((s) => s.verifySection);
+  const verifyMany = useScenario((s) => s.verifyMany);
   const acceptFix = useScenario((s) => s.acceptFix);
   const rejectIssue = useScenario((s) => s.rejectIssue);
   const setCardNote = useScenario((s) => s.setCardNote);
@@ -128,7 +130,6 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
   // Feedback round 6: no Next section when nothing else is left to verify, and a progress bar.
   const remaining = order.filter((u) => u.id !== def.id && sections[u.id]?.status !== 'verified');
   const hasNext = remaining.length > 0;
-  const doneCount = order.filter((u) => sections[u.id]?.status === 'verified').length;
   const openIssues = ISSUE_SECTION_IDS.filter((id) => issueOpen(issues[sectionById(id).issue!])).length;
   // The words count sections like the status pill and sections panel; the bar also moves per subsection.
   const tops = topSections(collaborators);
@@ -137,6 +138,13 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
     ? t(ed.progressLast)
     : openIssues === 0 ? t(ed.progressText, { verified: topDone, total: tops.length })
       : t(openIssues === 1 ? ed.progressIssuesOne : ed.progressIssues, { verified: topDone, total: tops.length, issues: openIssues });
+  // Round 8: once the errors are verified, the overview-only sections can be verified together.
+  const bulk = remainingOverview(collaborators, sections, issues);
+  const verifyRest = () => {
+    log('click', { target: 'verifyRemaining', n: bulk.length });
+    verifyMany(bulk.map((b) => b.id));
+    onToast(t(ed.verifyRemainingToast, { n: bulk.length }));
+  };
   const nextSection = () => {
     const next = order.find((u) => u.id !== def.id && sections[u.id]?.status !== 'verified');
     if (next) openSection(next.id);
@@ -240,9 +248,7 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
               <span className="pmr-label">{t(ed.progressLabel)}</span>
               <span aria-live="polite">{progressText}</span>
             </p>
-            <div className="progress-track" role="progressbar" aria-valuemin={0} aria-valuemax={order.length} aria-valuenow={doneCount} aria-label={t(ed.progressText, { verified: topDone, total: tops.length })}>
-              <div className="progress-fill" style={{ width: `${(doneCount / Math.max(order.length, 1)) * 100}%` }} />
-            </div>
+            <UrgencyProgress label={t(ed.progressText, { verified: topDone, total: tops.length })} />
           </div>
           {issueData ? (
             <>
@@ -285,8 +291,8 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
                 onClick={() => {
                   if (!canVerify) return;
                   verifySection(def.id);
-                  // Keyboard: Enter verifies, then Enter again goes to the next section.
-                  requestAnimationFrame(() => ref.current?.querySelector<HTMLElement>('[data-next]')?.focus());
+                  // Keyboard: Enter verifies, then Enter again goes on: verify the rest if offered, else next section.
+                  requestAnimationFrame(() => (ref.current?.querySelector<HTMLElement>('[data-verify-rest]') ?? ref.current?.querySelector<HTMLElement>('[data-next]'))?.focus());
                 }}
               >
                 {verified ? <Icon name="check" size={14} /> : !canVerify && <Icon name="lock" size={14} />}
@@ -295,6 +301,15 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
               {hasNext && <button type="button" className="pmr-button pmr-button--secondary" data-next onClick={nextSection}>{ed.next}</button>}
             </div>
             <p className="section-editor__help" aria-live="polite">{help}</p>
+            {bulk.length > 0 && !(bulk.length === 1 && bulk[0].id === def.id) && (
+              <div className="section-editor__bulk">
+                <button type="button" className="pmr-button section-editor__bulk-button" data-verify-rest onClick={verifyRest}>
+                  <Icon name="check-all" size={14} />
+                  {bulk.length === 1 ? t(ed.verifyRemainingOne) : t(ed.verifyRemaining, { n: bulk.length })}
+                </button>
+                <p className="section-editor__help">{t(ed.verifyRemainingHelp)}</p>
+              </div>
+            )}
 
             {/* Feedback round 7: one way in — see the fix first. Apply, Reject and Cancel live with the preview. */}
             {def.issue && open && editor.mode === 'edit' && (

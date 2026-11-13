@@ -1010,6 +1010,34 @@
     "diffReject": {
       "text": "Reject fix",
       "new": true
+    },
+    "legendErrors": {
+      "text": "Errors to fix",
+      "new": true
+    },
+    "legendOverview": {
+      "text": "Overview only",
+      "new": true
+    },
+    "legendDone": {
+      "text": "Verified",
+      "new": true
+    },
+    "verifyRemaining": {
+      "text": "Verify the remaining {n} sections",
+      "new": true
+    },
+    "verifyRemainingOne": {
+      "text": "Verify the last section",
+      "new": true
+    },
+    "verifyRemainingHelp": {
+      "text": "Both errors are fixed. The rest had no issues and match the spec, so you can verify them together, or open each one first.",
+      "new": true
+    },
+    "verifyRemainingToast": {
+      "text": "Verified {n} sections with no issues.",
+      "new": true
     }
   },
   "allClear": {

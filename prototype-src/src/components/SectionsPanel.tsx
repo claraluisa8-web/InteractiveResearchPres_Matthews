@@ -5,6 +5,8 @@ import { safeRange, sectionById, topSections, type SectionDef, type SectionRole 
 import { firstOf, useScenario } from '../lib/store';
 import type { Collaborator, IssueState, SectionState } from '../lib/types';
 import { Icon } from './Icon';
+import { UrgencyProgress, remainingOverview } from './UrgencyProgress';
+import { log } from '../lib/log';
 
 const sp = copy.sectionsPanel;
 
@@ -62,6 +64,8 @@ export function SectionsPanel() {
   const order = walkOrder(collaborators, issues);
   const firstIssue = order.find((u) => u.issue && issueOpen(issues[u.issue]));
   const firstOpen = firstIssue ?? order.find((u) => sections[u.id]?.status !== 'verified');
+  const bulk = remainingOverview(collaborators, sections, issues);
+  const verifyMany = useScenario((s) => s.verifyMany);
 
   const text = (file: string) => drafts[file] ?? files[file] ?? '';
   const rangeLabel = (d: SectionDef) => {
@@ -196,9 +200,7 @@ export function SectionsPanel() {
           <span>{t(sp.progress, { verified, total })}</span>
           <span className="sections-panel__against">{sp.progressRight}</span>
         </div>
-        <div className="progress-track" role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={verified} aria-label={t(sp.progress, { verified, total })}>
-          <div className="progress-fill" style={{ width: `${(verified / total) * 100}%` }} />
-        </div>
+        <UrgencyProgress label={t(sp.progress, { verified, total })} />
       </div>
       <div className="sections-panel__body">
         <p className="pmr-label sections-panel__group">{sp.groupOnLine}</p>
@@ -211,7 +213,12 @@ export function SectionsPanel() {
         )}
       </div>
       <footer className="sections-panel__footer">
-        {firstOpen ? (
+        {/* Round 8: once the errors are verified, the overview-only sections can be verified together. */}
+        {bulk.length > 1 ? (
+          <button type="button" className="pmr-button sections-panel__primary" data-verify-rest onClick={() => { log('click', { target: 'verifyRemaining:panel', n: bulk.length }); verifyMany(bulk.map((b) => b.id)); }}>
+            <Icon name="check-all" size={14} />{t(copy.editor.verifyRemaining, { n: bulk.length })}
+          </button>
+        ) : firstOpen ? (
           <button type="button" className="pmr-button sections-panel__primary" data-open-first onClick={() => openSection(firstOpen.id)}>
             {t(sp.primary, { firstIssueSection: firstOpen.label })}
           </button>
