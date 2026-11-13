@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 // One Esc stack for the whole app: Esc closes the topmost layer only
-// (popover → confirm → menu → panel → pop-up, in the order they opened).
+// (popover to confirm to menu to panel to pop-up, in the order they opened).
 const stack: { current: () => void }[] = [];
 
 window.addEventListener('keydown', (e) => {

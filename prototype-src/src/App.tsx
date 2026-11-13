@@ -18,10 +18,13 @@ import { StatusPill } from './components/StatusPill';
 import { TeamRail } from './components/TeamRail';
 import { TitleBar } from './components/TitleBar';
 import { Toast } from './components/Toast';
+import { Tooltip } from './components/Tooltip';
 import { copy, t } from './lib/copy';
 import { useFlow, useIssueFlow, useReviewFlow } from './lib/flow';
 import { computeGeometry, countOpen } from './lib/geometry';
 import { ISSUE_SECTION_IDS, sectionById, topSections } from './lib/sections';
+import { useFocusRescue, useIdleHints } from './lib/hints';
+import { LOGGING, exportLog, log, resetLog } from './lib/log';
 import { startOver } from './lib/reset';
 import { statusPill } from './lib/status';
 import { useScenario } from './lib/store';
@@ -74,11 +77,14 @@ export function App() {
   const setRightPanel = useScenario((s) => s.setRightPanel);
   const setCommentOpen = useScenario((s) => s.setCommentOpen);
   const collaboratorsAll = collaborators;
+  useIdleHints();
+  useFocusRescue();
   useFlow();
   useIssueFlow();
   useReviewFlow();
 
   const showToast = useCallback((message: string) => {
+    log('toast', { target: message });
     window.clearTimeout(toastTimer.current);
     setToast(message);
     toastTimer.current = window.setTimeout(() => setToast(null), TOAST_MS);
@@ -91,6 +97,11 @@ export function App() {
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'r') {
         e.preventDefault();
         startOver();
+      }
+      // Ctrl/Cmd+Shift+E: export the session log (docs/logging.md).
+      if (LOGGING && (e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        if (exportLog()) showToast(t(copy.chrome.exported));
       }
     };
     window.addEventListener('keydown', onKey);
@@ -119,6 +130,17 @@ export function App() {
     showToast(t(copy.editor.codeTabEmpty));
   };
   useEffect(() => setActiveTab(editor ? 'code' : 'constellation'), [editor]);
+
+  // The section editor is modal (frame 07's scrim): everything behind it leaves the tab order,
+  // except the title bar, composer, replies and status pill, which frame 07 keeps live.
+  useEffect(() => {
+    if (!editor) return;
+    const keep = '.titlebar, .composer, .replies, .toast-region, .status-pill-wrap, .scrim, .tooltip, .prompt-chip-row';
+    const stage = document.querySelector('.stage');
+    const hidden = [...(stage?.children ?? [])].filter((el) => !el.matches(keep)) as HTMLElement[];
+    hidden.forEach((el) => el.setAttribute('inert', ''));
+    return () => hidden.forEach((el) => el.removeAttribute('inert'));
+  }, [editor]);
 
   // "Show whole team": the only camera move, and only on request; eases over 200 ms.
   const fitTeam = () => {
@@ -192,6 +214,7 @@ export function App() {
           activeTab={activeTab}
           onTab={onTab}
           onStartOver={() => setDialog('startOver')}
+          onExport={() => exportLog() && showToast(t(copy.chrome.exported))}
           onAbout={() => setDialog('about')}
         />
         <Replies raised={pill.target === 'ready' && readyVisible} />
@@ -207,18 +230,27 @@ export function App() {
         <StatusPill text={pill.text} tone={pill.tone} onClick={onPill} />
         {editor && <SectionEditor onToast={showToast} />}
         {specOpen && <SpecViewer />}
+        <Tooltip scale={scale} />
         {dialog === 'startOver' && (
           <Dialog
             title={t(sc.title)}
             onClose={closeDialog}
             actions={
-              <>
-                <button type="button" className="pmr-button pmr-button--secondary" onClick={closeDialog}>{t(sc.cancel)}</button>
-                <button type="button" className="pmr-button" onClick={startOver}>{t(sc.confirm)}</button>
-              </>
+              LOGGING ? (
+                <>
+                  <button type="button" className="pmr-button pmr-button--secondary" onClick={closeDialog}>{t(sc.cancel)}</button>
+                  <button type="button" className="pmr-button pmr-button--secondary" onClick={() => { resetLog(false); startOver(true); }}>{t(sc.clearLog)}</button>
+                  <button type="button" className="pmr-button" onClick={() => { resetLog(true); startOver(true); }}>{t(sc.keepLog)}</button>
+                </>
+              ) : (
+                <>
+                  <button type="button" className="pmr-button pmr-button--secondary" onClick={closeDialog}>{t(sc.cancel)}</button>
+                  <button type="button" className="pmr-button" onClick={() => startOver()}>{t(sc.confirm)}</button>
+                </>
+              )
             }
           >
-            {t(sc.body)}
+            {LOGGING ? t(sc.bodyLogging) : t(sc.body)}
           </Dialog>
         )}
         {dialog === 'about' && (

@@ -84,7 +84,7 @@ export function TeamRail({ showFit, onFit }: { showFit: boolean; onFit: () => vo
 function FitButton({ onFit, standalone }: { onFit: () => void; standalone?: boolean }) {
   const label = t(copy.constellation.showWholeTeam);
   return (
-    <button type="button" className={standalone ? 'pmr-glass fit-button fit-button--standalone' : 'fit-button'} onClick={onFit} title={label}>
+    <button type="button" className={standalone ? 'pmr-glass fit-button fit-button--standalone' : 'fit-button'} onClick={onFit}>
       <Icon name="screen-full" size={14} />
       <span>{label}</span>
     </button>

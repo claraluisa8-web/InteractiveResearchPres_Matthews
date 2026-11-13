@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { copy, t } from './copy';
+import { log } from './log';
 import { topSections } from './sections';
 import { firstOf, useScenario } from './store';
 import { TIMING, thinkingDelay } from './timing';
@@ -76,12 +77,14 @@ export function useFlow() {
 }
 
 /** After a save: both agents recheck for recheckDelay, then the issue resolves or the reviewer says why not. */
-export function scheduleRecheck(ids: number[]) {
+export function scheduleRecheck(ids: number[], section?: string) {
   if (ids.length === 0) return;
   window.setTimeout(() => {
     const s = useScenario.getState();
     s.recheck(ids);
     const after = useScenario.getState();
+    // docs/logging.md: save events carry whether the recheck resolved the issue.
+    for (const id of ids) log('save', { file: 'PlanController.java', section: section ?? null, issue: id, resolved: after.issues[id]?.status === 'resolved' });
     const ar = copy.editor.afterResolve;
     // The cards speak for the issue on screen; others keep their result on the issue itself.
     const onScreen = after.editor ? copy.issues.find((i) => i.section === after.editor!.section)?.id : undefined;

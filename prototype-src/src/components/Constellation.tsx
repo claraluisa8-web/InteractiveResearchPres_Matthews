@@ -145,7 +145,7 @@ export function Constellation({ scale, onLineHover }: ConstellationProps) {
                 <g
                   key={line.id}
                   className={`line-group${lineHover === line.id ? ' is-hover' : ''}${dim ? ' is-dim' : ''}`}
-                  onPointerEnter={() => line.kind !== 'pending' && lineHoverStart(line, a, b)}
+                  onPointerEnter={() => (line.kind !== 'pending' || a.c?.review === 'pending' || b.c?.review === 'pending') && lineHoverStart(line, a, b)}
                   onPointerLeave={lineHoverEnd}
                   onClick={() =>
                     line.kind === 'issue' ? openSections() : line.kind !== 'pending' && onLineHover({ line, at: { x: p.mx, y: p.my }, pinned: true })
@@ -175,7 +175,7 @@ export function Constellation({ scale, onLineHover }: ConstellationProps) {
                 className={`issue-badge${lineDim(line.a, line.b) ? ' is-dim' : ''}`}
                 style={{ left: mx - 16, top: my - 16 }}
                 aria-label={label}
-                title={label}
+                data-tip={label}
                 data-issue-badge
                 onPointerEnter={() => lineHoverStart(line, a, b)}
                 onPointerLeave={lineHoverEnd}
@@ -224,7 +224,7 @@ export function Constellation({ scale, onLineHover }: ConstellationProps) {
                 className="comment-node pmr-glass"
                 style={{ left: mx - 12, top: my - 12 }}
                 aria-label={label}
-                title={label}
+                data-tip={label}
                 data-comment-node
                 onClick={() => setCommentOpen(true)}
               >
@@ -259,7 +259,7 @@ export function Constellation({ scale, onLineHover }: ConstellationProps) {
             className={`plus pmr-glass${addMenu?.anchor === 'plus' ? ' is-open' : ''}`}
             style={{ left: g.plus.x - 16, top: g.plus.y - 16 }}
             aria-label={t(copy.constellation.plusLabel)}
-            title={t(copy.constellation.plusLabel)}
+            data-tip={t(copy.constellation.plusLabel)}
             aria-haspopup="menu"
             aria-expanded={addMenu?.anchor === 'plus'}
             data-plus

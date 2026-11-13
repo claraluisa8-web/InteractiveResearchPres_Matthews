@@ -4,7 +4,7 @@ import { active, defaultName, firstOf } from './store';
 import type { AgentRole, Collaborator, Recommendation } from './types';
 
 // Scripted replies (docs/agent-replies.md): score intents allowed in the current context,
-// the highest wins, nothing scores → a fallback that ends with the next-step hint.
+// the highest wins, nothing scores to a fallback that ends with the next-step hint.
 
 export type Context = 'empty' | 'ready' | 'build' | 'issue' | 'editor' | 'allClear' | 'review' | 'done';
 
@@ -182,7 +182,7 @@ export function match(input: string, cs: Collaborator[], ctx: Context, flow: Flo
       : detected.role === 'other'
         ? defaultName('other', detected.otherType).toLowerCase()
         : copy.roles[detected.role].menuTitle.toLowerCase();
-    // "a {role}" → "an accessibility agent"
+    // "a {role}" to "an accessibility agent"
     const template = /^[aeiou]/.test(roleLabel) ? raw.replace(/\ba \{role\}/, 'an {role}') : raw;
     result.reply = t(template, { ...v, role: roleLabel });
     return result;

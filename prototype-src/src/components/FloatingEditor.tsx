@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { copy, t } from '../lib/copy';
 import { useEscape } from '../lib/escape';
 import { toScreen, useGeometry } from '../lib/geometry';
+import { log } from '../lib/log';
 import { firstOf, useScenario } from '../lib/store';
 import { CodeEditor } from './CodeEditor';
 import { Icon } from './Icon';
@@ -37,6 +38,7 @@ export function FloatingEditor({ onToast }: { onToast: (message: string) => void
   }, [file]);
 
   const save = () => {
+    log('save', { file, section: null, resolved: null });
     saveFile(file);
     onToast(t(ff.saveToast, { builder: builder?.name }));
   };
@@ -74,7 +76,7 @@ export function FloatingEditor({ onToast }: { onToast: (message: string) => void
               {t(ff.unsaved)}
             </span>
           )}
-          <button type="button" className="icon-button" aria-label={t(copy.chrome.about.close)} title={t(copy.chrome.about.close)} onClick={close}>
+          <button type="button" className="icon-button" aria-label={t(copy.chrome.about.close)} data-tip={t(copy.chrome.about.close)} onClick={close}>
             <Icon name="close" />
           </button>
         </header>

@@ -100,6 +100,18 @@
       "cancel": {
         "text": "Cancel",
         "new": true
+      },
+      "keepLog": {
+        "text": "Start over, keep log",
+        "new": true
+      },
+      "clearLog": {
+        "text": "Start over, clear log",
+        "new": true
+      },
+      "bodyLogging": {
+        "text": "This returns to the empty start. Keep the session log to continue the same recording, or clear it to begin a new one.",
+        "new": true
       }
     },
     "composerAddNode": {
@@ -110,6 +122,23 @@
     "composerTargetLabel": {
       "text": "Send to",
       "new": true
+    },
+    "recording": {
+      "text": "Recording",
+      "new": true
+    },
+    "recordingLabel": {
+      "text": "Session log is recording for {participant}",
+      "new": true
+    },
+    "exported": {
+      "text": "Session log downloaded",
+      "new": true
+    },
+    "specLocked": {
+      "text": "Approved specs are read-only for every agent.",
+      "new": true,
+      "note": "Same as configurePanel.fields.lockedHelp; shown as a toast when someone types in the spec."
     }
   },
   "emptyState": {
@@ -1066,7 +1095,8 @@
     "constellation (Phase 1: status pill, statuses, popover, line card, spec viewer, next steps)",
     "build: saveToast, unsaved, metaSuffix, updateCardClose, startEcho; constellation: removeConfirm, nextSteps, nextStepHints (Phase 2)",
     "Phase 3: issueLine.statusPillOne/badgeLabel, sectionsPanel extras, editor extras (labels, recheck, reject confirm, diff, afterResolve, notStillMet), section summaries and spec excerpts for non-issue sections",
-    "Phase 4: allClear footnotes/copy/close, pullRequest close, teammateReview reply/answer/autoApprove/approved, recap close, constellation nextSteps/hints for allClear/review/done, lineCard cleared/review"
+    "Phase 4: allClear footnotes/copy/close, pullRequest close, teammateReview reply/answer/autoApprove/approved, recap close, constellation nextSteps/hints for allClear/review/done, lineCard cleared/review",
+    "Phase 5: chrome.recording, recordingLabel, exported, startOverConfirm keep/clear log, specLocked; lineCard section counts"
   ],
   "constellation": {
     "$note": "Phase 1 copy that isn't drawn in Figma. All new.",
@@ -1225,6 +1255,14 @@
       },
       "review": {
         "text": "Waiting on {teammate}’s review",
+        "new": true
+      },
+      "sectionCount": {
+        "text": "{n} sections",
+        "new": true
+      },
+      "sectionCountOne": {
+        "text": "1 section",
         "new": true
       }
     },

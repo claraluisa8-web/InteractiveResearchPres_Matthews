@@ -17,7 +17,7 @@ export const SUGGESTED_ID = 'suggested-tester';
 
 export interface FlowState {
   buildStarted: boolean;
-  /** Open issues on the first builder↔reviewer line (M4 onward). */
+  /** Open issues on the first builder and reviewer line (M4 onward). */
   openIssues?: number;
   /** The sections panel is docked on the right (frame 06b moves the team 40px left). */
   sectionsOpen?: boolean;
@@ -44,7 +44,7 @@ export function computeGeometry(
   configureId: string | null,
   flow: FlowState = { buildStarted: false, suggestion: false },
 ): Geometry {
-  // Work flows You → builder and builder → reviewer once the build starts (frame 04).
+  // Work flows You to builder and builder to reviewer once the build starts (frame 04).
   const working = new Set<string>();
   const builder = firstOf(collaborators, 'builder');
   const reviewer = firstOf(collaborators, 'reviewer');
@@ -54,7 +54,7 @@ export function computeGeometry(
   }
   const lines = deriveLines(collaborators, working);
   if (flow.allClear) for (const l of lines) if (l.kind === 'connected' || l.kind === 'working') l.kind = 'cleared';
-  // M4: with the multiples rule, the issue sits on the first builder ↔ first reviewer line.
+  // M4: with the multiples rule, the issue sits on the first builder and first reviewer line.
   if (builder && reviewer && flow.openIssues) {
     const issueId = lineId(builder.id, reviewer.id);
     const l = lines.find((x) => x.id === issueId);
@@ -107,7 +107,7 @@ export function useGeometry(): Geometry {
   );
 }
 
-/** Layout point → stage pixels, through the panel shift and the user's pan/zoom. */
+/** Layout point to stage pixels, through the panel shift and the user's pan/zoom. */
 export function toScreen(p: Point, g: Geometry, v: View): Point {
   return { x: v.x + (p.x + g.shift.x) * v.k, y: v.y + (p.y + g.shift.y) * v.k };
 }

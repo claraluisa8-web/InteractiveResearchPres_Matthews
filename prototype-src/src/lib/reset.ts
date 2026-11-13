@@ -22,7 +22,19 @@ function handleResetParam() {
   window.history.replaceState(null, '', url);
 }
 
-export function startOver() {
+export function startOver(keepLog = false) {
+  // Session logs (pmr:session:*) survive a Start over; clearing only drops the pointer to the current one.
+  if (keepLog) {
+    try {
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith(PREFIX) && !k.startsWith('pmr:session:'))
+        .forEach((k) => localStorage.removeItem(k));
+    } catch {
+      // Storage blocked: the reload still resets the in-memory state.
+    }
+    window.location.reload();
+    return;
+  }
   clearStoredState();
   window.location.reload();
 }

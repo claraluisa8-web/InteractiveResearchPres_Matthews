@@ -3,6 +3,7 @@ import { copy, t } from '../lib/copy';
 import { useEscape } from '../lib/escape';
 import { toScreen, useGeometry } from '../lib/geometry';
 import { caughtPerLine, footnote, receiptRows, receiptText } from '../lib/receipt';
+import { log } from '../lib/log';
 import { initials } from '../lib/status';
 import { useScenario } from '../lib/store';
 import { Icon } from './Icon';
@@ -52,7 +53,7 @@ export function ReceiptPanel({ onToast }: { onToast: (message: string) => void }
           <h2 id="receipt-title" className="right-panel__title">{merged ? t(rc.receiptTitleMerged) : ac.receiptTitle}</h2>
           <p className="right-panel__meta">{t(ac.receiptMeta, { total: rows.length })}</p>
         </div>
-        <button type="button" className="icon-button" aria-label={t(ac.close)} title={t(ac.close)} onClick={close}>
+        <button type="button" className="icon-button" aria-label={t(ac.close)} data-tip={t(ac.close)} onClick={close}>
           <Icon name="close" />
         </button>
       </header>
@@ -104,6 +105,7 @@ export function PRPanel() {
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
+    log('input', { field: 'prTitle', text: form.title });
     createPR();
   };
 
@@ -119,7 +121,7 @@ export function PRPanel() {
             <span className="is-mono">{pr.branches[1]}</span>
           </p>
         </div>
-        <button type="button" className="icon-button" aria-label={t(pr.close)} title={t(pr.close)} onClick={closePR}>
+        <button type="button" className="icon-button" aria-label={t(pr.close)} data-tip={t(pr.close)} onClick={closePR}>
           <Icon name="close" />
         </button>
       </header>
@@ -238,7 +240,7 @@ export function CommentCard() {
   const first = mate.name.split(' ')[0];
   const sent = thread.some((m) => m.from === 'you');
 
-  // Anchored above the midpoint of the You ↔ teammate line, clear of the team rail.
+  // Anchored above the midpoint of the You and teammate line, clear of the team rail.
   const you = toScreen(g.you.point, g, view);
   const node = g.byId(mate.id);
   const them = node ? toScreen(node.point, g, view) : you;
@@ -251,6 +253,7 @@ export function CommentCard() {
     e.preventDefault();
     const v = text.trim();
     if (!v) return;
+    log('input', { field: 'commentReply', text: v });
     replyToTeammate(v);
     setText('');
     setReplying(false);
@@ -270,7 +273,7 @@ export function CommentCard() {
           <span className="avatar avatar--small">{initials(mate.name)}</span>
           <span id="comment-author" className="comment-card__author">{mate.name}</span>
           <span className="comment-card__meta">{tr.comment.meta}</span>
-          <button type="button" className="icon-button comment-card__close" aria-label={t(tr.closeComment)} title={t(tr.closeComment)} onClick={() => setCommentOpen(false)}>
+          <button type="button" className="icon-button comment-card__close" aria-label={t(tr.closeComment)} data-tip={t(tr.closeComment)} onClick={() => setCommentOpen(false)}>
             <Icon name="close" size={14} />
           </button>
         </header>
@@ -333,7 +336,7 @@ export function RecapPanel() {
           <h2 id="recap-title" className="right-panel__title">{rc.title}</h2>
           <p className="right-panel__meta">{t(rc.meta, { teammate: mate?.name ?? copy.people.teammate.fullName })}</p>
         </div>
-        <button type="button" className="icon-button" aria-label={t(rc.close)} title={t(rc.close)} onClick={done}>
+        <button type="button" className="icon-button" aria-label={t(rc.close)} data-tip={t(rc.close)} onClick={done}>
           <Icon name="close" />
         </button>
       </header>

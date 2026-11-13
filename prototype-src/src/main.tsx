@@ -13,8 +13,12 @@ import './app.css';
 import { App } from './App';
 import { useScenario } from './lib/store';
 
+import { startLogging, summary } from './lib/log';
+
+startLogging();
+
 // Dev only: lets test scripts read and drive the scenario store.
-if (import.meta.env.DEV) Object.assign(window, { __pmr: useScenario });
+if (import.meta.env.DEV) Object.assign(window, { __pmr: useScenario, __pmrSummary: summary });
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

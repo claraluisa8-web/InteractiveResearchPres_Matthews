@@ -3,6 +3,7 @@ import { sectionExtensions, type LineInfo } from '../lib/cmSection';
 import { copy, t } from '../lib/copy';
 import { useEscape } from '../lib/escape';
 import { scheduleRecheck } from '../lib/flow';
+import { log } from '../lib/log';
 import {
   ISSUE_SECTION_IDS, applyFix, changedLines, diffLines, issueById, originalFile, safeRange, sectionById, specLines, type SectionRole,
 } from '../lib/sections';
@@ -17,7 +18,7 @@ const ed = copy.editor;
 const SPEC = 'recurring-investments.yaml';
 const CODE_SIZE = { font: 13, line: 23 };
 
-/** "{builder} ↔ {reviewer}" with the Codicon instead of the glyph (scenario.json $description). */
+/** "{builder} and {reviewer}" with the Codicon instead of the glyph (scenario.json $description). */
 function WithLinkIcon({ text }: { text: string }) {
   const parts = text.split('↔');
   return (
@@ -92,8 +93,9 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
     const waiting = st().saveSectionFile(tab);
     if (waiting.length) {
       onToast(t(ed.afterSaveToast, names));
-      scheduleRecheck(waiting);
+      scheduleRecheck(waiting, def.id);
     } else {
+      log('save', { file: tab, section: def.id, resolved: null });
       onToast(t(ed.savedToast));
     }
   };
@@ -181,13 +183,13 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
           <span className="section-editor__sep" aria-hidden="true">·</span>
           <p className="section-editor__crumb"><WithLinkIcon text={crumb} /></p>
           <div className="section-editor__nav">
-            <button type="button" className="pmr-glass nav-button" aria-label={t(ed.prev)} title={t(ed.prev)} onClick={() => go(-1)}>
+            <button type="button" className="pmr-glass nav-button" aria-label={t(ed.prev)} data-tip={t(ed.prev)} onClick={() => go(-1)}>
               <Icon name="arrow-left" />
             </button>
-            <button type="button" className="pmr-glass nav-button" aria-label={t(ed.nextIssue)} title={t(ed.nextIssue)} onClick={() => go(1)}>
+            <button type="button" className="pmr-glass nav-button" aria-label={t(ed.nextIssue)} data-tip={t(ed.nextIssue)} onClick={() => go(1)}>
               <Icon name="arrow-right" />
             </button>
-            <button type="button" className="icon-button" aria-label={t(ed.close)} title={t(ed.close)} onClick={close}>
+            <button type="button" className="icon-button" aria-label={t(ed.close)} data-tip={t(ed.close)} onClick={close}>
               <Icon name="close" />
             </button>
           </div>
@@ -225,7 +227,7 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
                 {verified ? <Icon name="check" size={14} /> : !canVerify && <Icon name="lock" size={14} />}
                 {verified ? t(ed.verified) : ed.verify}
               </button>
-              <button type="button" className="pmr-button pmr-button--secondary" onClick={nextSection}>{ed.next}</button>
+              <button type="button" className="pmr-button pmr-button--secondary" data-next onClick={nextSection}>{ed.next}</button>
             </div>
             <p className="section-editor__help" aria-live="polite">{help}</p>
 
@@ -310,6 +312,7 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
                   useScenario.setState((s) => ({ milestones: { ...s.milestones, sectionEdited: true } }));
                 }}
                 onSave={save}
+                onReadOnlyAttempt={isSpec ? () => onToast(t(copy.chrome.specLocked)) : undefined}
               />
             )}
           </div>

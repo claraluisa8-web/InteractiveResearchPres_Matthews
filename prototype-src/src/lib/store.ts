@@ -320,7 +320,7 @@ export const useScenario = create<ScenarioState>()(
       },
       setUpdateCardOpen: (v) => set({ updateCardOpen: v }),
 
-      // M4: the builder↔reviewer line turns red. A pending tester suggestion quietly expires.
+      // M4: the builder and reviewer line turns red. A pending tester suggestion quietly expires.
       raiseIssue: () =>
         set((s) => ({
           milestones: { ...s.milestones, issueRaised: true },
@@ -374,7 +374,7 @@ export const useScenario = create<ScenarioState>()(
             if ([...mine].some((n) => n >= r.start && n <= r.end)) sections[id] = { ...st, editedByYou: true };
           }
         }
-        // Issues whose code lives in this file go back to both agents (flow-and-milestones: Save → recheck).
+        // Issues whose code lives in this file go back to both agents (flow-and-milestones: Save to recheck).
         const waiting = Object.values(s.issues)
           .filter((i) => (i.status === 'open' || i.status === 'savedAwaitingAgents') && sectionById(issueSection(i.id)).files.includes(file))
           .map((i) => i.id);
@@ -522,7 +522,7 @@ export const useScenario = create<ScenarioState>()(
           commentOpen: false,
         })),
 
-      // "Show line" opens the createPlan 409 branch read-only (frame 10 → 07).
+      // "Show line" opens the createPlan 409 branch read-only (frame 10 to 07).
       showLine: () => {
         set({ editor: { section: 'idempotencyKey', tab: 'PlanController.java', mode: 'edit', readOnly: true }, cardNotes: {}, popover: null });
       },

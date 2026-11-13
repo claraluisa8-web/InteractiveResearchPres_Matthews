@@ -57,7 +57,7 @@ export function BuildCard() {
           type="button"
           className="icon-button build-card__close"
           aria-label={t(copy.build.updateCardClose)}
-          title={t(copy.build.updateCardClose)}
+          data-tip={t(copy.build.updateCardClose)}
           onClick={() => setUpdateCardOpen(false)}
         >
           <Icon name="close" />

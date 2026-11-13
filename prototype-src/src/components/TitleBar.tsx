@@ -1,6 +1,7 @@
 import { KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { copy, t } from '../lib/copy';
 import { useEscape } from '../lib/escape';
+import { LOGGING, PARTICIPANT, QUIET } from '../lib/log';
 import { Icon } from './Icon';
 
 type Tab = 'constellation' | 'code';
@@ -10,14 +11,16 @@ interface TitleBarProps {
   onTab: (tab: Tab) => void;
   onStartOver: () => void;
   onAbout: () => void;
+  onExport: () => void;
 }
 
-export function TitleBar({ activeTab, onTab, onStartOver, onAbout }: TitleBarProps) {
+export function TitleBar({ activeTab, onTab, onStartOver, onAbout, onExport }: TitleBarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const items = [
     { id: 'start-over', label: t(copy.chrome.overflowMenu.startOver), run: onStartOver },
+    ...(LOGGING ? [{ id: 'export', label: t(copy.chrome.overflowMenu.exportLog), run: onExport }] : []),
     { id: 'about', label: t(copy.chrome.overflowMenu.about), run: onAbout },
   ];
 
@@ -70,12 +73,18 @@ export function TitleBar({ activeTab, onTab, onStartOver, onAbout }: TitleBarPro
       </div>
       <span className="titlebar__sep" aria-hidden="true" />
       <p className="titlebar__title">{copy.project.windowTitle}</p>
+      {LOGGING && !QUIET && (
+        <span className="titlebar__recording" aria-label={t(copy.chrome.recordingLabel, { participant: PARTICIPANT })} role="img">
+          <span className="titlebar__recording-dot" aria-hidden="true" />
+          <span aria-hidden="true">{t(copy.chrome.recording)}</span>
+        </span>
+      )}
       <button
         ref={buttonRef}
         type="button"
         className="titlebar__more"
         aria-label={t(copy.chrome.overflowLabel)}
-        title={t(copy.chrome.overflowLabel)}
+        data-tip={t(copy.chrome.overflowLabel)}
         aria-haspopup="menu"
         aria-expanded={menuOpen}
         onClick={() => setMenuOpen((o) => !o)}

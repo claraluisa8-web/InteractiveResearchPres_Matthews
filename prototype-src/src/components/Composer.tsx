@@ -5,6 +5,7 @@ import { countOpen } from '../lib/geometry';
 import { contextFor, match } from '../lib/intents';
 import { topSections } from '../lib/sections';
 import { active, firstOf, useScenario } from '../lib/store';
+import { log } from '../lib/log';
 import { thinkingDelay } from '../lib/timing';
 import { PromptChip } from './BuildCards';
 import { Icon } from './Icon';
@@ -59,6 +60,7 @@ export function Composer() {
     const ctx = contextFor(state.collaborators, state.milestones, !!state.editor);
     // Frame 10: while the review is open, anything sent is a reply to the teammate's comment.
     if (ctx === 'review' && !state.milestones.teammateApproved) {
+      log('input', { field: 'composer', text: input, intent: 'replyToTeammate', score: 0 });
       state.replyToTeammate(input);
       state.setCommentOpen(true);
       return;
@@ -70,6 +72,8 @@ export function Composer() {
       total: tops.length,
       issues: countOpen(state.issues),
     });
+    log('input', { field: 'composer', text: input, intent: m.intent, score: m.score });
+    if (!m.intent) log('fallback', { text: input });
     const first = firstOf(state.collaborators, 'builder');
     const toBuilderOrTeam = !targetAgent || targetAgent.id === first?.id;
     // M2: while the builder is ready, any message to it or the team is the go.
@@ -171,7 +175,7 @@ export function Composer() {
           placeholder={placeholder}
           aria-label={t(copy.chrome.composerInputLabel)}
         />
-        <button type="submit" className="composer__send" aria-label={t(copy.chrome.sendLabel)} title={t(copy.chrome.sendLabel)}>
+        <button type="submit" className="composer__send" aria-label={t(copy.chrome.sendLabel)} data-tip={t(copy.chrome.sendLabel)}>
           <Icon name="arrow-up" />
         </button>
       </form>

@@ -3,6 +3,7 @@ import { copy, t } from '../lib/copy';
 import { useEscape } from '../lib/escape';
 import { active, defaultName, useScenario } from '../lib/store';
 import type { Collaborator } from '../lib/types';
+import { log } from '../lib/log';
 import { useOutside } from '../lib/useOutside';
 import { Icon } from './Icon';
 import { Orb } from './Orb';
@@ -38,7 +39,7 @@ export function ConfigurePanel() {
     nameRef.current?.select();
   }, [configure.id]);
 
-  useEscape(() => (connectOpen ? setConnectOpen(false) : cancel()));
+  useEscape(() => (connectOpen ? setConnectOpen(false) : cancelAndReturn()));
   useOutside(connectRef, () => setConnectOpen(false), connectOpen);
 
   const patch = (p: Partial<typeof form>) => {
@@ -55,7 +56,16 @@ export function ConfigurePanel() {
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
+    log('input', { field: 'name', text: form.name, role: c.role });
     commit(form);
+    // Keyboard path: focus lands on the orb that just joined (or was edited).
+    requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-orb="${c.id}"]`)?.focus());
+  };
+  const cancelAndReturn = () => {
+    cancel();
+    requestAnimationFrame(() =>
+      (document.querySelector<HTMLElement>(isNew ? '[data-plus]' : `[data-orb="${c.id}"]`) ?? document.querySelector<HTMLElement>('[data-plus]'))?.focus(),
+    );
   };
 
   const shownName = form.name.trim() || defaultName(c.role, form.otherType);
@@ -78,7 +88,7 @@ export function ConfigurePanel() {
           <h2 id="configure-title" className="configure__title">{shownName}</h2>
           <p className="configure__subtitle">{copy.configurePanel.subtitle}</p>
         </div>
-        <button type="button" className="icon-button configure__close" aria-label={copy.configurePanel.secondary} title={copy.configurePanel.secondary} onClick={cancel}>
+        <button type="button" className="icon-button configure__close" aria-label={copy.configurePanel.secondary} data-tip={copy.configurePanel.secondary} onClick={cancelAndReturn}>
           <Icon name="close" />
         </button>
       </header>
@@ -167,7 +177,7 @@ export function ConfigurePanel() {
                     <span>{o}</span>
                   </label>
                 ))}
-                <span className="checkbox is-locked" title={f.lockedHelp}>
+                <span className="checkbox is-locked" data-tip={f.lockedHelp}>
                   <span className="checkbox__lock" aria-hidden="true"><Icon name="lock" size={14} /></span>
                   <span>{f.lockedOption}</span>
                 </span>
@@ -186,7 +196,7 @@ export function ConfigurePanel() {
                 type="button"
                 className="chip chip--toggle"
                 aria-label={t(copy.constellation.connectRemove, { name: nameOf(id) })}
-                title={t(copy.constellation.connectRemove, { name: nameOf(id) })}
+                data-tip={t(copy.constellation.connectRemove, { name: nameOf(id) })}
                 onClick={() => patch({ connectsTo: form.connectsTo.filter((x) => x !== id) })}
               >
                 {nameOf(id)}
@@ -227,7 +237,7 @@ export function ConfigurePanel() {
         <button type="submit" className="pmr-button configure__primary">
           {isNew ? copy.configurePanel.primary : t(copy.constellation.editPrimary)}
         </button>
-        <button type="button" className="pmr-button pmr-button--secondary configure__secondary" onClick={cancel}>
+        <button type="button" className="pmr-button pmr-button--secondary configure__secondary" onClick={cancelAndReturn}>
           {copy.configurePanel.secondary}
         </button>
       </footer>

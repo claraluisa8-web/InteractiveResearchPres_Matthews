@@ -1,4 +1,4 @@
-import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
+import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { java } from '@codemirror/lang-java';
 import { yaml } from '@codemirror/lang-yaml';
 import { bracketMatching, indentOnInput } from '@codemirror/language';
@@ -17,6 +17,8 @@ interface CodeEditorProps {
   onCursorLine?: (line: number) => void;
   /** Ctrl/Cmd+S inside the editor. */
   onSave?: () => void;
+  /** Someone tried to type in a read-only file. */
+  onReadOnlyAttempt?: () => void;
   /** Extra extensions; swapped in place (no remount) when their identity changes. */
   extensions?: Extension;
   /** Gutters drawn before / after the line numbers (issue dots, authorship marks). */
@@ -30,15 +32,15 @@ const languageFor = (file: string) => (file.endsWith('.java') ? [java()] : file.
 
 /** CodeMirror 6: real typing, selection, undo and paste. One instance per file; remount to switch files. */
 export function CodeEditor({
-  file, doc, readOnly, size = { font: 12, line: 20 }, label, onChange, onCursorLine, onSave, extensions, gutterBefore, gutterAfter, scrollToLine,
+  file, doc, readOnly, size = { font: 12, line: 20 }, label, onChange, onCursorLine, onSave, onReadOnlyAttempt, extensions, gutterBefore, gutterAfter, scrollToLine,
 }: CodeEditorProps) {
   const host = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const extra = useRef(new Compartment());
   const before = useRef(new Compartment());
   const after = useRef(new Compartment());
-  const cbs = useRef({ onChange, onCursorLine, onSave });
-  cbs.current = { onChange, onCursorLine, onSave };
+  const cbs = useRef({ onChange, onCursorLine, onSave, onReadOnlyAttempt });
+  cbs.current = { onChange, onCursorLine, onSave, onReadOnlyAttempt };
 
   useEffect(() => {
     const view = new EditorView({
@@ -57,7 +59,7 @@ export function CodeEditor({
           bracketMatching(),
           EditorState.tabSize.of(2),
           EditorState.readOnly.of(!!readOnly),
-          EditorView.editable.of(!readOnly),
+          // Read-only files stay focusable so they can be read by keyboard; edits are blocked by readOnly.
           EditorView.contentAttributes.of({ 'aria-label': label }),
           keymap.of([
             { key: 'Mod-s', preventDefault: true, run: () => (cbs.current.onSave?.(), true) },
@@ -65,8 +67,15 @@ export function CodeEditor({
             { key: 'Escape', run: () => false },
             ...defaultKeymap,
             ...historyKeymap,
-            indentWithTab,
+            // No Tab-to-indent: Tab and Shift+Tab move focus, so keyboard users can reach Save and Verify.
           ]),
+          EditorView.domEventHandlers({
+            keydown: (e) => {
+              // Typing in a read-only file (the spec) explains why nothing happens.
+              if (readOnly && e.key.length === 1 && !e.metaKey && !e.ctrlKey) cbs.current.onReadOnlyAttempt?.();
+              return false;
+            },
+          }),
           ...languageFor(file),
           pmrTheme(size),
           pmrHighlight,

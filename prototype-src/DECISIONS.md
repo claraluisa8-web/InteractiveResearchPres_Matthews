@@ -73,3 +73,17 @@ Each entry records what changed from the design or the handoff, why, and which f
 - **The comment card is bottom-anchored 45px above the You–teammate line**, so a growing thread rises instead of covering You. It also stays clear of the team rail, which frame 10 doesn't draw.
 - **During review, any composer message counts as a reply** to the comment (`replyToTeammate`). Asking to merge once everything is clear opens the PR panel (M8).
 - **The PR status card hides "Contract tests" when there's no tester.** The recap moves missing lines' counts onto builder↔reviewer, so the total stays 7.
+
+## Phase 5
+
+- **Session logging** follows `docs/logging.md`. It's on only with `?test=1` or `?test=P1`, and refreshing continues the same participant's session. Every event records the expected step it happened in. On-path means the click hit the hint table's affordance for that state. Clicks inside the panel that holds that affordance (a field or checkbox in the configure panel) aren't counted as off-path, because they're working the step, not wandering. Opening the add menu has its own step, so choosing a role isn't off-path.
+- **Start over with logging on** offers "keep log" (same recording continues) or "clear log" (a new session starts). Neither deletes earlier sessions from localStorage, so nothing is lost before it's exported.
+- **The recording indicator** is a CSS dot plus the word "Recording", not a ● glyph, in the secondary text color so it doesn't read as an issue. `&quiet=1` hides it.
+- **Idle hints** use the same expected-step table as the log, fire once per state after 25 s, and reset while the user types. With reduced motion, the pulse becomes a steady lavender ring for the same time.
+- **Tab no longer indents in the code editors.** Tab-to-indent trapped keyboard users inside CodeMirror, away from Save and Verify. Enter still auto-indents, and typing, selection, undo and paste are unchanged.
+- **The section editor is modal for keyboard users:** while it's open, everything behind the scrim is inert. The title bar, composer and status pill stay reachable, because frame 07 keeps them live.
+- **Focus rescue.** When a keyboard action removes the focused control (Start from the spec, Apply fix, Create pull request, quick verify, the receipt replacing the panel), focus moves to the next expected step. Quick verify keeps focus on its row. Approval moves focus to Merge. Mouse users never have focus moved for them.
+- **Tooltips** on Codicon-only buttons are a glass tooltip after 400 ms, on hover or focus, replacing the native `title`. They're hidden from screen readers, since the aria-label already says the same thing.
+- **Read-only files** (the spec tab) stay focusable; typing in them shows "Approved specs are read-only for every agent."
+- **Line hover cards** now name their state ("Cleared", "Waiting on {teammate}'s review") and, once sections exist, how many sections the line carries.
+- **Glyph sweep:** no glyph icons are rendered anywhere. The ↔ in copy always renders as the Codicon. The "•" bullets in the PR description are your copy, as text inside an editable field, so they stay.

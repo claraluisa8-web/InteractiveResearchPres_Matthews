@@ -26,7 +26,7 @@ export function SpecViewer() {
             <p className="spec-viewer__meta">{t(copy.constellation.specViewer.meta)}</p>
           </div>
           <span className="spec-viewer__lock"><Icon name="lock" size={14} />{t(copy.constellation.specViewer.locked)}</span>
-          <button type="button" className="icon-button spec-viewer__close" aria-label={t(copy.chrome.about.close)} title={t(copy.chrome.about.close)} onClick={close}>
+          <button type="button" className="icon-button spec-viewer__close" aria-label={t(copy.chrome.about.close)} data-tip={t(copy.chrome.about.close)} onClick={close}>
             <Icon name="close" />
           </button>
         </header>

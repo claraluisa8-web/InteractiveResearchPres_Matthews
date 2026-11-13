@@ -73,6 +73,13 @@ export function SectionsPanel() {
   };
   const nameFor = (r: SectionRole) => (r === 'you' ? copy.people.you.displayName : firstOf(collaborators, r)?.name ?? '');
 
+  // The quick-verify button disappears once used; keep keyboard focus on its row.
+  const quickVerify = (button: HTMLElement, id: string) => {
+    const row = button.previousElementSibling as HTMLElement | null;
+    verifySection(id);
+    requestAnimationFrame(() => row?.isConnected && row.focus());
+  };
+
   const link = (d: SectionDef) => ({
     onPointerEnter: () => setLinkIds(lineIds(d, collaborators)),
     onPointerLeave: () => setLinkIds(null),
@@ -127,7 +134,7 @@ export function SectionsPanel() {
                     <Icon name="chevron-right" className="row-chevron" />
                   </button>
                   {!isOpen && ks.status !== 'verified' && (
-                    <button type="button" className="quick-verify" onClick={() => verifySection(k.id)} aria-label={`${t(sp.quickVerify)} ${k.label}`}>
+                    <button type="button" className="quick-verify" onClick={(e) => quickVerify(e.currentTarget, k.id)} aria-label={`${t(sp.quickVerify)} ${k.label}`}>
                       {t(sp.quickVerify)}
                     </button>
                   )}
@@ -150,7 +157,7 @@ export function SectionsPanel() {
         </button>
         {st.status !== 'verified' && (
           // Quick verify: no need to open every non-issue section.
-          <button type="button" className="quick-verify" onClick={() => verifySection(d.id)} aria-label={`${t(sp.quickVerify)} ${d.label}`}>
+          <button type="button" className="quick-verify" onClick={(e) => quickVerify(e.currentTarget, d.id)} aria-label={`${t(sp.quickVerify)} ${d.label}`}>
             {t(sp.quickVerify)}
           </button>
         )}
@@ -167,7 +174,7 @@ export function SectionsPanel() {
           <span>{nameOf(line[1])}</span>
         </h2>
         <p className="sections-panel__subtitle">{t(sp.subtitle, { issueCount: openIssues })}</p>
-        <button type="button" className="icon-button sections-panel__close" aria-label={t(sp.close)} title={t(sp.close)} onClick={closeSections}>
+        <button type="button" className="icon-button sections-panel__close" aria-label={t(sp.close)} data-tip={t(sp.close)} onClick={closeSections}>
           <Icon name="close" />
         </button>
       </header>
