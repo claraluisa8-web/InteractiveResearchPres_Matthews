@@ -16,7 +16,12 @@ export interface Collaborator {
   addedAt: number;
   /** Index into the layout's slot table, fixed when the collaborator is created. */
   slot: number;
+  /** Human teammate reviewing the pull request (frames 10–11). */
+  review?: 'pending' | 'approved';
 }
+
+/** Not yet in the constellation: a draft being configured, or a teammate being added for the PR. */
+export const isGhost = (c: { status: string }) => c.status === 'draft' || c.status === 'suggested';
 
 export type LineKind = 'connected' | 'working' | 'issue' | 'pending' | 'suggested' | 'cleared';
 
@@ -42,7 +47,13 @@ export interface Milestones {
   prOpened: boolean;
   teammateApproved: boolean;
   merged: boolean;
+  /** M9: "Create pull request" clicked; the teammate's review is under way. */
+  prCreated: boolean;
 }
+
+export interface ThreadMessage { from: 'you' | 'teammate'; text: string }
+
+export type RightPanel = 'receipt' | 'pr' | 'recap' | null;
 
 export interface View {
   x: number;

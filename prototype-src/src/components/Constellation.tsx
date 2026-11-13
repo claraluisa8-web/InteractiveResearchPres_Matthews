@@ -4,6 +4,8 @@ import { FLOOR_Y, type Point } from '../lib/layout';
 import { SUGGESTED_ID, useGeometry, type Node } from '../lib/geometry';
 import { subtitleFor } from '../lib/status';
 import { firstOf, useScenario } from '../lib/store';
+import { caughtPerLine } from '../lib/receipt';
+import { initials } from '../lib/status';
 import type { Line } from '../lib/types';
 import { usePanZoom } from '../lib/useView';
 import { Icon } from './Icon';
@@ -70,6 +72,11 @@ export function Constellation({ scale, onLineHover }: ConstellationProps) {
   const configure = useScenario((s) => s.configure);
   const hoverId = useScenario((s) => s.hoverId);
   const linkIds = useScenario((s) => s.linkIds);
+  const allClear = useScenario((s) => s.milestones.allSectionsVerified);
+  const merged = useScenario((s) => s.milestones.merged);
+  const reviewerId = useScenario((s) => s.pr.reviewer);
+  const setCommentOpen = useScenario((s) => s.setCommentOpen);
+  const caught = merged ? caughtPerLine(collaborators, reviewerId) : [];
   const openSections = useScenario((s) => s.openSections);
   // Orbs ringed from elsewhere: a section row rings its line's two ends; a rail row rings one orb.
   const linkSet = linkIds ? new Set(linkIds) : hoverId ? new Set([hoverId]) : null;
@@ -181,6 +188,51 @@ export function Constellation({ scale, onLineHover }: ConstellationProps) {
             );
           })}
 
+          {/* Frame 08: a check on each settled line; frame 11: "n caught" tags instead. */}
+          {allClear && g.lines.filter((l) => l.kind === 'cleared').map((line) => {
+            const a = g.byId(line.a);
+            const b = g.byId(line.b);
+            if (!a || !b) return null;
+            const mx = (a.point.x + b.point.x) / 2;
+            const my = (a.point.y + b.point.y) / 2;
+            if (merged) {
+              const c = caught.find((x) => x.id === line.id);
+              return c ? (
+                <span key={`tag-${line.id}`} className="caught-tag" style={{ left: mx, top: my }}>
+                  {t(copy.recap.lineTag, { n: c.n })}
+                </span>
+              ) : null;
+            }
+            return (
+              <span key={`check-${line.id}`} className="line-check" style={{ left: mx - 10, top: my - 10 }} aria-hidden="true">
+                <Icon name="check" size={12} />
+              </span>
+            );
+          })}
+
+          {/* Frame 10: a comment node on the dashed line to the reviewing teammate. */}
+          {g.lines.filter((l) => l.kind === 'pending' && l.a === 'you').map((line) => {
+            const b = g.byId(line.b);
+            if (!b?.c || b.c.review !== 'pending') return null;
+            const mx = (g.you.point.x + b.point.x) / 2;
+            const my = (g.you.point.y + b.point.y) / 2;
+            const label = t(copy.teammateReview.commentNode, { teammateFirst: b.c.name.split(' ')[0] });
+            return (
+              <button
+                key={`comment-${line.id}`}
+                type="button"
+                className="comment-node pmr-glass"
+                style={{ left: mx - 12, top: my - 12 }}
+                aria-label={label}
+                title={label}
+                data-comment-node
+                onClick={() => setCommentOpen(true)}
+              >
+                <Icon name="comment" size={14} />
+              </button>
+            );
+          })}
+
           {/* You */}
           <div className={`node node--you${isDim('you') ? ' is-dim' : ''}`} style={{ left: g.you.point.x, top: g.you.point.y }}>
             <span className="halo halo--inner" aria-hidden="true" />
@@ -272,26 +324,40 @@ function CollaboratorNode({ n, linked, dim }: { n: Node; linked: boolean; dim: b
   const floatingFile = useScenario((s) => s.floatingFile);
   const setRecCardOpen = useScenario((s) => s.setRecCardOpen);
   const c = n.c!;
-  const draft = c.status === 'draft';
+  const draft = c.status === 'draft' || c.status === 'suggested';
   const sub = subtitleFor(c, collaborators);
   // Lavender non-urgent ring on the reviewer while its suggestion is open; clicking it reopens the card.
   const suggesting = (recommendation === 'shown' || recommendation === 'dismissed') && firstOf(collaborators, 'reviewer')?.id === c.id;
   // The builder wears a ring while its file is open in the floating editor (frame 04).
   const sourceOpen = !!floatingFile && firstOf(collaborators, 'builder')?.id === c.id;
+  const allClear = useScenario((s) => s.milestones.allSectionsVerified);
+  // Frame 08: every agent gets a mint check; the teammate gets theirs once they approve (frame 11).
+  const checked = c.role === 'teammate' ? c.review === 'approved' : allClear && !draft;
+  const reviewing = c.review === 'pending';
+  const adding = c.status === 'suggested';
   return (
     <div
       className={`node node--${c.role}${n.far ? ' is-far' : ''}${draft ? ' is-draft' : ''}${dim ? ' is-dim' : ''}`}
       style={{ left: n.point.x, top: n.point.y }}
     >
-      {draft && <span className="ghost-ring" aria-hidden="true" />}
+      {c.status === 'draft' && <span className="ghost-ring" aria-hidden="true" />}
       {sourceOpen && <span className="source-ring" aria-hidden="true" />}
-      {suggesting && (
+      {checked && (
+        <span className="orb-check" style={{ left: n.size * 0.35 - 9, top: -n.size * 0.35 - 9 }} aria-hidden="true">
+          <Icon name="check" size={12} />
+        </span>
+      )}
+      {(suggesting || reviewing) && (
         <>
           <span className="attention-ring" aria-hidden="true" />
           <span className="attention-dot" aria-hidden="true" />
         </>
       )}
-      {draft ? (
+      {adding ? (
+        <span className="orb-ghost orb-ghost--teammate" style={{ width: n.size, height: n.size }} aria-hidden="true">
+          {initials(c.name)}
+        </span>
+      ) : draft ? (
         <span className="orb-ghost">
           <Orb role={c.role} size={n.size} name={c.name} otherType={c.otherType} />
         </span>
@@ -308,7 +374,10 @@ function CollaboratorNode({ n, linked, dim }: { n: Node; linked: boolean; dim: b
           <Orb role={c.role} size={n.size} name={c.name} otherType={c.otherType} />
         </button>
       )}
-      <div className={`node__label${n.far ? ' node__label--right' : ''}`} style={labelStyle(n.size, n.far)}>
+      <div
+        className={`node__label${n.far && !allClear ? ' node__label--right' : ''}${n.far && allClear ? ' node__label--above' : ''}`}
+        style={n.far && allClear ? { top: -n.size / 2 - 50 } : labelStyle(n.size, n.far)}
+      >
         <span className="node__name">{c.name}</span>
         <span className="node__sub">{sub}</span>
       </div>

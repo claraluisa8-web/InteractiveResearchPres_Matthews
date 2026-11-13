@@ -57,6 +57,12 @@ export function Composer() {
   const send = (input: string) => {
     const state = useScenario.getState();
     const ctx = contextFor(state.collaborators, state.milestones, !!state.editor);
+    // Frame 10: while the review is open, anything sent is a reply to the teammate's comment.
+    if (ctx === 'review' && !state.milestones.teammateApproved) {
+      state.replyToTeammate(input);
+      state.setCommentOpen(true);
+      return;
+    }
     const tops = topSections(state.collaborators);
     const m = match(input, state.collaborators, ctx, {
       recommendation: state.recommendation,
@@ -107,6 +113,8 @@ export function Composer() {
           else s.openAddMenu('composer');
         }
         if (m.intent === 'build' && ctx === 'empty') s.openAddMenu('composer', 'builder');
+        // M8 also fires when the user asks to merge or ship once every line is clear.
+        if (m.intent === 'merge' && ctx === 'allClear' && !s.milestones.prOpened) s.openPR();
         if (m.intent === 'rename' && m.targetId) s.editCollaborator(m.targetId, { focusName: true, prefillName: m.newName });
       }, thinkingDelay()),
     );

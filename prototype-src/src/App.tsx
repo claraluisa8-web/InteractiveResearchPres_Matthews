@@ -8,6 +8,7 @@ import { Constellation, type LineHover } from './components/Constellation';
 import { Composer } from './components/Composer';
 import { Dialog } from './components/Dialog';
 import { FloatingEditor } from './components/FloatingEditor';
+import { CommentCard, PRPanel, PRStatusCard, ReceiptPanel, RecapPanel } from './components/ReviewPanels';
 import { SectionEditor } from './components/SectionEditor';
 import { SectionsPanel, issueOpen, walkOrder } from './components/SectionsPanel';
 import { LineCard } from './components/LineCard';
@@ -18,7 +19,7 @@ import { TeamRail } from './components/TeamRail';
 import { TitleBar } from './components/TitleBar';
 import { Toast } from './components/Toast';
 import { copy, t } from './lib/copy';
-import { useFlow, useIssueFlow } from './lib/flow';
+import { useFlow, useIssueFlow, useReviewFlow } from './lib/flow';
 import { computeGeometry, countOpen } from './lib/geometry';
 import { ISSUE_SECTION_IDS, sectionById, topSections } from './lib/sections';
 import { startOver } from './lib/reset';
@@ -68,8 +69,14 @@ export function App() {
   const openSection = useScenario((s) => s.openSection);
   const closeEditor = useScenario((s) => s.closeEditor);
   const openFile = useScenario((s) => s.openFile);
+  const rightPanel = useScenario((s) => s.rightPanel);
+  const commentOpen = useScenario((s) => s.commentOpen);
+  const setRightPanel = useScenario((s) => s.setRightPanel);
+  const setCommentOpen = useScenario((s) => s.setCommentOpen);
+  const collaboratorsAll = collaborators;
   useFlow();
   useIssueFlow();
+  useReviewFlow();
 
   const showToast = useCallback((message: string) => {
     window.clearTimeout(toastTimer.current);
@@ -134,6 +141,8 @@ export function App() {
     editorIssue,
   });
   const issueLineVisible = milestones.issueRaised && countOpen(issues) > 0;
+  const tr = copy.teammateReview;
+  const reviewPending = milestones.prCreated && !milestones.teammateApproved && collaboratorsAll.some((c) => c.review === 'pending');
   // Clicking the pill goes to the thing it describes.
   const onPill = (() => {
     switch (pill.target) {
@@ -142,6 +151,10 @@ export function App() {
       case 'build': return () => setUpdateCardOpen(true);
       case 'suggestion': return () => setRecCardOpen(true);
       case 'sections': return () => (editor ? undefined : openSections());
+      case 'receipt': return () => setRightPanel('receipt');
+      case 'recap': return () => setRightPanel('recap');
+      case 'comment': return () => setCommentOpen(true);
+      case 'merge': return () => document.querySelector<HTMLElement>('[data-merge]')?.focus();
       default: return undefined;
     }
   })();
@@ -158,6 +171,11 @@ export function App() {
         <BuildCard />
         {suggestion && recCardOpen && <RecommendationCard />}
         {sectionsLine && <SectionsPanel />}
+        {rightPanel === 'receipt' && <ReceiptPanel onToast={showToast} />}
+        {rightPanel === 'pr' && <PRPanel />}
+        {rightPanel === 'recap' && <RecapPanel />}
+        {milestones.prCreated && !milestones.merged && !rightPanel && <PRStatusCard />}
+        {milestones.prCreated && !milestones.merged && commentOpen && <CommentCard />}
         {floatingFile && <FloatingEditor onToast={showToast} />}
         {lineHover && (
           <LineCard
@@ -183,6 +201,7 @@ export function App() {
           items={[
             ...(suggestion ? [{ kind: 'ring' as const, text: copy.recommendation.legend }] : []),
             ...(issueLineVisible ? [{ kind: 'issue' as const, text: copy.issueLine.legend }] : []),
+            ...(reviewPending ? [{ kind: 'ring' as const, text: tr.legends[0] }, { kind: 'dashed' as const, text: tr.legends[1] }] : []),
           ]}
         />
         <StatusPill text={pill.text} tone={pill.tone} onClick={onPill} />

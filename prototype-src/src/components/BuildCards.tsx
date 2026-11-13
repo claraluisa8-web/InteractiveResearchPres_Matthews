@@ -132,7 +132,7 @@ export function RecommendationCard() {
 }
 
 /** Bottom-left legend, shown only once its encoding is on screen. */
-export function Legend({ items }: { items: { kind: 'ring' | 'issue'; text: string }[] }) {
+export function Legend({ items }: { items: { kind: 'ring' | 'issue' | 'dashed'; text: string }[] }) {
   if (items.length === 0) return null;
   return (
     <ul className="legend" aria-label={t(copy.recommendation.legendLabel)}>

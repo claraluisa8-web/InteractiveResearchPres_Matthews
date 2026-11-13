@@ -833,7 +833,48 @@
     "footnoteNote": "Generate from state: count sections the user edited; pluralize properly.",
     "primary": "Open pull request",
     "secondary": "Copy",
-    "statusPill": "All lines clear"
+    "statusPill": "All lines clear",
+    "footnoteNone": {
+      "text": "You verified every section without editing. Each was reviewed against the spec.",
+      "new": true
+    },
+    "footnoteOne": {
+      "text": "You edited 1 section by hand. It was re-reviewed and re-tested.",
+      "new": true
+    },
+    "footnoteMany": {
+      "text": "You edited {n} sections by hand. All were re-reviewed and re-tested.",
+      "new": true
+    },
+    "footnoteNoTester": {
+      "text": "You edited {n} by hand, and each was re-reviewed.",
+      "new": true,
+      "note": "Used when there's no tester; {n} is '1 section' or 'n sections'."
+    },
+    "rejectedByYou": {
+      "text": "Rejected by you",
+      "new": true
+    },
+    "you": {
+      "text": "You",
+      "new": true
+    },
+    "close": {
+      "text": "Close receipt",
+      "new": true
+    },
+    "copied": {
+      "text": "Receipt copied",
+      "new": true
+    },
+    "copyFailed": {
+      "text": "Couldn’t reach the clipboard. Select the receipt text and copy it instead.",
+      "new": true
+    },
+    "plainTitle": {
+      "text": "Verification receipt  ·  {repo}  ·  {branch}",
+      "new": true
+    }
   },
   "pullRequest": {
     "title": "Open a pull request",
@@ -850,7 +891,15 @@
     "reviewerHint": "Joins the constellation as a teammate",
     "attachReceipt": "Attach verification receipt",
     "primary": "Create pull request",
-    "teammateAddingSubtitle": "Human teammate  ·  adding"
+    "teammateAddingSubtitle": "Human teammate  ·  adding",
+    "close": {
+      "text": "Close pull request",
+      "new": true
+    },
+    "reviewerSelect": {
+      "text": "Reviewer",
+      "new": true
+    }
   },
   "teammateReview": {
     "prTitle": "Pull request #482",
@@ -889,7 +938,49 @@
       "Dashed line = waiting on a teammate’s review"
     ],
     "statusPill": "Waiting on 1 review",
-    "approveAfter": "After the user replies (any text) or after ~20 s of no action, {teammate} approves: 'Approved #482'. Merge unlocks."
+    "approveAfter": "After the user replies (any text) or after ~20 s of no action, {teammate} approves: 'Approved #482'. Merge unlocks.",
+    "replyPlaceholder": {
+      "text": "Reply to {teammateFirst}…",
+      "new": true
+    },
+    "send": {
+      "text": "Send",
+      "new": true
+    },
+    "answer": {
+      "text": "Makes sense, thanks. Approving.",
+      "new": true,
+      "note": "From intents.json replyToTeammate."
+    },
+    "autoApprove": {
+      "text": "Looks good to me. The receipt covers it. Approving.",
+      "new": true
+    },
+    "approvedCheck": {
+      "text": "Approved by {teammate}",
+      "new": true
+    },
+    "approvedSubtitle": {
+      "text": "Approved #482",
+      "new": true
+    },
+    "statusApproved": {
+      "text": "Approved  ·  ready to merge",
+      "new": true
+    },
+    "you": {
+      "text": "You",
+      "new": true
+    },
+    "commentNode": {
+      "text": "Open {teammateFirst}’s comment",
+      "new": true
+    },
+    "closeComment": {
+      "text": "Close comment",
+      "new": true
+    },
+    "legendDashed": "Dashed line = waiting on a teammate’s review"
   },
   "recap": {
     "title": "Pull request merged",
@@ -946,7 +1037,15 @@
       "Done"
     ],
     "statusPill": "Merged  ·  all lines clear",
-    "doneBehavior": "Done closes the panel and leaves the settled constellation. A small 'Start over' control (and the hidden reset) returns to the empty state."
+    "doneBehavior": "Done closes the panel and leaves the settled constellation. A small 'Start over' control (and the hidden reset) returns to the empty state.",
+    "close": {
+      "text": "Close recap",
+      "new": true
+    },
+    "receiptTitleMerged": {
+      "text": "Verification receipt  ·  #482",
+      "new": true
+    }
   },
   "$newCopy": [
     "issues[1].builderSays",
@@ -966,7 +1065,8 @@
     "chrome (title-bar overflow menu, About dialog, toast, composer aria labels)",
     "constellation (Phase 1: status pill, statuses, popover, line card, spec viewer, next steps)",
     "build: saveToast, unsaved, metaSuffix, updateCardClose, startEcho; constellation: removeConfirm, nextSteps, nextStepHints (Phase 2)",
-    "Phase 3: issueLine.statusPillOne/badgeLabel, sectionsPanel extras, editor extras (labels, recheck, reject confirm, diff, afterResolve, notStillMet), section summaries and spec excerpts for non-issue sections"
+    "Phase 3: issueLine.statusPillOne/badgeLabel, sectionsPanel extras, editor extras (labels, recheck, reject confirm, diff, afterResolve, notStillMet), section summaries and spec excerpts for non-issue sections",
+    "Phase 4: allClear footnotes/copy/close, pullRequest close, teammateReview reply/answer/autoApprove/approved, recap close, constellation nextSteps/hints for allClear/review/done, lineCard cleared/review"
   ],
   "constellation": {
     "$note": "Phase 1 copy that isn't drawn in Figma. All new.",
@@ -1118,6 +1218,14 @@
       "suggested": {
         "text": "Suggested by {reviewer}  ·  not added yet",
         "new": true
+      },
+      "cleared": {
+        "text": "Cleared  ·  every section verified",
+        "new": true
+      },
+      "review": {
+        "text": "Waiting on {teammate}’s review",
+        "new": true
       }
     },
     "specViewer": {
@@ -1160,11 +1268,11 @@
         "new": true
       },
       "review": {
-        "text": "reply to {teammate}’s comment",
+        "text": "reply to {teammateFirst}’s comment, or wait for the approval",
         "new": true
       },
       "done": {
-        "text": "nothing, you’re done",
+        "text": "nothing, it’s merged",
         "new": true
       },
       "buildReviewing": {
@@ -1173,6 +1281,10 @@
       },
       "recommendation": {
         "text": "decide on {reviewer}’s suggestion to add a tester",
+        "new": true
+      },
+      "allClear": {
+        "text": "open the pull request from the receipt",
         "new": true
       }
     },
@@ -1206,6 +1318,10 @@
       },
       "recommendation": {
         "text": "Take a look at {reviewer}’s suggestion to add a tester.",
+        "new": true
+      },
+      "allClear": {
+        "text": "Every line is clear. Open the pull request from the receipt.",
         "new": true
       }
     }

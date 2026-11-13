@@ -6,7 +6,7 @@ import type { AgentRole, Collaborator, Recommendation } from './types';
 // Scripted replies (docs/agent-replies.md): score intents allowed in the current context,
 // the highest wins, nothing scores → a fallback that ends with the next-step hint.
 
-export type Context = 'empty' | 'ready' | 'build' | 'issue' | 'editor' | 'review' | 'done';
+export type Context = 'empty' | 'ready' | 'build' | 'issue' | 'editor' | 'allClear' | 'review' | 'done';
 
 interface Intent {
   id: string;
@@ -52,9 +52,12 @@ function hasTerm(text: string, words: string[], term: string) {
 
 export function contextFor(
   cs: Collaborator[],
-  milestones: { buildStarted: boolean; issueRaised?: boolean; allSectionsVerified?: boolean },
+  milestones: { buildStarted: boolean; issueRaised?: boolean; allSectionsVerified?: boolean; prCreated?: boolean; merged?: boolean },
   editorOpen = false,
 ): Context {
+  if (milestones.merged) return 'done';
+  if (milestones.prCreated) return 'review';
+  if (milestones.allSectionsVerified) return 'allClear';
   if (editorOpen) return 'editor';
   if (milestones.issueRaised && !milestones.allSectionsVerified) return 'issue';
   if (!firstOf(cs, 'builder')) return 'empty';
@@ -63,7 +66,7 @@ export function contextFor(
 
 /** Which affordance comes next; shared with the idle hints. */
 const EXPECTED: Record<Context, string> = {
-  empty: 'addAgent', ready: 'build', build: 'addAgent', issue: 'why', editor: 'fix', review: 'replyToTeammate', done: 'thanks',
+  empty: 'addAgent', ready: 'build', build: 'addAgent', issue: 'why', editor: 'fix', allClear: 'merge', review: 'replyToTeammate', done: 'thanks',
 };
 
 export interface Match {

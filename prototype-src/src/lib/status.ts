@@ -6,6 +6,9 @@ import type { PillTone } from '../components/StatusPill';
 /** The orb's second label line: its configuration, or a believable quiet status. */
 export function subtitleFor(c: Collaborator, all: Collaborator[]): string {
   if (c.status === 'draft') return copy.configurePanel.ghostLabel;
+  if (c.status === 'suggested') return copy.pullRequest.teammateAddingSubtitle;
+  if (c.review === 'pending') return copy.teammateReview.teammateSubtitle;
+  if (c.review === 'approved') return t(copy.teammateReview.approvedSubtitle);
   if (c.role === 'teammate') return copy.roles.teammate.subtitle;
   if (c.role === 'other') {
     const statuses = copy.constellation.otherStatuses as Record<string, { text: string }>;
@@ -19,20 +22,23 @@ export function subtitleFor(c: Collaborator, all: Collaborator[]): string {
   return `${copy.project.model.name}  ·  ${c.configuration.split('·')[0].trim()}`;
 }
 
-export interface Pill { text: string; tone: PillTone; target?: 'add' | 'ready' | 'build' | 'suggestion' | 'sections' }
+export interface Pill { text: string; tone: PillTone; target?: 'add' | 'ready' | 'build' | 'suggestion' | 'sections' | 'receipt' | 'comment' | 'merge' | 'recap' }
 
 export interface IssueCounts { open: number; verified: number; total: number; editorIssue?: { n: number; total: number } }
 
 /** Status pill by milestone: suggestion > building > ready > team size > empty. */
 export function statusPill(all: Collaborator[], m: Milestones, rec: Recommendation, counts?: IssueCounts): Pill {
   const builder = firstOf(all, 'builder');
+  if (m.merged) return { text: copy.recap.statusPill, tone: 'neutral', target: 'recap' };
+  if (m.prCreated && !m.teammateApproved) return { text: copy.teammateReview.statusPill, tone: 'lavender', target: 'comment' };
+  if (m.prCreated) return { text: t(copy.teammateReview.statusApproved), tone: 'neutral', target: 'merge' };
   if (m.issueRaised && counts) {
     if (counts.editorIssue) return { text: t(copy.editor.statusPill, counts.editorIssue), tone: 'issue', target: 'sections' };
     if (counts.open > 0) {
       const text = counts.open === 1 ? t(copy.issueLine.statusPillOne) : copy.issueLine.statusPill.replace('2', String(counts.open));
       return { text, tone: 'issue', target: 'sections' };
     }
-    if (m.allSectionsVerified) return { text: copy.allClear.statusPill, tone: 'neutral', target: 'sections' };
+    if (m.allSectionsVerified) return { text: copy.allClear.statusPill, tone: 'neutral', target: 'receipt' };
     return { text: t(copy.sectionsPanel.progress, { verified: counts.verified, total: counts.total }), tone: 'neutral', target: 'sections' };
   }
   if (rec === 'shown' || rec === 'dismissed') return { text: copy.recommendation.statusPill, tone: 'lavender', target: 'suggestion' };

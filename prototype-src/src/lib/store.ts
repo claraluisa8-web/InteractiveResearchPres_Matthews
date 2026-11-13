@@ -3,15 +3,15 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { copy, t } from './copy';
 import { codeFile } from './code';
 import { pickSlot } from './layout';
-import { applyFix, initialIssues, initialSections, issueMet, sectionById } from './sections';
-import type { AgentRole, Collaborator, IssueState, Milestones, Recommendation, SectionState, View } from './types';
+import { applyFix, changedLines, initialIssues, initialSections, issueMet, originalFile, safeRange, sectionById } from './sections';
+import { isGhost, type AgentRole, type Collaborator, type IssueState, type Milestones, type Recommendation, type RightPanel, type SectionState, type ThreadMessage, type View } from './types';
 
 export const IDENTITY_VIEW: View = { x: 0, y: 0, k: 1 };
 
 const NO_MILESTONES: Milestones = {
   builderAdded: false, reviewerAdded: false, buildStarted: false, recommendationShown: false,
   issueRaised: false, sectionsOpened: false, sectionEdited: false, sectionSaved: false,
-  allSectionsVerified: false, prOpened: false, teammateApproved: false, merged: false,
+  allSectionsVerified: false, prOpened: false, teammateApproved: false, merged: false, prCreated: false,
 };
 
 export interface Reply {
@@ -51,6 +51,8 @@ interface ScenarioState {
   fileDrafts: Record<string, string>;
   sections: Record<string, SectionState>;
   issues: Record<number, IssueState>;
+  pr: { title: string; description: string; reviewer: string | null; attachReceipt: boolean };
+  thread: ThreadMessage[];
   /** M1: the coach card is gone for good once anyone is added. */
   firstAdded: boolean;
   view: View;
@@ -74,11 +76,14 @@ interface ScenarioState {
   /** 06b: the sections panel, for one line (ids of its two ends). */
   sectionsLine: [string, string] | null;
   /** 07: the section-scoped editor. `tab` is the file shown (the spec tab is read-only). */
-  editor: { section: string; tab: string; mode: 'edit' | 'diff' | 'reject' } | null;
+  editor: { section: string; tab: string; mode: 'edit' | 'diff' | 'reject'; readOnly?: boolean } | null;
   /** Orbs ringed by hovering something linked to them (rail row, section row). */
   linkIds: string[] | null;
   /** Latest line from each agent in the editor's left-column cards. */
   cardNotes: Record<string, string>;
+  /** Right-docked panel for frames 08, 09 and 11. */
+  rightPanel: RightPanel;
+  commentOpen: boolean;
 
   openAddMenu: (anchor: MenuAnchor, highlight?: AgentRole) => void;
   closeAddMenu: () => void;
@@ -116,6 +121,16 @@ interface ScenarioState {
   verifySection: (id: string) => void;
   setLinkIds: (ids: string[] | null) => void;
   setCardNote: (role: string, text: string) => void;
+  setRightPanel: (p: RightPanel) => void;
+  openPR: () => void;
+  closePR: () => void;
+  setPR: (patch: Partial<ScenarioState['pr']>) => void;
+  createPR: () => void;
+  setCommentOpen: (v: boolean) => void;
+  replyToTeammate: (text: string) => void;
+  approve: (auto: boolean) => void;
+  merge: () => void;
+  showLine: () => void;
   pushReply: (reply: Omit<Reply, 'id'>) => number;
   updateReply: (id: number, patch: Partial<Reply>) => void;
   dismissReply: (id: number) => void;
@@ -123,7 +138,7 @@ interface ScenarioState {
 
 export const issueSection = (issue: number) => copy.issues.find((i) => i.id === issue)!.section;
 
-export const active = (cs: Collaborator[]) => cs.filter((c) => c.status !== 'draft');
+export const active = (cs: Collaborator[]) => cs.filter((c) => !isGhost(c));
 export const firstOf = (cs: Collaborator[], role: AgentRole) =>
   active(cs).filter((c) => c.role === role).sort((a, b) => a.addedAt - b.addedAt)[0];
 
@@ -189,6 +204,8 @@ export const useScenario = create<ScenarioState>()(
       fileDrafts: {},
       sections: initialSections(),
       issues: initialIssues(),
+      pr: { title: copy.pullRequest.titleValue, description: copy.pullRequest.descriptionValue, reviewer: null, attachReceipt: true },
+      thread: [],
       firstAdded: false,
       view: IDENTITY_VIEW,
       seq: 1,
@@ -207,6 +224,8 @@ export const useScenario = create<ScenarioState>()(
       editor: null,
       linkIds: null,
       cardNotes: {},
+      rightPanel: null,
+      commentOpen: false,
 
       openAddMenu: (anchor, highlight) => set({ addMenu: { anchor, highlight }, popover: null }),
       closeAddMenu: () => set({ addMenu: null }),
@@ -329,7 +348,7 @@ export const useScenario = create<ScenarioState>()(
 
       openSection: (id, tab) => {
         const s = get();
-        if (!s.sectionsLine) get().openSections();
+        if (!s.sectionsLine && !s.milestones.allSectionsVerified) get().openSections();
         set({ editor: { section: id, tab: tab ?? sectionById(id).file, mode: 'edit' }, linkIds: null, popover: null, cardNotes: {} });
       },
       closeEditor: () => set({ editor: null }),
@@ -341,9 +360,20 @@ export const useScenario = create<ScenarioState>()(
         const draft = s.fileDrafts[file];
         const { [file]: _, ...rest } = s.fileDrafts;
         const text = draft ?? s.files[file];
-        // Every section in the saved file that differs from the builder's text is now edited by you.
+        // A section is edited by you when its own lines differ from the builder's original.
         const sections = { ...s.sections };
-        for (const [id, st] of Object.entries(sections)) if (sectionById(id).files.includes(file) && draft !== undefined) sections[id] = { ...st, editedByYou: true };
+        if (draft !== undefined) {
+          const builder = firstOf(s.collaborators, 'builder');
+          const original = originalFile(file, builder?.name ?? 'Builder');
+          const mine = changedLines(original, text);
+          for (const [id, st] of Object.entries(sections)) {
+            const def = sectionById(id);
+            if (!def.files.includes(file) || st.editedByYou) continue;
+            const whole = def.files.length > 1 || ['contractTests', 'changelog'].includes(id);
+            const r = whole ? { start: 1, end: text.split('\n').length } : safeRange(id, text);
+            if ([...mine].some((n) => n >= r.start && n <= r.end)) sections[id] = { ...st, editedByYou: true };
+          }
+        }
         // Issues whose code lives in this file go back to both agents (flow-and-milestones: Save → recheck).
         const waiting = Object.values(s.issues)
           .filter((i) => (i.status === 'open' || i.status === 'savedAwaitingAgents') && sectionById(issueSection(i.id)).files.includes(file))
@@ -407,6 +437,95 @@ export const useScenario = create<ScenarioState>()(
 
       setLinkIds: (ids) => set({ linkIds: ids }),
       setCardNote: (role, text) => set((s) => ({ cardNotes: { ...s.cardNotes, [role]: text } })),
+
+      setRightPanel: (p) => set({ rightPanel: p, sectionsLine: null, popover: null, updateCardOpen: false }),
+
+      // M8: the PR panel. Without a teammate, Dana Kim appears as a dashed "adding" ghost (frame 09).
+      openPR: () => {
+        const s = get();
+        let collaborators = s.collaborators;
+        let reviewer = s.pr.reviewer && collaborators.some((c) => c.id === s.pr.reviewer) ? s.pr.reviewer : null;
+        const mates = collaborators.filter((c) => c.role === 'teammate');
+        if (!reviewer && mates.length) reviewer = mates[0].id;
+        let seq = s.seq;
+        if (!reviewer) {
+          const ghost: Collaborator = {
+            id: `teammate-${seq}`,
+            role: 'teammate',
+            name: copy.people.teammate.fullName,
+            configuration: '',
+            allowedToEdit: [],
+            crossTeamRequests: false,
+            connectsTo: ['you'],
+            status: 'suggested',
+            addedAt: Date.now(),
+            slot: pickSlot('teammate', collaborators.map((c) => c.slot)),
+          };
+          collaborators = [...collaborators, ghost];
+          reviewer = ghost.id;
+          seq += 1;
+        }
+        set({
+          collaborators,
+          seq,
+          pr: { ...s.pr, reviewer },
+          rightPanel: 'pr',
+          sectionsLine: null,
+          editor: null,
+          popover: null,
+          milestones: { ...s.milestones, prOpened: true },
+        });
+      },
+      // Closing the PR panel takes the ghost with it and goes back to the receipt.
+      closePR: () =>
+        set((s) => ({
+          collaborators: s.collaborators.filter((c) => c.status !== 'suggested'),
+          rightPanel: 'receipt',
+        })),
+      setPR: (patch) => set((s) => ({ pr: { ...s.pr, ...patch } })),
+
+      // M9: the PR exists; the teammate joins (or is already there) and starts reviewing.
+      createPR: () => {
+        const s = get();
+        const id = s.pr.reviewer;
+        set({
+          collaborators: s.collaborators.map((c) =>
+            c.id === id ? { ...c, status: 'active', review: 'pending', connectsTo: c.connectsTo.includes('you') ? c.connectsTo : [...c.connectsTo, 'you'] } : c,
+          ),
+          rightPanel: null,
+          commentOpen: true,
+          thread: [],
+          firstAdded: true,
+          milestones: { ...s.milestones, prCreated: true },
+        });
+      },
+      setCommentOpen: (v) => set({ commentOpen: v }),
+      replyToTeammate: (text) => set((s) => ({ thread: [...s.thread, { from: 'you', text }] })),
+
+      // M10: approved after a reply (any text) or 20 s of quiet.
+      approve: (auto) => {
+        const s = get();
+        if (s.milestones.teammateApproved) return;
+        const tr = copy.teammateReview;
+        set({
+          collaborators: s.collaborators.map((c) => (c.id === s.pr.reviewer ? { ...c, review: 'approved' } : c)),
+          thread: [...s.thread, { from: 'teammate', text: t(auto ? tr.autoApprove : tr.answer) }],
+          milestones: { ...s.milestones, teammateApproved: true },
+        });
+      },
+
+      // M11
+      merge: () =>
+        set((s) => ({
+          milestones: { ...s.milestones, merged: true },
+          rightPanel: 'recap',
+          commentOpen: false,
+        })),
+
+      // "Show line" opens the createPlan 409 branch read-only (frame 10 → 07).
+      showLine: () => {
+        set({ editor: { section: 'idempotencyKey', tab: 'PlanController.java', mode: 'edit', readOnly: true }, cardNotes: {}, popover: null });
+      },
 
       openFile: (name) =>
         set((s) => ({
@@ -473,6 +592,8 @@ export const useScenario = create<ScenarioState>()(
         files: s.files,
         fileDrafts: s.fileDrafts,
         sections: s.sections,
+        pr: s.pr,
+        thread: s.thread,
         // A recheck in flight when the page closed goes back to open; nothing is left hanging.
         issues: Object.fromEntries(
           Object.entries(s.issues).map(([k, i]) => [k, i.status === 'savedAwaitingAgents' || i.status === 'fixPreview' ? { ...i, status: 'open' as const } : i]),

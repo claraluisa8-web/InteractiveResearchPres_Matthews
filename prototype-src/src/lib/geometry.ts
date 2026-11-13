@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { ORB_SIZE, deriveLines, isNear, lineId, pickSlot, slotPoint, youPoint, type Point } from './layout';
 import { firstOf, useScenario } from './store';
-import type { Collaborator, IssueState, Line, View } from './types';
+import { isGhost, type Collaborator, type IssueState, type Line, type View } from './types';
 
 export interface Node {
   id: string;
@@ -21,6 +21,8 @@ export interface FlowState {
   openIssues?: number;
   /** The sections panel is docked on the right (frame 06b moves the team 40px left). */
   sectionsOpen?: boolean;
+  /** M7 onward: lines settle to mint and the team sits 140px left of the right-hand panels (frames 08–11). */
+  allClear?: boolean;
   /** Recommendation shown or dismissed but not yet acted on. */
   suggestion: boolean;
 }
@@ -51,6 +53,7 @@ export function computeGeometry(
     if (reviewer) working.add(lineId(builder.id, reviewer.id));
   }
   const lines = deriveLines(collaborators, working);
+  if (flow.allClear) for (const l of lines) if (l.kind === 'connected' || l.kind === 'working') l.kind = 'cleared';
   // M4: with the multiples rule, the issue sits on the first builder ↔ first reviewer line.
   if (builder && reviewer && flow.openIssues) {
     const issueId = lineId(builder.id, reviewer.id);
@@ -60,7 +63,7 @@ export function computeGeometry(
   const youP = youPoint(collaborators);
   const you: Node = { id: 'you', point: youP, size: ORB_SIZE.you, far: false };
   const nodes: Node[] = collaborators.map((c) => {
-    const far = c.status !== 'draft' && !isNear(c, lines);
+    const far = !isGhost(c) && !isNear(c, lines);
     return { id: c.id, point: slotPoint(c.slot), size: far ? ORB_SIZE.far : ORB_SIZE.near, far, c };
   });
   if (flow.suggestion && reviewer) {
@@ -77,6 +80,8 @@ export function computeGeometry(
     shift = target.c?.status === 'draft' ? { x: Math.min(-200, needed), y: 60 } : { x: needed, y: 0 };
   } else if (flow.sectionsOpen) {
     shift = { x: -40, y: 0 };
+  } else if (flow.allClear) {
+    shift = { x: -140, y: 0 };
   }
   // Alone, the + sits right of You (frame 01). With a team, You's label takes that side and lines
   // leave You downward, so the + moves to the upper left where nothing is drawn.
@@ -93,11 +98,12 @@ export function useGeometry(): Geometry {
   const issueRaised = useScenario((s) => s.milestones.issueRaised);
   const issues = useScenario((s) => s.issues);
   const sectionsOpen = useScenario((s) => !!s.sectionsLine);
+  const allClear = useScenario((s) => s.milestones.allSectionsVerified);
   const suggestion = recommendation === 'shown' || recommendation === 'dismissed';
   const openIssues = issueRaised ? countOpen(issues) : 0;
   return useMemo(
-    () => computeGeometry(collaborators, configureId, { buildStarted, suggestion, openIssues, sectionsOpen }),
-    [collaborators, configureId, buildStarted, suggestion, openIssues, sectionsOpen],
+    () => computeGeometry(collaborators, configureId, { buildStarted, suggestion, openIssues, sectionsOpen, allClear }),
+    [collaborators, configureId, buildStarted, suggestion, openIssues, sectionsOpen, allClear],
   );
 }
 

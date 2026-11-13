@@ -1,4 +1,4 @@
-import type { AgentRole, Collaborator, Line } from './types';
+import { isGhost, type AgentRole, type Collaborator, type Line } from './types';
 
 export interface Point { x: number; y: number }
 
@@ -12,7 +12,7 @@ export const SLOTS: Point[] = [
   { x: 600, y: 500 },  // 0 builder
   { x: 900, y: 520 },  // 1 reviewer
   { x: 1110, y: 320 }, // 2 tester
-  { x: 190, y: 330 },  // 3 teammate
+  { x: 340, y: 320 },  // 3 teammate (frames 09–11, before their 140px team shift)
   { x: 380, y: 410 },  // clear of the You–teammate line
   { x: 1050, y: 640 },
   { x: 300, y: 640 },
@@ -73,7 +73,7 @@ export function deriveLines(collaborators: Collaborator[], working: Set<string> 
       const id = lineId(c.id, other);
       const [a, b] = id.split('~');
       const otherC = collaborators.find((o) => o.id === other);
-      const kind = c.status === 'draft' || otherC?.status === 'draft' ? 'pending' : working.has(id) ? 'working' : 'connected';
+      const kind = isGhost(c) || (otherC && isGhost(otherC)) || c.review === 'pending' || otherC?.review === 'pending' ? 'pending' : working.has(id) ? 'working' : 'connected';
       lines.set(id, { id, a, b, kind });
     }
   }

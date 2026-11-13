@@ -61,3 +61,15 @@ Each entry records what changed from the design or the handoff, why, and which f
 - **Composer in the editor** defaults to "To: {builder} + {reviewer}". "just fix it" opens the fix preview (on the first open issue if the editor isn't open) without applying it. Replies written as "{reviewer}: …" now come from that agent without the prefix.
 - **Intent phrases added** (marked new): "the gateway" and friends for sideBuilder, "what does the spec say" for spec. Without them, both lost a tie to fix and why.
 - **Diff line numbers** on tinted rows use the primary text color: the secondary color measured 6.2:1 there, under AAA.
+
+## Phase 4
+
+- **The teammate slot moves to (340, 320).** Frames 09–11 draw Dana at 200,320 with the team shifted 140px left. The doc's (190, 330) put her under the team rail. This replaces the Phase 1 note.
+- **From M7 on, the team sits 140px left**, as in frames 08–11, clear of the right-hand panels. A far orb's label (the tester) moves above it, as drawn.
+- **The receipt, PR and recap panels have a close ×**, and Esc closes them; Figma doesn't draw one, but Close and Esc must always work. The status pill reopens the receipt or the recap. Closing the PR panel removes the "adding" ghost and returns to the receipt.
+- **WROTE** adds "You" when the section's own lines differ from the builder's original, and adds the reviewer when its fix was accepted. A rejected issue shows "Rejected by you" under REVIEWED.
+- **Footnote variants** (new copy): none, one, two (Clara's line), many, and no tester.
+- **Copy** writes a plain-text receipt, with a selection-based fallback for browsers that refuse the async clipboard.
+- **The comment card is bottom-anchored 45px above the You–teammate line**, so a growing thread rises instead of covering You. It also stays clear of the team rail, which frame 10 doesn't draw.
+- **During review, any composer message counts as a reply** to the comment (`replyToTeammate`). Asking to merge once everything is clear opens the PR panel (M8).
+- **The PR status card hides "Contract tests" when there's no tester.** The recap moves missing lines' counts onto builder↔reviewer, so the total stays 7.

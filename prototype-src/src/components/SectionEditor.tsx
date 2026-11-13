@@ -63,7 +63,9 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
   const verified = sections[def.id]?.status === 'verified';
   const canVerify = !verified && (!def.issue || !open);
   const tab = editor.tab;
+  // "Show line" from the teammate's comment opens the merged-ready code read-only.
   const isSpec = tab === SPEC;
+  const locked = isSpec || !!editor.readOnly;
   const saved = files[tab] ?? '';
   const current = drafts[tab] ?? saved;
   const dirty = !isSpec && drafts[tab] !== undefined && drafts[tab] !== saved;
@@ -269,14 +271,14 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
                 </button>
               ))}
             </div>
-            <span className="code-panel__meta">{isSpec ? t(ed.readOnly) : writtenBy}</span>
+            <span className="code-panel__meta">{locked ? t(ed.readOnly) : writtenBy}</span>
             {dirty && (
               <span className="unsaved">
                 <span className="unsaved__dot" aria-hidden="true" />
                 {ed.unsaved}
               </span>
             )}
-            {!isSpec && <button type="button" className="pmr-button code-panel__save" onClick={save}>{ed.save}</button>}
+            {!locked && <button type="button" className="pmr-button code-panel__save" onClick={save}>{ed.save}</button>}
           </div>
           <div className="code-panel__body">
             {editor.mode === 'diff' && issueData ? (
@@ -296,7 +298,7 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
                 key={`${tab}:${fixCount}`}
                 file={tab}
                 doc={isSpec ? specText() : current}
-                readOnly={isSpec}
+                readOnly={locked}
                 size={CODE_SIZE}
                 label={tab}
                 extensions={ext?.main}

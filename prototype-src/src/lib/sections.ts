@@ -88,7 +88,7 @@ export const ISSUE_SECTION_IDS = SECTIONS.filter((s) => s.issue).map((s) => s.id
 
 /** Top-level sections that exist for this team (contract tests only with a tester). */
 export function topSections(cs: Collaborator[]): SectionDef[] {
-  return SECTIONS.filter((s) => !s.parent && (!s.onlyIfRole || cs.some((c) => c.role === s.onlyIfRole && c.status !== 'draft')));
+  return SECTIONS.filter((s) => !s.parent && (!s.onlyIfRole || cs.some((c) => c.role === s.onlyIfRole && c.status === 'active')));
 }
 
 export function initialSections(): Record<string, SectionState> {

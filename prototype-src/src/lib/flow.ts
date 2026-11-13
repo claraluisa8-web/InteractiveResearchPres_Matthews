@@ -118,7 +118,33 @@ export function useIssueFlow() {
     if (!m.issueRaised || m.allSectionsVerified) return;
     const tops = topSections(collaborators);
     if (tops.every((sec) => sections[sec.id]?.status === 'verified')) {
-      useScenario.setState((s) => ({ milestones: { ...s.milestones, allSectionsVerified: true } }));
+      // M7: lines settle and the receipt replaces the sections panel (frame 08).
+      useScenario.setState((s) => ({
+        milestones: { ...s.milestones, allSectionsVerified: true },
+        sectionsLine: null,
+        linkIds: null,
+        rightPanel: s.editor ? s.rightPanel : 'receipt',
+        updateCardOpen: false,
+        floatingFile: null,
+      }));
     }
   }, [m.issueRaised, m.allSectionsVerified, sections, collaborators]);
+}
+
+/** M10: the teammate approves after a reply (1.5 s later) or after 20 s with no reply. */
+export function useReviewFlow() {
+  const prCreated = useScenario((s) => s.milestones.prCreated);
+  const approved = useScenario((s) => s.milestones.teammateApproved);
+  const replies = useScenario((s) => s.thread.filter((m) => m.from === 'you').length);
+  const approve = useScenario((s) => s.approve);
+
+  useEffect(() => {
+    if (!prCreated || approved) return;
+    if (replies > 0) {
+      const id = window.setTimeout(() => approve(false), 1500);
+      return () => window.clearTimeout(id);
+    }
+    const id = window.setTimeout(() => approve(true), TIMING.teammateAutoApprove);
+    return () => window.clearTimeout(id);
+  }, [prCreated, approved, replies, approve]);
 }

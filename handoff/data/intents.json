@@ -14,7 +14,8 @@
     "editor": "code pop-up is open (07)",
     "review": "pull request open, waiting on teammate",
     "done": "merged",
-    "ready": "a builder exists and is waiting for the user to start the build (ready card showing)"
+    "ready": "a builder exists and is waiting for the user to start the build (ready card showing)",
+    "allClear": "every section verified, pull request not opened yet (new)"
   },
   "intents": [
     {
@@ -57,7 +58,8 @@
         "done": "Everything is merged. Start over from the menu if you want to run it again.",
         "ready": "{builder} is ready. Tell it what to build, or click Start from the spec. The approved spec already defines the API.",
         "buildReviewing": "{builder} is working from recurring-investments.yaml and {reviewer} is checking it against the spec. Open {builder} to see its code.",
-        "recommendation": "{reviewer} spotted a gap in test coverage. Add a tester from the suggestion, or choose Not now."
+        "recommendation": "{reviewer} spotted a gap in test coverage. Add a tester from the suggestion, or choose Not now.",
+        "allClear": "Every section is verified. Open the pull request from the receipt; the receipt goes with it."
       },
       "phrases": [
         "what do i do",
@@ -69,7 +71,8 @@
       "newPhrases": true,
       "newReplies": [
         "buildReviewing",
-        "recommendation"
+        "recommendation",
+        "allClear"
       ]
     },
     {
@@ -299,12 +302,18 @@
         "*": "{verified} of {total} sections verified, {issues} open issues. Next: {nextStep}.",
         "empty": "Nothing built yet. Next: {nextStep}.",
         "ready": "{builder} is ready and waiting for your go. Next: {nextStep}.",
-        "build": "{builder} is building from the spec, with no issues so far. Next: {nextStep}."
+        "build": "{builder} is building from the spec, with no issues so far. Next: {nextStep}.",
+        "allClear": "All {total} sections verified, no open issues. Next: {nextStep}.",
+        "review": "All {total} sections verified. Pull request #482 is waiting on {teammate}.",
+        "done": "Merged. All {total} sections verified, 7 issues caught before review."
       },
       "newReplies": [
         "empty",
         "ready",
-        "build"
+        "build",
+        "allClear",
+        "review",
+        "done"
       ],
       "phrases": [
         "how far",
@@ -330,8 +339,14 @@
         "issue": "Not yet: {issues} issues are still open on the line between {builder} and {reviewer}. Once every section is verified you can open a pull request.",
         "editor": "Not yet: {issues} issues are still open on the line between {builder} and {reviewer}. Once every section is verified you can open a pull request.",
         "review": "Merging unlocks when {teammate} approves.",
-        "*": "Open the pull request from the receipt when all lines are clear."
-      }
+        "*": "Open the pull request from the receipt when all lines are clear.",
+        "allClear": "Every line is clear. Here’s the pull request, drafted from the receipt.",
+        "done": "It’s merged. #482 went in with the receipt attached."
+      },
+      "newReplies": [
+        "allClear",
+        "done"
+      ]
     },
     {
       "id": "rename",
@@ -399,7 +414,8 @@
       "editor": "Try editing the flagged lines, then Save.",
       "review": "Try replying to {teammate}’s comment.",
       "done": "You’re all done. Start over from the menu to run it again.",
-      "ready": "Tell {builder} what to build, or click Start from the spec."
+      "ready": "Tell {builder} what to build, or click Start from the spec.",
+      "allClear": "Open the pull request from the receipt."
     }
   },
   "safety": "Stay in character as the agent; don't mention scripts or the prototype unless the fallback says so. Never claim to run real code. Keep replies to 1–3 sentences, plain words, no emoji.",

@@ -20,9 +20,16 @@ export function TeamRail({ showFit, onFit }: { showFit: boolean; onFit: () => vo
   const builder = firstOf(collaborators, 'builder');
   // Red "!" flags on both ends of the issue line while it has open issues (frame 06).
   const flagged = issueRaised && countOpen(issues) > 0 ? new Set([builder?.id, reviewer?.id]) : new Set<string | undefined>();
+  const allClear = useScenario((s) => s.milestones.allSectionsVerified);
+  // Frame 08: mint checks on every agent; the teammate's comes with the approval.
+  const checkedRow = (id: string) => {
+    const c = collaborators.find((x) => x.id === id);
+    if (!c) return false;
+    return c.role === 'teammate' ? c.review === 'approved' : allClear && c.status === 'active';
+  };
   const rows = [
     { id: 'you', role: 'you' as const, name: copy.people.you.displayName, sub: copy.people.you.fullName, draft: false, otherType: undefined },
-    ...collaborators.map((c) => ({ id: c.id, role: c.role, name: c.name, sub: subtitleFor(c, collaborators), draft: c.status === 'draft', otherType: c.otherType })),
+    ...collaborators.map((c) => ({ id: c.id, role: c.role, name: c.name, sub: subtitleFor(c, collaborators), draft: c.status === 'draft' || c.status === 'suggested', otherType: c.otherType })),
     // Frame 05 lists the suggested tester with a dashed icon.
     ...(suggestion && reviewer
       ? [{ id: SUGGESTED_ID, role: 'tester' as const, name: copy.roles.tester.defaultName, sub: t(copy.recommendation.suggestedSubtitle, { reviewer: reviewer.name }), draft: true, otherType: undefined }]
@@ -61,7 +68,9 @@ export function TeamRail({ showFit, onFit }: { showFit: boolean; onFit: () => vo
                 <span className="rail__name">{r.name}</span>
                 <span className="rail__sub">{r.sub}</span>
               </span>
-              {flagged.has(r.id) ? (
+              {checkedRow(r.id) ? (
+                <span className="rail__marker rail__marker--check" aria-hidden="true"><Icon name="check" size={12} /></span>
+              ) : flagged.has(r.id) ? (
                 <span className="rail__marker rail__marker--issue" aria-hidden="true">{copy.issueLine.teamRailFlag}</span>
               ) : suggestion && r.id === reviewer?.id && <span className="rail__marker rail__marker--suggestion" aria-hidden="true" />}
             </button>
