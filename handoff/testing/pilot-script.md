@@ -24,7 +24,7 @@ Then stop talking. Don't name buttons.
 | Red line | Click the line, badge or red pill | They don't connect red with "the agents disagree" |
 | Sections | Open Idempotency key | They open a verified row first, or miss the subsections |
 | Fix | Edit and Save, or Accept fix, or Reject | They save nonsense and how they read the reviewer's reply; whether they find Verify |
-| Finish the rest | Next section or quick Verify | They try to verify issue rows from the panel |
+| Finish the rest | "Verify the remaining sections" once both errors are verified, or Next section | Whether they trust the bulk verify or open each section first |
 | Receipt, then PR | Open pull request (every teammate reviews), then Create pull request | They skip reading the receipt, or choose Proceed anyway with no teammate |
 | Review | Reply to each teammate's comment in the composer; it merges on its own | They look for a Merge button, or miss a second teammate's comment |
 
