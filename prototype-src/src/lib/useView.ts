@@ -25,22 +25,24 @@ export function zoomAt(v: View, p: Point, factor: number): View {
 export const isIdentity = (v: View) => Math.abs(v.x) < 0.5 && Math.abs(v.y) < 0.5 && Math.abs(v.k - 1) < 0.001;
 
 // Area the team should fit in: below the title bar, above the composer, clear of the rail.
-const FIT = { x0: 270, y0: 60, x1: 1400, y1: 800 };
+const FIT = { x0: 270, y0: 60, right: 40, y1: 800 };
 
 /** "Show whole team": fit every orb (plus label room); never zooms past the designed 1:1. */
-export function fitView(points: Point[]): View {
+/** Points are in stage pixels (layout x plus the centring offset); `width` is the stage width. */
+export function fitView(points: Point[], width = 1440): View {
+  const FITX1 = width - FIT.right;
   if (points.length === 0) return IDENTITY_VIEW;
   const pad = { x: 110, top: 70, bottom: 70 };
   const x0 = Math.min(...points.map((p) => p.x)) - pad.x;
   const x1 = Math.max(...points.map((p) => p.x)) + pad.x;
   const y0 = Math.min(...points.map((p) => p.y)) - pad.top;
   const y1 = Math.max(...points.map((p) => p.y)) + pad.bottom;
-  const inDesign = x0 >= 0 && x1 <= 1440 && y0 >= 36 && y1 <= 810;
+  const inDesign = x0 >= 0 && x1 <= width && y0 >= 36 && y1 <= 810;
   if (inDesign) return IDENTITY_VIEW;
-  const k = clamp(Math.min((FIT.x1 - FIT.x0) / (x1 - x0), (FIT.y1 - FIT.y0) / (y1 - y0), 1), MIN_K, 1);
+  const k = clamp(Math.min((FITX1 - FIT.x0) / (x1 - x0), (FIT.y1 - FIT.y0) / (y1 - y0), 1), MIN_K, 1);
   const cx = (x0 + x1) / 2;
   const cy = (y0 + y1) / 2;
-  return clampView({ k, x: (FIT.x0 + FIT.x1) / 2 - cx * k, y: (FIT.y0 + FIT.y1) / 2 - cy * k });
+  return clampView({ k, x: (FIT.x0 + FITX1) / 2 - cx * k, y: (FIT.y0 + FIT.y1) / 2 - cy * k });
 }
 
 /** Pointer drag on empty canvas pans; wheel / pinch zooms around the pointer. Never moves on its own. */

@@ -7,6 +7,7 @@ import { firstOf, useScenario } from '../lib/store';
 import { CodeEditor } from './CodeEditor';
 import { Icon } from './Icon';
 import { Orb } from './Orb';
+import { SaveButton } from './SaveButton';
 
 const BOX = { left: 40, top: 72, width: 460, height: 470 };
 
@@ -23,6 +24,8 @@ export function FloatingEditor({ onToast }: { onToast: (message: string) => void
   const g = useGeometry();
   const builder = firstOf(collaborators, 'builder');
   const [line, setLine] = useState(1);
+  // After Save the button reads "Saved" with a check until the next edit.
+  const [justSaved, setJustSaved] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const dirty = draft !== undefined && draft !== saved;
   const ff = copy.build.floatingFile;
@@ -40,6 +43,7 @@ export function FloatingEditor({ onToast }: { onToast: (message: string) => void
   const save = () => {
     log('save', { file, section: null, resolved: null });
     saveFile(file);
+    setJustSaved(true);
     onToast(t(ff.saveToast, { builder: builder?.name }));
   };
 
@@ -59,7 +63,7 @@ export function FloatingEditor({ onToast }: { onToast: (message: string) => void
   return (
     <>
       {tie && (
-        <svg className="stage-overlay" width="1440" height="900" aria-hidden="true">
+        <svg className="stage-overlay" width="100%" height="900" aria-hidden="true">
           <line className="line line--attach" {...tie} />
         </svg>
       )}
@@ -81,12 +85,15 @@ export function FloatingEditor({ onToast }: { onToast: (message: string) => void
           </button>
         </header>
         <div className="floating-editor__code">
-          <CodeEditor file={file} doc={draft ?? saved} label={file} onChange={(text) => setFileDraft(file, text)} onCursorLine={setLine} onSave={save} />
+          <CodeEditor file={file} doc={draft ?? saved} label={file} onChange={(text) => {
+              setFileDraft(file, text);
+              setJustSaved(false);
+            }} onCursorLine={setLine} onSave={save} />
         </div>
         <footer className="floating-editor__footer">
           <Orb role="you" size={20} />
           <span className="floating-editor__typing" aria-live="polite">{t(ff.typingNote, { line })}</span>
-          <button type="button" className="pmr-button floating-editor__save" onClick={save}>{ff.save}</button>
+          <SaveButton saved={justSaved && !dirty} label={ff.save} savedLabel={t(ff.savedLabel)} className="floating-editor__save" onClick={save} />
         </footer>
       </section>
     </>

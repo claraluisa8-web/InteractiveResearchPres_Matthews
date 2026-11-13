@@ -1,5 +1,5 @@
 import { copy, t } from './copy';
-import { active, firstOf } from './store';
+import { active, firstOf, useScenario } from './store';
 import type { Collaborator, Milestones, Recommendation } from './types';
 import type { PillTone } from '../components/StatusPill';
 
@@ -30,7 +30,15 @@ export interface IssueCounts { open: number; verified: number; total: number; ed
 export function statusPill(all: Collaborator[], m: Milestones, rec: Recommendation, counts?: IssueCounts): Pill {
   const builder = firstOf(all, 'builder');
   if (m.merged) return { text: copy.recap.statusPill, tone: 'neutral', target: 'recap' };
-  if (m.prCreated && !m.teammateApproved) return { text: copy.teammateReview.statusPill, tone: 'lavender', target: 'comment' };
+  if (m.prCreated && !m.teammateApproved) {
+    const s = useScenario.getState();
+    const mate = s.collaborators.find((c) => c.id === s.pr.reviewer);
+    // Once the comment is in, the wait is on the user, and the pill says so.
+    if (s.reviewStage === 'commented' && mate) {
+      return { text: t(copy.teammateReview.waitingReplyCheck, { teammateFirst: mate.name.split(' ')[0] }), tone: 'lavender', target: 'comment' };
+    }
+    return { text: copy.teammateReview.statusPill, tone: 'lavender', target: s.reviewStage === 'reviewing' ? undefined : 'comment' };
+  }
   if (m.prCreated) return { text: t(copy.teammateReview.statusApproved), tone: 'neutral', target: 'merge' };
   if (m.issueRaised && counts) {
     if (counts.editorIssue) return { text: t(copy.editor.statusPill, counts.editorIssue), tone: 'issue', target: 'sections' };
@@ -58,5 +66,9 @@ function orbitText(all: Collaborator[]): string {
 
 export function initials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
-  return (parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : (parts[0] ?? '?').slice(0, 2)).toUpperCase();
+  if (parts.length === 0) return '';
+  return (parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : parts[0].slice(0, 2)).toUpperCase();
 }
+
+/** A teammate draft has no name until the user types one; show the role meanwhile. */
+export const displayName = (c: { name: string; role: string }) => c.name || (c.role === 'teammate' ? copy.roles.teammate.menuTitle : c.name);

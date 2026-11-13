@@ -8,7 +8,7 @@ import { Constellation, type LineHover } from './components/Constellation';
 import { Composer } from './components/Composer';
 import { Dialog } from './components/Dialog';
 import { FloatingEditor } from './components/FloatingEditor';
-import { CommentCard, PRPanel, PRStatusCard, ReceiptPanel, RecapPanel } from './components/ReviewPanels';
+import { AllClearPopup, CommentCard, PRPanel, PRStatusCard, ReceiptPanel, RecapPanel } from './components/ReviewPanels';
 import { SectionEditor } from './components/SectionEditor';
 import { SectionsPanel, issueOpen, walkOrder } from './components/SectionsPanel';
 import { LineCard } from './components/LineCard';
@@ -28,13 +28,13 @@ import { LOGGING, exportLog, log, resetLog } from './lib/log';
 import { startOver } from './lib/reset';
 import { statusPill } from './lib/status';
 import { useScenario } from './lib/store';
-import { STAGE_H, STAGE_W, useStageScale } from './lib/useStageScale';
+import { STAGE_H, useStageScale } from './lib/useStageScale';
 import { fitView, isIdentity } from './lib/useView';
 
 const TOAST_MS = 3000;
 
 export function App() {
-  const scale = useStageScale();
+  const { scale, width: stageWidth } = useStageScale();
   const [activeTab, setActiveTab] = useState<'constellation' | 'code'>('constellation');
   const [dialog, setDialog] = useState<'startOver' | 'about' | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -74,6 +74,8 @@ export function App() {
   const openFile = useScenario((s) => s.openFile);
   const rightPanel = useScenario((s) => s.rightPanel);
   const commentOpen = useScenario((s) => s.commentOpen);
+  const reviewStage = useScenario((s) => s.reviewStage);
+  const allClearOpen = useScenario((s) => s.allClearOpen);
   const setRightPanel = useScenario((s) => s.setRightPanel);
   const setCommentOpen = useScenario((s) => s.setCommentOpen);
   const collaboratorsAll = collaborators;
@@ -144,9 +146,9 @@ export function App() {
 
   // "Show whole team": the only camera move, and only on request; eases over 200 ms.
   const fitTeam = () => {
-    const g = computeGeometry(collaborators, null);
+    const g = computeGeometry(collaborators, null, undefined, stageWidth);
     setFitting(true);
-    setView(fitView([g.you.point, ...g.nodes.map((n) => n.point)]));
+    setView(fitView([g.you.point, ...g.nodes.map((n) => n.point)].map((p) => ({ x: p.x + g.dx, y: p.y })), stageWidth));
     window.setTimeout(() => setFitting(false), 220);
   };
 
@@ -173,7 +175,7 @@ export function App() {
       case 'build': return () => setUpdateCardOpen(true);
       case 'suggestion': return () => setRecCardOpen(true);
       case 'sections': return () => (editor ? undefined : openSections());
-      case 'receipt': return () => setRightPanel('receipt');
+      case 'receipt': return () => useScenario.getState().setAllClearOpen(true);
       case 'recap': return () => setRightPanel('recap');
       case 'comment': return () => setCommentOpen(true);
       case 'merge': return () => document.querySelector<HTMLElement>('[data-merge]')?.focus();
@@ -185,7 +187,7 @@ export function App() {
     <div className="viewport">
       <div
         className={`stage${fitting ? ' is-fitting' : ''}`}
-        style={{ width: STAGE_W, height: STAGE_H, transform: `translate(-50%, -50%) scale(${scale})` }}
+        style={{ width: stageWidth, height: STAGE_H, transform: `translate(-50%, -50%) scale(${scale})` }}
       >
         <Canvas />
         <Constellation scale={scale} onLineHover={onLineHover} />
@@ -197,7 +199,8 @@ export function App() {
         {rightPanel === 'pr' && <PRPanel />}
         {rightPanel === 'recap' && <RecapPanel />}
         {milestones.prCreated && !milestones.merged && !rightPanel && <PRStatusCard />}
-        {milestones.prCreated && !milestones.merged && commentOpen && <CommentCard />}
+        {milestones.prCreated && !milestones.merged && commentOpen && reviewStage !== 'reviewing' && <CommentCard />}
+        {allClearOpen && milestones.allSectionsVerified && !milestones.prOpened && <AllClearPopup />}
         {floatingFile && <FloatingEditor onToast={showToast} />}
         {lineHover && (
           <LineCard

@@ -29,7 +29,9 @@ export function ConfigurePanel() {
     crossTeamRequests: c.crossTeamRequests,
     allowedToEdit: c.allowedToEdit,
     connectsTo: linkedIds,
+    email: c.email ?? '',
   });
+  const [errors, setErrors] = useState<{ name?: string; email?: string }>({});
   const [connectOpen, setConnectOpen] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
   const connectRef = useRef<HTMLDivElement>(null);
@@ -56,6 +58,18 @@ export function ConfigurePanel() {
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
+    // A human teammate needs a real name and a work email (for the invite); agents don't.
+    if (c.role === 'teammate') {
+      const next: { name?: string; email?: string } = {};
+      if (!form.name.trim()) next.name = t(copy.constellation.teammateNameRequired);
+      if (!form.email.trim()) next.email = t(copy.constellation.teammateEmailRequired);
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) next.email = t(copy.constellation.teammateEmailInvalid);
+      setErrors(next);
+      if (next.name || next.email) {
+        document.getElementById(next.name ? 'configure-name' : 'configure-email')?.focus();
+        return;
+      }
+    }
     log('input', { field: 'name', text: form.name, role: c.role });
     commit(form);
     // Keyboard path: focus lands on the orb that just joined (or was edited).
@@ -68,7 +82,7 @@ export function ConfigurePanel() {
     );
   };
 
-  const shownName = form.name.trim() || defaultName(c.role, form.otherType);
+  const shownName = form.name.trim() || defaultName(c.role, form.otherType) || copy.roles.teammate.menuTitle;
   const nameOf = (id: string) => (id === 'you' ? copy.people.you.displayName : collaborators.find((x) => x.id === id)?.name ?? id);
   const connectable = ['you', ...others.map((o) => o.id)].filter((id) => !form.connectsTo.includes(id));
   const toggleEdit = (opt: string, on: boolean) =>
@@ -77,7 +91,7 @@ export function ConfigurePanel() {
   const isTeammate = c.role === 'teammate';
 
   return (
-    <form className="pmr-glass configure" onSubmit={submit} aria-labelledby="configure-title">
+    <form className="pmr-glass configure" onSubmit={submit} aria-labelledby="configure-title" noValidate>
       <header className="configure__header">
         {isTeammate ? (
           <span className="configure__teammate-icon"><Icon name="person-add" /></span>
@@ -96,8 +110,45 @@ export function ConfigurePanel() {
       <div className="configure__body">
         <label className="field">
           <span className="pmr-label field__label">{f.name}</span>
-          <input ref={nameRef} className="input" value={form.name} onChange={(e) => patch({ name: e.target.value })} placeholder={defaultName(c.role, form.otherType)} />
+          <input
+            ref={nameRef}
+            id="configure-name"
+            className={`input${errors.name ? ' is-invalid' : ''}`}
+            value={form.name}
+            onChange={(e) => {
+              patch({ name: e.target.value });
+              if (errors.name) setErrors((x) => ({ ...x, name: undefined }));
+            }}
+            placeholder={isTeammate ? t(copy.constellation.teammateNamePlaceholder) : defaultName(c.role, form.otherType)}
+            aria-invalid={!!errors.name}
+            aria-describedby={errors.name ? 'configure-name-error' : undefined}
+            autoComplete="off"
+          />
+          {errors.name && <span id="configure-name-error" className="field__error">{errors.name}</span>}
         </label>
+
+        {isTeammate && (
+          <label className="field">
+            <span className="pmr-label field__label">{t(copy.constellation.teammateEmailLabel)}</span>
+            <input
+              id="configure-email"
+              type="email"
+              className={`input${errors.email ? ' is-invalid' : ''}`}
+              value={form.email}
+              onChange={(e) => {
+                setForm((prev) => ({ ...prev, email: e.target.value }));
+                if (errors.email) setErrors((x) => ({ ...x, email: undefined }));
+              }}
+              placeholder={t(copy.constellation.teammateEmailPlaceholder)}
+              aria-invalid={!!errors.email}
+              aria-describedby={errors.email ? 'configure-email-error' : 'configure-email-help'}
+              autoComplete="off"
+            />
+            {errors.email
+              ? <span id="configure-email-error" className="field__error">{errors.email}</span>
+              : <span id="configure-email-help" className="field__help">{t(copy.constellation.teammateEmailHelp)}</span>}
+          </label>
+        )}
 
         {c.role === 'other' && (
           <label className="field">

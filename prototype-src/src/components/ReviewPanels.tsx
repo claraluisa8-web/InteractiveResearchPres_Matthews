@@ -3,7 +3,9 @@ import { copy, t } from '../lib/copy';
 import { useEscape } from '../lib/escape';
 import { toScreen, useGeometry } from '../lib/geometry';
 import { caughtPerLine, footnote, receiptRows, receiptText } from '../lib/receipt';
+import { topSections } from '../lib/sections';
 import { log } from '../lib/log';
+import { usePopupFocus } from '../lib/usePopupFocus';
 import { initials } from '../lib/status';
 import { useScenario } from '../lib/store';
 import { Icon } from './Icon';
@@ -141,6 +143,7 @@ export function PRPanel() {
             <span className="avatar">{initials(reviewer.name)}</span>
             <span className="pr-panel__reviewer-text">
               <span className="pr-panel__reviewer-name">{reviewer.name}</span>
+              {reviewer.email && <span className="field__help pr-panel__email">{reviewer.email}</span>}
               <span className="field__help">{reviewer.status === 'suggested' ? pr.reviewerHint : copy.roles.teammate.menuBody}</span>
             </span>
           </div>
@@ -171,6 +174,7 @@ export function PRStatusCard() {
   const reviewerId = useScenario((s) => s.pr.reviewer);
   const attach = useScenario((s) => s.pr.attachReceipt);
   const approved = useScenario((s) => s.milestones.teammateApproved);
+  const stage = useScenario((s) => s.reviewStage);
   const merge = useScenario((s) => s.merge);
   const mate = collaborators.find((c) => c.id === reviewerId);
   const name = mate?.name ?? copy.people.teammate.fullName;
@@ -212,7 +216,11 @@ export function PRStatusCard() {
         {!approved && <Icon name="lock" size={14} />}
         {tr.merge}
       </button>
-      {!approved && <p className="pr-status__help">{t(tr.mergeLocked, { teammateFirst: name.split(' ')[0] })}</p>}
+      {!approved && (
+        <p className="pr-status__help">
+          {t(stage === 'commented' ? tr.mergeLockedReply : stage === 'reading' ? tr.readingReply : tr.mergeLocked, { teammateFirst: name.split(' ')[0] })}
+        </p>
+      )}
     </section>
   );
 }
@@ -231,8 +239,12 @@ export function CommentCard() {
   const [replying, setReplying] = useState(false);
   const [text, setText] = useState('');
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const cardRef = useRef<HTMLElement>(null);
+  const stage = useScenario((s) => s.reviewStage);
   const mate = collaborators.find((c) => c.id === reviewerId);
   useEscape(() => (replying ? setReplying(false) : setCommentOpen(false)));
+  // The comment is the one thing to act on: Reply takes focus so Enter opens the reply field.
+  usePopupFocus(cardRef, '[data-reply]', { trap: true });
   useEffect(() => {
     if (replying) inputRef.current?.focus();
   }, [replying]);
@@ -245,7 +257,8 @@ export function CommentCard() {
   const node = g.byId(mate.id);
   const them = node ? toScreen(node.point, g, view) : you;
   const mid = { x: (you.x + them.x) / 2, y: (you.y + them.y) / 2 };
-  const left = Math.min(Math.max(mid.x - 210, 262), 1440 - 366);
+  const stageWidth = useScenario.getState().stageWidth;
+  const left = Math.min(Math.max(mid.x - 210, 262), stageWidth - 366);
   // Bottom-anchored 45px above the line (frame 10) so a growing thread rises instead of covering You.
   const bottomEdge = Math.max(mid.y - 45, 200);
 
@@ -261,10 +274,11 @@ export function CommentCard() {
 
   return (
     <>
-      <svg className="stage-overlay" width="1440" height="900" aria-hidden="true">
+      <svg className="stage-overlay" width="100%" height="900" aria-hidden="true">
         <line className="line line--attach" x1={mid.x} y1={bottomEdge} x2={mid.x} y2={mid.y - 14} />
       </svg>
       <section
+        ref={cardRef}
         className="pmr-glass comment-card"
         style={{ left, bottom: 900 - bottomEdge, maxHeight: bottomEdge - 48 }}
         aria-labelledby="comment-author"
@@ -284,6 +298,9 @@ export function CommentCard() {
             {m.text}
           </p>
         ))}
+        {stage === 'reading' && (
+          <p className="comment-card__reply comment-card__reading" aria-live="polite">{t(tr.readingReply, { teammateFirst: first })}</p>
+        )}
         {replying ? (
           <form className="comment-card__form" onSubmit={send}>
             <textarea
@@ -375,5 +392,39 @@ export function RecapPanel() {
         <button type="button" className="pmr-button" data-done onClick={done}>{rc.actions[1]}</button>
       </div>
     </aside>
+  );
+}
+
+/** M7 (feedback): a pop-up so Open pull request isn't hidden behind the "All lines clear" pill. */
+export function AllClearPopup() {
+  const collaborators = useScenario((s) => s.collaborators);
+  const setAllClearOpen = useScenario((s) => s.setAllClearOpen);
+  const setRightPanel = useScenario((s) => s.setRightPanel);
+  const openPR = useScenario((s) => s.openPR);
+  const ref = useRef<HTMLDivElement>(null);
+  const total = topSections(collaborators).length;
+  // Close leaves the receipt on screen, so Open pull request is still one click away.
+  const close = () => {
+    setAllClearOpen(false);
+    setRightPanel('receipt');
+  };
+  useEscape(close);
+  usePopupFocus(ref, '[data-allclear-primary]', { trap: true });
+  return (
+    <div className="scrim" onPointerDown={(e) => e.target === e.currentTarget && close()}>
+      <div ref={ref} className="pmr-glass dialog all-clear" role="dialog" aria-modal="true" aria-labelledby="all-clear-title">
+        <span className="all-clear__check" aria-hidden="true"><Icon name="check" size={20} /></span>
+        <h2 id="all-clear-title" className="dialog__title">{t(ac.popupTitle)}</h2>
+        <p className="dialog__body">{t(ac.popupBody, { total })}</p>
+        <div className="dialog__actions">
+          <button type="button" className="pmr-button pmr-button--secondary" onClick={() => { setAllClearOpen(false); setRightPanel('receipt'); }}>
+            {t(ac.popupSecondary)}
+          </button>
+          <button type="button" className="pmr-button" data-allclear-primary onClick={() => { setAllClearOpen(false); openPR(); }}>
+            {ac.primary}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

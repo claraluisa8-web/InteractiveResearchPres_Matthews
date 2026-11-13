@@ -59,7 +59,7 @@ export function Tooltip({ scale }: { scale: number }) {
   return (
     <div
       className={`pmr-glass tooltip${tip.below ? '' : ' is-above'}`}
-      style={{ left: Math.min(Math.max(tip.x, 80), 1360), top: tip.y }}
+      style={{ left: Math.max(tip.x, 80), top: tip.y }}
       role="presentation"
       aria-hidden="true"
     >

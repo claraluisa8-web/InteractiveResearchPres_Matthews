@@ -1,4 +1,6 @@
+import { useRef } from 'react';
 import { copy, t } from '../lib/copy';
+import { usePopupFocus } from '../lib/usePopupFocus';
 import { useEscape } from '../lib/escape';
 import { giveTheGo } from '../lib/flow';
 import { subtitleFor } from '../lib/status';
@@ -22,6 +24,9 @@ export function BuildCard() {
   const openFile = useScenario((s) => s.openFile);
   const setUpdateCardOpen = useScenario((s) => s.setUpdateCardOpen);
   const builder = firstOf(collaborators, 'builder');
+  const readyRef = useRef<HTMLElement>(null);
+  // The ready card's purple "Start from the spec" takes focus when it appears, so Enter starts the build.
+  usePopupFocus(readyRef, '[data-start-build]', { when: !!builder && !buildStarted && readyVisible });
   if (!builder) return null;
   const model = subtitleFor(builder, collaborators);
 
@@ -29,7 +34,7 @@ export function BuildCard() {
     if (!readyVisible) return null;
     const rc = copy.build.readyCard;
     return (
-      <section key="ready" className="pmr-glass build-card" aria-label={builder.name}>
+      <section key="ready" ref={readyRef} className="pmr-glass build-card" aria-label={builder.name}>
         <header className="build-card__header">
           <Orb role="builder" size={28} />
           <div>
@@ -104,13 +109,16 @@ export function RecommendationCard() {
   const addDirect = useScenario((s) => s.addDirect);
   const startDraft = useScenario((s) => s.startDraft);
   const reviewer = firstOf(collaborators, 'reviewer');
+  const ref = useRef<HTMLElement>(null);
+  // Enter adds the tester; Tab cycles Add tester, Adjust first, Not now.
+  usePopupFocus(ref, '[data-rec-primary]', { trap: true });
   // Esc is "Not now": the ring and the pill stay so the suggestion can be reopened.
   useEscape(() => setRecommendation('dismissed', false));
   if (!reviewer) return null;
   const r = copy.recommendation;
   const [add, adjust, notNow] = r.actions;
   return (
-    <section className="pmr-glass rec-card" aria-labelledby="rec-title" role="dialog">
+    <section ref={ref} className="pmr-glass rec-card" aria-labelledby="rec-title" role="dialog">
       <header className="build-card__header">
         <Orb role="reviewer" size={28} />
         <div>

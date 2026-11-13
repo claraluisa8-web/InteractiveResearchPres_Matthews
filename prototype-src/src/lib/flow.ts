@@ -126,7 +126,10 @@ export function useIssueFlow() {
         milestones: { ...s.milestones, allSectionsVerified: true },
         sectionsLine: null,
         linkIds: null,
-        rightPanel: s.editor ? s.rightPanel : 'receipt',
+        // Feedback: the next step shouldn't hide behind the status pill, so a pop-up says it.
+        editor: null,
+        allClearOpen: true,
+        rightPanel: null,
         updateCardOpen: false,
         floatingFile: null,
       }));
@@ -134,20 +137,23 @@ export function useIssueFlow() {
   }, [m.issueRaised, m.allSectionsVerified, sections, collaborators]);
 }
 
-/** M10: the teammate approves after a reply (1.5 s later) or after 20 s with no reply. */
+/**
+ * M9 to M10: the teammate reviews the PR for a few seconds, then comments. Approval needs a reply
+ * (any text); the teammate reads it for a beat before approving. The idle hint points at Reply.
+ */
 export function useReviewFlow() {
-  const prCreated = useScenario((s) => s.milestones.prCreated);
-  const approved = useScenario((s) => s.milestones.teammateApproved);
-  const replies = useScenario((s) => s.thread.filter((m) => m.from === 'you').length);
+  const stage = useScenario((s) => s.reviewStage);
+  const setReviewStage = useScenario((s) => s.setReviewStage);
   const approve = useScenario((s) => s.approve);
 
   useEffect(() => {
-    if (!prCreated || approved) return;
-    if (replies > 0) {
-      const id = window.setTimeout(() => approve(false), 1500);
+    if (stage === 'reviewing') {
+      const id = window.setTimeout(() => setReviewStage('commented'), TIMING.teammateReview);
       return () => window.clearTimeout(id);
     }
-    const id = window.setTimeout(() => approve(true), TIMING.teammateAutoApprove);
-    return () => window.clearTimeout(id);
-  }, [prCreated, approved, replies, approve]);
+    if (stage === 'reading') {
+      const id = window.setTimeout(() => approve(false), TIMING.teammateReadReply);
+      return () => window.clearTimeout(id);
+    }
+  }, [stage, setReviewStage, approve]);
 }

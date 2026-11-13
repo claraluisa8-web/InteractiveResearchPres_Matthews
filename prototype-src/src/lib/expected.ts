@@ -21,11 +21,13 @@ export function expectedStep(s: State): Expected {
   if (m.merged) return { key: 'done', selector: s.rightPanel === 'recap' ? '[data-done]' : null };
   if (m.prCreated && m.teammateApproved) return { key: 'approved', selector: '[data-merge]' };
   if (m.prCreated) {
-    const replied = s.thread.some((t) => t.from === 'you');
-    return { key: 'review', selector: replied ? null : s.commentOpen ? '[data-reply]' : '[data-comment-node]' };
+    if (s.reviewStage !== 'commented') return { key: `review:${s.reviewStage}`, selector: null };
+    return { key: 'review:commented', selector: s.commentOpen ? '[data-reply]' : '[data-comment-node]' };
   }
   if (s.rightPanel === 'pr') return { key: 'pr', selector: '[data-create-pr]' };
-  if (m.allSectionsVerified) return { key: 'allClear', selector: s.rightPanel === 'receipt' ? '[data-open-pr]' : '.status-pill.is-button' };
+  if (m.allSectionsVerified) {
+    return { key: 'allClear', selector: s.allClearOpen ? '[data-allclear-primary]' : s.rightPanel === 'receipt' ? '[data-open-pr]' : '.status-pill.is-button' };
+  }
 
   if (s.editor) {
     const def = sectionById(s.editor.section);

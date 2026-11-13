@@ -54,7 +54,8 @@ export function LineCard({ hover, onClose, onStay, onLeave }: LineCardProps) {
     : 0;
   const countText = onLine === 1 ? t(lc.sectionCountOne) : onLine > 1 ? t(lc.sectionCount, { n: onLine }) : '';
   const at = toScreen(hover.at, g, view);
-  const left = Math.min(Math.max(at.x - W / 2, 16), 1440 - W - 16);
+  const stageWidth = useScenario((s) => s.stageWidth);
+  const left = Math.min(Math.max(at.x - W / 2, 16), stageWidth - W - 16);
   const top = Math.min(at.y + 18, 740);
 
   return (

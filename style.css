@@ -413,8 +413,7 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
   box-shadow: 0 0 0 1px rgb(124 92 255 / 0.35), 0 0 6px rgb(185 168 255 / 0.7);
 }
 
-/* The prototype viewer covers the whole chart; the prototype keeps its 1440×900 ratio,
-   letterboxed on its own canvas color. */
+/* The prototype viewer covers the whole chart, and the prototype fills it. */
 #prototype-viewer {
   position: absolute;
   inset: 0;
@@ -454,5 +453,5 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
 }
 #prototype-close:hover { color: var(--text); border-color: rgba(255, 255, 255, 0.32); }
 #prototype-close:focus-visible, #prototype-new-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-#prototype-frame { flex: 1; min-height: 0; display: grid; place-items: center; }
+#prototype-frame { flex: 1; min-height: 0; display: flex; }
 #prototype-frame iframe { display: block; border: 0; background: var(--pmr-canvas); }

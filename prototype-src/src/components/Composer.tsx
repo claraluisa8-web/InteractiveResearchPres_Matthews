@@ -59,7 +59,7 @@ export function Composer() {
     const state = useScenario.getState();
     const ctx = contextFor(state.collaborators, state.milestones, !!state.editor);
     // Frame 10: while the review is open, anything sent is a reply to the teammate's comment.
-    if (ctx === 'review' && !state.milestones.teammateApproved) {
+    if (ctx === 'review' && state.reviewStage === 'commented') {
       log('input', { field: 'composer', text: input, intent: 'replyToTeammate', score: 0 });
       state.replyToTeammate(input);
       state.setCommentOpen(true);

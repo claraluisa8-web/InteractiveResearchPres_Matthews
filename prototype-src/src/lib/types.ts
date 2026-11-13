@@ -16,6 +16,8 @@ export interface Collaborator {
   addedAt: number;
   /** Index into the layout's slot table, fixed when the collaborator is created. */
   slot: number;
+  /** Human teammates: their work email (feedback: a second identifier beside the name). */
+  email?: string;
   /** Human teammate reviewing the pull request (frames 10–11). */
   review?: 'pending' | 'approved';
 }
@@ -54,6 +56,9 @@ export interface Milestones {
 export interface ThreadMessage { from: 'you' | 'teammate'; text: string }
 
 export type RightPanel = 'receipt' | 'pr' | 'recap' | null;
+
+/** The teammate's review: reading the PR, comment posted, reading the user's reply, approved. */
+export type ReviewStage = 'none' | 'reviewing' | 'commented' | 'reading' | 'approved';
 
 export interface View {
   x: number;

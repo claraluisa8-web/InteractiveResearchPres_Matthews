@@ -4,7 +4,10 @@ export const TIMING = {
   recommendationDelay: 4000,
   issueDelay: 3000,
   recheckDelay: 2000,
-  teammateAutoApprove: 20000,
+  // Dana reviews before commenting, then reads the user's reply before approving (feedback round 1:
+  // no approval without a reply; the old 20 s auto-approve is gone, the idle hint covers a stall).
+  teammateReview: 4000,
+  teammateReadReply: 3500,
   idleHint: 25000,
   replyThinking: [700, 1200] as const,
 };

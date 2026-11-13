@@ -47,7 +47,7 @@ export function AgentPopover() {
   const at = toScreen(node.point, g, view);
   const r = (node.size / 2) * view.k;
   let left = at.x + r + 18;
-  if (left + W > 1424) left = at.x - r - 18 - W;
+  if (left + W > useScenario.getState().stageWidth - 16) left = at.x - r - 18 - W;
   const top = Math.min(Math.max(at.y - 40, 48), 600);
 
   const youView = !c;
@@ -73,6 +73,12 @@ export function AgentPopover() {
             <>
               <dt>{t(p.configuration)}</dt>
               <dd>{c.configuration}</dd>
+            </>
+          )}
+          {c.role === 'teammate' && c.email && (
+            <>
+              <dt>{t(p.email)}</dt>
+              <dd>{c.email}</dd>
             </>
           )}
           <dt>{t(p.status)}</dt>

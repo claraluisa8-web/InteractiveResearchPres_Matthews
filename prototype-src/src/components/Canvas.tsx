@@ -37,7 +37,8 @@ export function Canvas() {
   return (
     <div className="canvas" aria-hidden="true">
       <div className="canvas__glow" />
-      <svg className="canvas__grid" width={STAGE_W} height={STAGE_H} viewBox={`0 0 ${STAGE_W} ${STAGE_H}`}>
+      {/* Drawn for 1440×900 and scaled to cover a wider stage, centred. */}
+      <svg className="canvas__grid" width="100%" height="100%" viewBox={`0 0 ${STAGE_W} ${STAGE_H}`} preserveAspectRatio="xMidYMid slice">
         {DEPTHS.map((f) => {
           const b = boxAt(f);
           return <rect key={f} x={b.x0} y={b.y0} width={b.x1 - b.x0} height={b.y1 - b.y0} />;

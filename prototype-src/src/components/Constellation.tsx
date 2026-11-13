@@ -5,7 +5,7 @@ import { SUGGESTED_ID, useGeometry, type Node } from '../lib/geometry';
 import { subtitleFor } from '../lib/status';
 import { firstOf, useScenario } from '../lib/store';
 import { caughtPerLine } from '../lib/receipt';
-import { initials } from '../lib/status';
+import { displayName, initials } from '../lib/status';
 import type { Line } from '../lib/types';
 import { usePanZoom } from '../lib/useView';
 import { Icon } from './Icon';
@@ -76,6 +76,7 @@ export function Constellation({ scale, onLineHover }: ConstellationProps) {
   const merged = useScenario((s) => s.milestones.merged);
   const reviewerId = useScenario((s) => s.pr.reviewer);
   const setCommentOpen = useScenario((s) => s.setCommentOpen);
+  const reviewStage = useScenario((s) => s.reviewStage);
   const caught = merged ? caughtPerLine(collaborators, reviewerId) : [];
   const openSections = useScenario((s) => s.openSections);
   // Orbs ringed from elsewhere: a section row rings its line's two ends; a rail row rings one orb.
@@ -122,7 +123,7 @@ export function Constellation({ scale, onLineHover }: ConstellationProps) {
       onPointerCancel={onPointerUp}
     >
       <div className="world" style={{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.k})` }}>
-        <div className="world__layout" style={{ transform: `translate(${g.shift.x}px, ${g.shift.y}px)` }}>
+        <div className="world__layout" style={{ transform: `translate(${g.shift.x + g.dx}px, ${g.shift.y}px)` }}>
           {/* Floor reflections sit on the grid floor under each orb. */}
           {[g.you, ...g.nodes].map((n) => (
             <span
@@ -213,7 +214,7 @@ export function Constellation({ scale, onLineHover }: ConstellationProps) {
           {/* Frame 10: a comment node on the dashed line to the reviewing teammate. */}
           {g.lines.filter((l) => l.kind === 'pending' && l.a === 'you').map((line) => {
             const b = g.byId(line.b);
-            if (!b?.c || b.c.review !== 'pending') return null;
+            if (!b?.c || b.c.review !== 'pending' || reviewStage === 'reviewing') return null;
             const mx = (g.you.point.x + b.point.x) / 2;
             const my = (g.you.point.y + b.point.y) / 2;
             const label = t(copy.teammateReview.commentNode, { teammateFirst: b.c.name.split(' ')[0] });
@@ -378,7 +379,7 @@ function CollaboratorNode({ n, linked, dim }: { n: Node; linked: boolean; dim: b
         className={`node__label${n.far && !allClear ? ' node__label--right' : ''}${n.far && allClear ? ' node__label--above' : ''}`}
         style={n.far && allClear ? { top: -n.size / 2 - 50 } : labelStyle(n.size, n.far)}
       >
-        <span className="node__name">{c.name}</span>
+        <span className="node__name">{displayName(c)}</span>
         <span className="node__sub">{sub}</span>
       </div>
     </div>

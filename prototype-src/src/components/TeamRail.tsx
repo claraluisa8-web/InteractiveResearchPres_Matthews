@@ -1,5 +1,5 @@
 import { copy, t } from '../lib/copy';
-import { subtitleFor } from '../lib/status';
+import { displayName, subtitleFor } from '../lib/status';
 import { SUGGESTED_ID, countOpen } from '../lib/geometry';
 import { firstOf, useScenario } from '../lib/store';
 import { Icon } from './Icon';
@@ -29,7 +29,7 @@ export function TeamRail({ showFit, onFit }: { showFit: boolean; onFit: () => vo
   };
   const rows = [
     { id: 'you', role: 'you' as const, name: copy.people.you.displayName, sub: copy.people.you.fullName, draft: false, otherType: undefined },
-    ...collaborators.map((c) => ({ id: c.id, role: c.role, name: c.name, sub: subtitleFor(c, collaborators), draft: c.status === 'draft' || c.status === 'suggested', otherType: c.otherType })),
+    ...collaborators.map((c) => ({ id: c.id, role: c.role, name: displayName(c), sub: subtitleFor(c, collaborators), draft: c.status === 'draft' || c.status === 'suggested', otherType: c.otherType })),
     // Frame 05 lists the suggested tester with a dashed icon.
     ...(suggestion && reviewer
       ? [{ id: SUGGESTED_ID, role: 'tester' as const, name: copy.roles.tester.defaultName, sub: t(copy.recommendation.suggestedSubtitle, { reviewer: reviewer.name }), draft: true, otherType: undefined }]

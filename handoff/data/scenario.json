@@ -32,7 +32,12 @@
     "teammate": {
       "fullName": "Dana Kim",
       "initials": "DK",
-      "role": "Human teammate"
+      "role": "Human teammate",
+      "email": {
+        "text": "dana.kim@brokerage.example",
+        "new": true,
+        "note": "Only used for the 'adding' ghost when the user opens a PR without a teammate."
+      }
     }
   },
   "tabs": {
@@ -266,6 +271,10 @@
       },
       "unsaved": {
         "text": "Unsaved changes",
+        "new": true
+      },
+      "savedLabel": {
+        "text": "Saved",
         "new": true
       }
     },
@@ -847,6 +856,10 @@
         "text": "Noted. Your decision is on the receipt.",
         "new": true
       }
+    },
+    "savedLabel": {
+      "text": "Saved",
+      "new": true
     }
   },
   "allClear": {
@@ -902,6 +915,22 @@
     },
     "plainTitle": {
       "text": "Verification receipt  ·  {repo}  ·  {branch}",
+      "new": true
+    },
+    "popupTitle": {
+      "text": "All lines clear",
+      "new": true
+    },
+    "popupBody": {
+      "text": "All {total} sections are verified against recurring-investments.yaml v1.2.0. Your verification receipt is ready to go with the pull request.",
+      "new": true
+    },
+    "popupSecondary": {
+      "text": "View receipt",
+      "new": true
+    },
+    "popupClose": {
+      "text": "Close",
       "new": true
     }
   },
@@ -1009,7 +1038,24 @@
       "text": "Close comment",
       "new": true
     },
-    "legendDashed": "Dashed line = waiting on a teammate’s review"
+    "legendDashed": "Dashed line = waiting on a teammate’s review",
+    "reviewing": {
+      "text": "{teammateFirst} is reviewing the pull request…",
+      "new": true
+    },
+    "readingReply": {
+      "text": "{teammateFirst} is reading your reply…",
+      "new": true
+    },
+    "waitingReplyCheck": {
+      "text": "Waiting on your reply to {teammateFirst}",
+      "new": true
+    },
+    "mergeLockedReply": {
+      "text": "Reply to {teammateFirst}’s comment. Merging unlocks once {teammateFirst} approves.",
+      "new": true,
+      "note": "Replaces mergeLocked once the comment has arrived."
+    }
   },
   "recap": {
     "title": "Pull request merged",
@@ -1096,7 +1142,8 @@
     "build: saveToast, unsaved, metaSuffix, updateCardClose, startEcho; constellation: removeConfirm, nextSteps, nextStepHints (Phase 2)",
     "Phase 3: issueLine.statusPillOne/badgeLabel, sectionsPanel extras, editor extras (labels, recheck, reject confirm, diff, afterResolve, notStillMet), section summaries and spec excerpts for non-issue sections",
     "Phase 4: allClear footnotes/copy/close, pullRequest close, teammateReview reply/answer/autoApprove/approved, recap close, constellation nextSteps/hints for allClear/review/done, lineCard cleared/review",
-    "Phase 5: chrome.recording, recordingLabel, exported, startOverConfirm keep/clear log, specLocked; lineCard section counts"
+    "Phase 5: chrome.recording, recordingLabel, exported, startOverConfirm keep/clear log, specLocked; lineCard section counts",
+    "Feedback round 1: Saved label, teammate name/email fields and errors, all-clear pop-up, Dana reviewing/reading states"
   ],
   "constellation": {
     "$note": "Phase 1 copy that isn't drawn in Figma. All new.",
@@ -1230,6 +1277,10 @@
       "youRole": {
         "text": "Senior software engineer",
         "new": true
+      },
+      "email": {
+        "text": "Email",
+        "new": true
       }
     },
     "lineCard": {
@@ -1362,6 +1413,34 @@
         "text": "Every line is clear. Open the pull request from the receipt.",
         "new": true
       }
+    },
+    "teammateNamePlaceholder": {
+      "text": "Teammate’s full name",
+      "new": true
+    },
+    "teammateEmailLabel": {
+      "text": "WORK EMAIL",
+      "new": true
+    },
+    "teammateEmailPlaceholder": {
+      "text": "name@company.com",
+      "new": true
+    },
+    "teammateEmailHelp": {
+      "text": "Used to send the invite and to tag them on reviews.",
+      "new": true
+    },
+    "teammateNameRequired": {
+      "text": "Add their name so the team knows who’s reviewing.",
+      "new": true
+    },
+    "teammateEmailRequired": {
+      "text": "Add a work email so the invite can be sent.",
+      "new": true
+    },
+    "teammateEmailInvalid": {
+      "text": "That doesn’t look like an email address.",
+      "new": true
     }
   }
 }

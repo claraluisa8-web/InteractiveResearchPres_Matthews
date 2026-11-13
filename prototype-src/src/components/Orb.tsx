@@ -35,7 +35,9 @@ export function Orb({ role, size, name = '', otherType, outline }: OrbProps) {
         </>
       )}
       {role === 'teammate' && !outline && (
-        <span className="orb__initials" style={{ fontSize: Math.max(9, Math.round(size * 0.3)) }}>{initials(name)}</span>
+        initials(name)
+          ? <span className="orb__initials" style={{ fontSize: Math.max(9, Math.round(size * 0.3)) }}>{initials(name)}</span>
+          : <Icon name="person" size={Math.round(size * 0.42)} className="orb__glyph" />
       )}
       {icon && size >= 20 && <Icon name={icon} size={glyph} className="orb__glyph" />}
     </span>

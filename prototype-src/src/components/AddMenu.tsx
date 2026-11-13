@@ -20,6 +20,7 @@ export function AddMenu() {
   const closeAddMenu = useScenario((s) => s.closeAddMenu);
   const startDraft = useScenario((s) => s.startDraft);
   const g = useGeometry();
+  const stageWidth = useScenario((s) => s.stageWidth);
   const ref = useRef<HTMLDivElement>(null);
   const [subOpen, setSubOpen] = useState(false);
 
@@ -31,12 +32,13 @@ export function AddMenu() {
     left = g.plus.x > g.you.point.x ? p.x + 16 * view.k : p.x - 16 * view.k - MENU_W;
     top = p.y - 120;
   } else {
-    left = 408;
+    // Above the composer's Add node pill; the composer is centred in the stage.
+    left = (stageWidth - 640) / 2 + 8;
     top = 816 - MENU_H;
   }
-  left = Math.min(Math.max(left, 16), 1440 - MENU_W - 16);
+  left = Math.min(Math.max(left, 16), stageWidth - MENU_W - 16);
   top = Math.min(Math.max(top, 48), 812 - MENU_H);
-  const subLeft = left + MENU_W + SUB_W + 8 > 1440 ? -SUB_W - 6 : MENU_W + 6;
+  const subLeft = left + MENU_W + SUB_W + 8 > stageWidth ? -SUB_W - 6 : MENU_W + 6;
 
   const close = () => {
     closeAddMenu();

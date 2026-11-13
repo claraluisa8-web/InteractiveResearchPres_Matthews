@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useRef } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { sectionExtensions, type LineInfo } from '../lib/cmSection';
 import { copy, t } from '../lib/copy';
 import { useEscape } from '../lib/escape';
@@ -12,6 +12,7 @@ import type { Collaborator } from '../lib/types';
 import { CodeEditor } from './CodeEditor';
 import { Icon } from './Icon';
 import { Orb } from './Orb';
+import { SaveButton } from './SaveButton';
 import { issueOpen, lineIds, walkOrder } from './SectionsPanel';
 
 const ed = copy.editor;
@@ -53,6 +54,9 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
   const rejectIssue = useScenario((s) => s.rejectIssue);
   const setCardNote = useScenario((s) => s.setCardNote);
   const ref = useRef<HTMLDivElement>(null);
+  // After Save the button reads "Saved" with a check until the next edit (or another section).
+  const [justSaved, setJustSaved] = useState(false);
+  useEffect(() => setJustSaved(false), [editor.section, editor.tab]);
 
   const def = sectionById(editor.section);
   const builder = firstOf(collaborators, 'builder');
@@ -90,6 +94,7 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
 
   const save = () => {
     if (isSpec) return;
+    setJustSaved(true);
     const waiting = st().saveSectionFile(tab);
     if (waiting.length) {
       onToast(t(ed.afterSaveToast, names));
@@ -280,7 +285,9 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
                 {ed.unsaved}
               </span>
             )}
-            {!locked && <button type="button" className="pmr-button code-panel__save" onClick={save}>{ed.save}</button>}
+            {!locked && (
+              <SaveButton saved={justSaved && !dirty} label={ed.save} savedLabel={t(ed.savedLabel)} className="code-panel__save" onClick={save} />
+            )}
           </div>
           <div className="code-panel__body">
             {editor.mode === 'diff' && issueData ? (
@@ -309,6 +316,7 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
                 scrollToLine={scrollLine}
                 onChange={(text) => {
                   setFileDraft(tab, text);
+                  setJustSaved(false);
                   useScenario.setState((s) => ({ milestones: { ...s.milestones, sectionEdited: true } }));
                 }}
                 onSave={save}

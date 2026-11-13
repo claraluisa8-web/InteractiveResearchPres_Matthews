@@ -34,16 +34,21 @@ export interface Geometry {
   /** Layout offset while the configure panel is open, so the ghost sits clear of the panel (frame 03). */
   shift: Point;
   plus: Point;
+  /** Extra stage width split either side: layout x is designed for 1440 and centred in the stage. */
+  dx: number;
   byId: (id: string) => Node | undefined;
 }
 
+// Configure panel's left edge in the 1440 design (frame 03); it's anchored to the right edge.
 const PANEL_LEFT = 880;
 
 export function computeGeometry(
   collaborators: Collaborator[],
   configureId: string | null,
   flow: FlowState = { buildStarted: false, suggestion: false },
+  stageWidth = 1440,
 ): Geometry {
+  const dx = (stageWidth - 1440) / 2;
   // Work flows You to builder and builder to reviewer once the build starts (frame 04).
   const working = new Set<string>();
   const builder = firstOf(collaborators, 'builder');
@@ -76,18 +81,19 @@ export function computeGeometry(
   if (target) {
     // Frame 03 moves the team 200px left and 60px down for a new collaborator, further if the ghost
     // would still sit under the panel. Editing only moves as far as needed to keep the orb in view.
-    const needed = Math.min(0, PANEL_LEFT - 80 - target.point.x);
-    shift = target.c?.status === 'draft' ? { x: Math.min(-200, needed), y: 60 } : { x: needed, y: 0 };
+    // In a wider stage the right-anchored panels sit further right, so the team needs to move less.
+    const needed = Math.min(0, PANEL_LEFT + dx - 80 - target.point.x);
+    shift = target.c?.status === 'draft' ? { x: Math.min(0, -200 + dx, needed), y: 60 } : { x: needed, y: 0 };
   } else if (flow.sectionsOpen) {
-    shift = { x: -40, y: 0 };
+    shift = { x: Math.min(0, -40 + dx), y: 0 };
   } else if (flow.allClear) {
-    shift = { x: -140, y: 0 };
+    shift = { x: Math.min(0, -140 + dx), y: 0 };
   }
   // Alone, the + sits right of You (frame 01). With a team, You's label takes that side and lines
   // leave You downward, so the + moves to the upper left where nothing is drawn.
   const plus = collaborators.length > 0 ? { x: youP.x - 50, y: youP.y - 44 } : { x: youP.x + 64, y: youP.y };
   const all = [you, ...nodes];
-  return { you, nodes, lines, shift, plus, byId: (id) => all.find((n) => n.id === id) };
+  return { you, nodes, lines, shift, plus, dx, byId: (id) => all.find((n) => n.id === id) };
 }
 
 export function useGeometry(): Geometry {
@@ -99,17 +105,18 @@ export function useGeometry(): Geometry {
   const issues = useScenario((s) => s.issues);
   const sectionsOpen = useScenario((s) => !!s.sectionsLine);
   const allClear = useScenario((s) => s.milestones.allSectionsVerified);
+  const stageWidth = useScenario((s) => s.stageWidth);
   const suggestion = recommendation === 'shown' || recommendation === 'dismissed';
   const openIssues = issueRaised ? countOpen(issues) : 0;
   return useMemo(
-    () => computeGeometry(collaborators, configureId, { buildStarted, suggestion, openIssues, sectionsOpen, allClear }),
-    [collaborators, configureId, buildStarted, suggestion, openIssues, sectionsOpen, allClear],
+    () => computeGeometry(collaborators, configureId, { buildStarted, suggestion, openIssues, sectionsOpen, allClear }, stageWidth),
+    [collaborators, configureId, buildStarted, suggestion, openIssues, sectionsOpen, allClear, stageWidth],
   );
 }
 
 /** Layout point to stage pixels, through the panel shift and the user's pan/zoom. */
 export function toScreen(p: Point, g: Geometry, v: View): Point {
-  return { x: v.x + (p.x + g.shift.x) * v.k, y: v.y + (p.y + g.shift.y) * v.k };
+  return { x: v.x + (p.x + g.shift.x + g.dx) * v.k, y: v.y + (p.y + g.shift.y) * v.k };
 }
 
 export const countOpen = (issues: Record<number, IssueState>) =>

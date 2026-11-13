@@ -24,7 +24,7 @@ button { cursor: pointer; }
   *, *::before, *::after { transition-duration: 0ms !important; animation-duration: 0ms !important; animation-iteration-count: 1 !important; }
 }
 
-/* ---------- Stage: fixed 1440×900, scaled uniformly, letterboxed on the canvas color ---------- */
+/* ---------- Stage: 900px tall, as wide as the window (1440 minimum), scaled uniformly ---------- */
 
 .viewport { position: fixed; inset: 0; overflow: clip; }
 
@@ -125,7 +125,7 @@ button { cursor: pointer; }
 
 .titlebar__title {
   position: absolute;
-  left: 688px;
+  left: calc(50% - 32px); /* x 688 in the 1440 design: stays with the centred composer */
   top: 10px;
   margin: 0;
   font-size: 12px;
@@ -177,7 +177,7 @@ button { cursor: pointer; }
 
 .composer {
   position: absolute;
-  left: 400px;
+  left: calc(50% - 320px);
   top: 824px;
   width: 640px;
   height: 58px;
@@ -334,7 +334,7 @@ button { cursor: pointer; }
 .world-surface { position: absolute; inset: 36px 0 0 0; overflow: clip; cursor: grab; touch-action: none; user-select: none; }
 .world-surface:active { cursor: grabbing; }
 /* World coordinates are stage coordinates, so offset back up by the title bar. */
-.world { position: absolute; left: 0; top: -36px; width: 1440px; height: 900px; transform-origin: 0 0; }
+.world { position: absolute; left: 0; top: -36px; width: 100%; height: 900px; transform-origin: 0 0; }
 .stage.is-fitting .world { transition: transform var(--pmr-t-panel) var(--pmr-ease); }
 .world__layout { position: absolute; inset: 0; transition: transform var(--pmr-t-panel) var(--pmr-ease); }
 
@@ -578,7 +578,7 @@ button { cursor: pointer; }
 
 .configure {
   position: absolute;
-  left: 880px;
+  right: 160px; /* x 880 in the 1440 design, anchored to the right edge */
   top: 51px;
   width: 400px;
   max-height: 755px;
@@ -823,7 +823,7 @@ button.chip:hover { border-color: rgba(255, 255, 255, 0.32); }
 
 .replies {
   position: absolute;
-  left: 400px;
+  left: calc(50% - 320px);
   bottom: 84px;
   width: 640px;
   display: flex;
@@ -853,7 +853,7 @@ button.chip:hover { border-color: rgba(255, 255, 255, 0.32); }
    Phase 2: build and recommendation
    ====================================================================== */
 
-.prompt-chip-row { position: absolute; left: 400px; bottom: 86px; display: flex; gap: 8px; z-index: 11; animation: fade-in var(--pmr-t-panel) var(--pmr-ease); }
+.prompt-chip-row { position: absolute; left: calc(50% - 320px); bottom: 86px; display: flex; gap: 8px; z-index: 11; animation: fade-in var(--pmr-t-panel) var(--pmr-ease); }
 .chip--prompt { height: 30px; gap: 6px; padding: 0 14px 1px 11px; border-radius: 15px; font-size: 12px; background: var(--pmr-glass); backdrop-filter: blur(var(--pmr-blur)); cursor: pointer; }
 .chip--prompt .codicon { color: var(--pmr-chip-text); }
 .replies.is-raised { bottom: 126px; }
@@ -866,8 +866,8 @@ button.chip:hover { border-color: rgba(255, 255, 255, 0.32); }
   z-index: 14;
   animation: fade-in var(--pmr-t-panel) var(--pmr-ease);
 }
-.build-card { left: 971px; top: 72px; width: 432px; }
-.rec-card { left: 1018px; top: 420px; width: 398px; padding-left: 16px; }
+.build-card { right: 37px; top: 72px; width: 432px; }
+.rec-card { right: 24px; top: 420px; width: 398px; padding-left: 16px; }
 .build-card__header { display: flex; align-items: center; gap: 10px; }
 .build-card__header > div { flex: 1; min-width: 0; }
 .build-card__name { margin: 0; font-size: 13px; font-weight: 600; line-height: 17px; }
@@ -1000,7 +1000,7 @@ button.chip:hover { border-color: rgba(255, 255, 255, 0.32); }
 
 .sections-panel {
   position: absolute;
-  left: 1008px;
+  right: 16px;
   top: 52px;
   width: 416px;
   height: 756px;
@@ -1122,8 +1122,8 @@ button.chip:hover { border-color: rgba(255, 255, 255, 0.32); }
 .section-editor {
   position: absolute;
   left: 40px;
+  right: 40px;
   top: 52px;
-  width: 1360px;
   height: 756px;
   display: grid;
   grid-template-columns: 364px 1fr;
@@ -1276,7 +1276,7 @@ button.chip:hover { border-color: rgba(255, 255, 255, 0.32); }
 .right-panel {
   position: absolute;
   top: 72px;
-  left: 1040px;
+  right: 16px;
   width: 384px;
   padding: 16px 16px 22px;
   z-index: 18;
@@ -1329,7 +1329,7 @@ textarea.input::placeholder { color: var(--pmr-text-2); opacity: 1; }
 }
 .avatar--small { width: 22px; height: 22px; font-size: 8px; }
 
-.pr-status { position: absolute; left: 1166px; top: 72px; width: 258px; padding: 16px 16px 18px; z-index: 18; animation: fade-in var(--pmr-t-panel) var(--pmr-ease); }
+.pr-status { position: absolute; right: 16px; top: 72px; width: 258px; padding: 16px 16px 18px; z-index: 18; animation: fade-in var(--pmr-t-panel) var(--pmr-ease); }
 .pr-status .right-panel__title { font-size: 18px; }
 .pr-status__checks { list-style: none; margin: 10px 0 14px; padding: 0; }
 .pr-status__checks li { display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid var(--pmr-divider); }
@@ -1352,7 +1352,7 @@ textarea.input::placeholder { color: var(--pmr-text-2); opacity: 1; }
 .comment-card__actions { display: flex; gap: 8px; margin-top: 12px; }
 .comment-card__actions .pmr-button { height: 32px; padding: 0 16px 1px; }
 
-.recap { left: 1000px; width: 424px; }
+.recap { left: auto; right: 16px; width: 424px; }
 .recap__header > .codicon { margin-top: 3px; color: var(--pmr-text); }
 .recap__stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 12px 0 0; padding: 12px 0 6px; border-top: 1px solid var(--pmr-divider); }
 .recap__stat { margin: 0; display: flex; flex-direction: column; }
@@ -1431,3 +1431,22 @@ textarea.input::placeholder { color: var(--pmr-text-2); opacity: 1; }
 
 /* Decoration and window chrome keep the default cursor. */
 .titlebar__lights, .titlebar__title, .node__label, .canvas, .floor, .legend { cursor: default; }
+
+/* Save that confirms itself (feedback round 1). */
+.floating-editor__save, .code-panel__save { display: inline-flex; align-items: center; justify-content: center; gap: 5px; width: auto; min-width: 72px; padding: 0 14px 1px; }
+.pmr-button.is-saved { background: rgba(62, 230, 168, 0.14); border: 1px solid rgba(62, 230, 168, 0.5); color: var(--pmr-text); }
+.pmr-button.is-saved .codicon { color: var(--pmr-cleared); margin-top: 1px; }
+.pmr-button.is-saved:hover { filter: none; background: rgba(62, 230, 168, 0.2); }
+
+/* Teammate form: inline errors (feedback round 1) */
+/* Red is for agent issues only, so a missing field is flagged in lavender ("worth a look"). */
+.input.is-invalid { border-color: var(--pmr-lavender); box-shadow: inset 0 0 0 1px var(--pmr-lavender); }
+.field__error { display: block; margin-top: 6px; font-size: 11px; line-height: 15px; color: var(--pmr-link); }
+.pr-panel__email { font-family: var(--pmr-mono); }
+
+/* M7 pop-up (feedback round 1) */
+.all-clear { width: 420px; padding-top: 22px; text-align: left; }
+.all-clear__check { display: grid; place-items: center; width: 36px; height: 36px; margin-bottom: 12px; border-radius: 50%; background: var(--pmr-cleared); color: var(--pmr-text-on-accent); }
+.all-clear__check .codicon { margin-top: 1px; }
+.all-clear .dialog__body { color: var(--pmr-text); }
+.comment-card__reading { color: var(--pmr-text-2); font-style: italic; }

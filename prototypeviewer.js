@@ -12,15 +12,12 @@ function createPrototypeViewer({onClose}) {
   let iframe = null;
   let current = null;
 
-  // Keep the prototype's 1440×900 stage ratio, scaled to fit and letterboxed.
+  // The iframe fills the overlay; the prototype widens its own stage to fit whatever it gets.
   function fit() {
     if (!iframe) return;
-    const box = frameBox.getBoundingClientRect();
-    const scale = Math.min(box.width / 1440, box.height / 900);
-    iframe.style.width = `${Math.floor(1440 * scale)}px`;
-    iframe.style.height = `${Math.floor(900 * scale)}px`;
+    iframe.style.width = "100%";
+    iframe.style.height = "100%";
   }
-  new ResizeObserver(fit).observe(frameBox);
 
   function open(d) {
     const proto = d.data.prototype;

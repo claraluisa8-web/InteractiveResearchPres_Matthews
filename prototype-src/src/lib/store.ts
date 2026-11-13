@@ -4,7 +4,7 @@ import { copy, t } from './copy';
 import { codeFile } from './code';
 import { pickSlot } from './layout';
 import { applyFix, changedLines, initialIssues, initialSections, issueMet, originalFile, safeRange, sectionById } from './sections';
-import { isGhost, type AgentRole, type Collaborator, type IssueState, type Milestones, type Recommendation, type RightPanel, type SectionState, type ThreadMessage, type View } from './types';
+import { isGhost, type AgentRole, type Collaborator, type IssueState, type Milestones, type Recommendation, type ReviewStage, type RightPanel, type SectionState, type ThreadMessage, type View } from './types';
 
 export const IDENTITY_VIEW: View = { x: 0, y: 0, k: 1 };
 
@@ -53,6 +53,7 @@ interface ScenarioState {
   issues: Record<number, IssueState>;
   pr: { title: string; description: string; reviewer: string | null; attachReceipt: boolean };
   thread: ThreadMessage[];
+  reviewStage: ReviewStage;
   /** M1: the coach card is gone for good once anyone is added. */
   firstAdded: boolean;
   view: View;
@@ -81,6 +82,10 @@ interface ScenarioState {
   linkIds: string[] | null;
   /** Latest line from each agent in the editor's left-column cards. */
   cardNotes: Record<string, string>;
+  /** M7's pop-up: All lines clear, with Open pull request front and centre. */
+  allClearOpen: boolean;
+  /** Stage width in design pixels (1440 or wider; the height is always 900). */
+  stageWidth: number;
   /** Right-docked panel for frames 08, 09 and 11. */
   rightPanel: RightPanel;
   commentOpen: boolean;
@@ -122,6 +127,9 @@ interface ScenarioState {
   setLinkIds: (ids: string[] | null) => void;
   setCardNote: (role: string, text: string) => void;
   setRightPanel: (p: RightPanel) => void;
+  setStageWidth: (w: number) => void;
+  setAllClearOpen: (v: boolean) => void;
+  setReviewStage: (stage: ReviewStage) => void;
   openPR: () => void;
   closePR: () => void;
   setPR: (patch: Partial<ScenarioState['pr']>) => void;
@@ -143,6 +151,8 @@ export const firstOf = (cs: Collaborator[], role: AgentRole) =>
   active(cs).filter((c) => c.role === role).sort((a, b) => a.addedAt - b.addedAt)[0];
 
 export function defaultName(role: AgentRole, otherType?: string) {
+  // A human teammate is a real person: no made-up default, the user types the name.
+  if (role === 'teammate') return '';
   if (role === 'other' && otherType && otherType !== 'Custom…') {
     return t(copy.constellation.otherDefaultName, { type: otherType });
   }
@@ -206,6 +216,7 @@ export const useScenario = create<ScenarioState>()(
       issues: initialIssues(),
       pr: { title: copy.pullRequest.titleValue, description: copy.pullRequest.descriptionValue, reviewer: null, attachReceipt: true },
       thread: [],
+      reviewStage: 'none',
       firstAdded: false,
       view: IDENTITY_VIEW,
       seq: 1,
@@ -226,6 +237,8 @@ export const useScenario = create<ScenarioState>()(
       cardNotes: {},
       rightPanel: null,
       commentOpen: false,
+      stageWidth: 1440,
+      allClearOpen: false,
 
       openAddMenu: (anchor, highlight) => set({ addMenu: { anchor, highlight }, popover: null }),
       closeAddMenu: () => set({ addMenu: null }),
@@ -438,6 +451,9 @@ export const useScenario = create<ScenarioState>()(
       setLinkIds: (ids) => set({ linkIds: ids }),
       setCardNote: (role, text) => set((s) => ({ cardNotes: { ...s.cardNotes, [role]: text } })),
 
+      setStageWidth: (w) => set({ stageWidth: w }),
+      setAllClearOpen: (v) => set({ allClearOpen: v }),
+      setReviewStage: (stage) => set({ reviewStage: stage, commentOpen: stage === 'commented' ? true : get().commentOpen }),
       setRightPanel: (p) => set({ rightPanel: p, sectionsLine: null, popover: null, updateCardOpen: false }),
 
       // M8: the PR panel. Without a teammate, Dana Kim appears as a dashed "adding" ghost (frame 09).
@@ -453,6 +469,7 @@ export const useScenario = create<ScenarioState>()(
             id: `teammate-${seq}`,
             role: 'teammate',
             name: copy.people.teammate.fullName,
+            email: t(copy.people.teammate.email),
             configuration: '',
             allowedToEdit: [],
             crossTeamRequests: false,
@@ -493,14 +510,16 @@ export const useScenario = create<ScenarioState>()(
             c.id === id ? { ...c, status: 'active', review: 'pending', connectsTo: c.connectsTo.includes('you') ? c.connectsTo : [...c.connectsTo, 'you'] } : c,
           ),
           rightPanel: null,
-          commentOpen: true,
+          // The comment arrives after the teammate has looked at the PR (useReviewFlow).
+          commentOpen: false,
+          reviewStage: 'reviewing',
           thread: [],
           firstAdded: true,
           milestones: { ...s.milestones, prCreated: true },
         });
       },
       setCommentOpen: (v) => set({ commentOpen: v }),
-      replyToTeammate: (text) => set((s) => ({ thread: [...s.thread, { from: 'you', text }] })),
+      replyToTeammate: (text) => set((s) => ({ thread: [...s.thread, { from: 'you', text }], reviewStage: 'reading' })),
 
       // M10: approved after a reply (any text) or 20 s of quiet.
       approve: (auto) => {
@@ -510,6 +529,7 @@ export const useScenario = create<ScenarioState>()(
         set({
           collaborators: s.collaborators.map((c) => (c.id === s.pr.reviewer ? { ...c, review: 'approved' } : c)),
           thread: [...s.thread, { from: 'teammate', text: t(auto ? tr.autoApprove : tr.answer) }],
+          reviewStage: 'approved',
           milestones: { ...s.milestones, teammateApproved: true },
         });
       },
@@ -594,6 +614,8 @@ export const useScenario = create<ScenarioState>()(
         sections: s.sections,
         pr: s.pr,
         thread: s.thread,
+        // A review stage waiting on a timer resumes as if the timer had just finished.
+        reviewStage: s.reviewStage === 'reviewing' ? 'commented' : s.reviewStage === 'reading' ? 'commented' : s.reviewStage,
         // A recheck in flight when the page closed goes back to open; nothing is left hanging.
         issues: Object.fromEntries(
           Object.entries(s.issues).map(([k, i]) => [k, i.status === 'savedAwaitingAgents' || i.status === 'fixPreview' ? { ...i, status: 'open' as const } : i]),
