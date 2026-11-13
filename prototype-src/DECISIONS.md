@@ -174,3 +174,7 @@ Each entry records what changed from the design or the handoff, why, and which f
 - **Still on first open.** You and the spec card don't move when the prototype opens: the layout's slide transition (which animated the stage measuring its width) and the orb entry animation only apply once someone has been added. You never plays the entry animation.
 - **Urgency-coded progress.** The progress bars in the section editor and sections panel are segmented, one segment per section or subsection, errors first: red for a real error still open, faded red once fixed but not verified, lavender for overview-only sections, mint once verified, with a small legend. Red stays reserved for issues.
 - **Verify the rest together.** This answers round 1's open question ("why so many sections?"). Once both error sections are verified, "Verify the remaining {n} sections" appears in the section editor (under the help line, taking focus after the last error's Verify) and as the sections panel's primary button. It verifies every overview-only section at once, which reaches all clear. Opening and verifying each one still works.
+
+## Feedback round 9
+
+- **Other comments waiting.** An open thread card can cover another reviewer's comment icon. When other reviewers have comments waiting on a reply, the card lists them under its fixed header ("{teammate} also commented", with their avatar tone and a lavender dot); clicking one switches the card to that reviewer's thread. The list leaves as each comment is answered.

@@ -332,6 +332,9 @@ export function CommentCard() {
   const hasComment = !!stage && stage !== 'reviewing';
   const replied = stage === 'reading' || stage === 'approved';
   const lastCount = allThread.filter((m) => m.with === commentWith).length;
+  const openThread = useScenario((s) => s.openThread);
+  // Other reviewers whose comment is waiting on a reply.
+  const others = collaborators.filter((c) => c.role === 'teammate' && c.id !== commentWith && c.reviewStage === 'commented');
   useEscape(closeComment);
   // Feedback round 3: new messages scroll into view on their own.
   useEffect(() => {
@@ -397,6 +400,25 @@ export function CommentCard() {
             <Icon name="close" size={14} />
           </button>
         </header>
+        {/* Round 9: this card can cover other reviewers' comment icons, so it says when more are waiting. */}
+        {others.length > 0 && (
+          <div className="comment-card__others" role="status" aria-label={t(tr.otherWaitingLabel)}>
+            {others.map((o) => (
+              <button
+                key={o.id}
+                type="button"
+                className="comment-card__other"
+                aria-label={t(tr.otherWaitingOpen, { teammateFirst: o.name.split(' ')[0] })}
+                onClick={() => { log('click', { target: 'otherComment', teammate: o.id }); openThread(o.id); }}
+              >
+                <span className="comment-card__other-dot" aria-hidden="true" />
+                <span className={`avatar avatar--small avatar--tone-${mateTone(o.id, collaborators) ?? 1}`} aria-hidden="true">{initials(o.name)}</span>
+                <span>{t(tr.otherWaiting, { teammateFirst: o.name.split(' ')[0] })}</span>
+                <Icon name="arrow-right" size={14} />
+              </button>
+            ))}
+          </div>
+        )}
         <div ref={threadRef} className="comment-card__thread">
           <MateThread mate={mate} thread={allThread} render={messageRenderer(mate)} />
           {stage === 'reading' && (

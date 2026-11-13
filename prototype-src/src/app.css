@@ -1614,3 +1614,10 @@ textarea.input::placeholder { color: var(--pmr-text-2); opacity: 1; }
 .section-editor__bulk-button, .sections-panel__primary[data-verify-rest] { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .section-editor__bulk-button { width: 100%; }
 .section-editor__bulk .section-editor__help { margin-top: 6px; }
+
+/* Round 9: other reviewers' comments waiting, shown under the card's header. */
+.comment-card__others { flex: none; display: flex; flex-direction: column; gap: 4px; margin: 8px 0 4px; }
+.comment-card__other { display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 8px; border: 1px solid var(--pmr-btn-2-stroke); border-radius: 8px; background: var(--pmr-btn-2); font-size: 12px; font-weight: 600; line-height: 16px; color: var(--pmr-text); text-align: left; }
+.comment-card__other:hover { background: var(--pmr-row-hover); }
+.comment-card__other .codicon { margin-left: auto; color: var(--pmr-text-2); }
+.comment-card__other-dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--pmr-lavender); }

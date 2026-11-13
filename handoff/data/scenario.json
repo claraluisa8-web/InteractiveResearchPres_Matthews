@@ -1362,6 +1362,18 @@
     "mergedToast": {
       "text": "Pull request #482 merged into main.",
       "new": true
+    },
+    "otherWaiting": {
+      "text": "{teammateFirst} also commented",
+      "new": true
+    },
+    "otherWaitingLabel": {
+      "text": "More comments waiting on you",
+      "new": true
+    },
+    "otherWaitingOpen": {
+      "text": "Open {teammateFirst}’s comment",
+      "new": true
     }
   },
   "recap": {
