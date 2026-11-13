@@ -1494,8 +1494,9 @@ textarea.input::placeholder { color: var(--pmr-text-2); opacity: 1; }
 .section-editor .cm-line[data-note-kind='fix']::after { color: var(--pmr-text); font-weight: 600; }
 
 /* Feedback round 3: reviewer is picked, not assumed. */
-.pr-panel__add { margin-top: 10px; gap: 6px; }
-[data-add-reviewer] { gap: 6px; margin-top: 8px; }
+.pr-panel__add, [data-add-reviewer] { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.pr-panel__add { margin-top: 10px; }
+[data-add-reviewer] { display: flex; margin-top: 8px; }
 .pr-panel__reviewer { margin-top: 10px; }
 
 /* Feedback round 4: each teammate wears their own ring. */
@@ -1523,7 +1524,7 @@ textarea.input::placeholder { color: var(--pmr-text-2); opacity: 1; }
 .pr-status__success .codicon { color: var(--pmr-cleared); }
 
 /* Recap: resolved review conversations. */
-.recap__history { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.recap__history { display: flex; flex-direction: column; gap: 6px; margin: 10px 0 14px; }
 .recap__thread { border: 1px solid var(--pmr-divider); border-radius: var(--pmr-r-button); }
 .recap__thread summary { display: flex; align-items: center; gap: 8px; padding: 7px 10px; cursor: pointer; font-size: 13px; font-weight: 600; list-style: none; }
 .recap__thread summary::-webkit-details-marker { display: none; }
