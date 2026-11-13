@@ -34,6 +34,7 @@ function createPrototypeViewer({onClose}) {
     frameBox.replaceChildren(iframe);
     viewer.hidden = false;
     requestAnimationFrame(() => {
+      if (current !== d) return; // closed again before the next frame
       viewer.classList.add("open");
       fit();
       iframe.focus();
