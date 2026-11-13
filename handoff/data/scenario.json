@@ -694,6 +694,200 @@
     "build.promptChip",
     "build.startReply",
     "build.statusPillReady",
-    "chrome (title-bar overflow menu, About dialog, toast, composer aria labels)"
-  ]
+    "chrome (title-bar overflow menu, About dialog, toast, composer aria labels)",
+    "constellation (Phase 1: status pill, statuses, popover, line card, spec viewer, next steps)"
+  ],
+  "constellation": {
+    "$note": "Phase 1 copy that isn't drawn in Figma. All new.",
+    "plusLabel": {
+      "text": "Add to your constellation",
+      "new": true
+    },
+    "showWholeTeam": {
+      "text": "Show whole team",
+      "new": true
+    },
+    "teamLabel": {
+      "text": "TEAM  ·  {n}",
+      "new": true
+    },
+    "statusOrbit": {
+      "text": "{n} agents in your orbit",
+      "new": true
+    },
+    "statusOrbitOne": {
+      "text": "1 agent in your orbit",
+      "new": true
+    },
+    "statusTeammatesOnly": {
+      "text": "{n} in your orbit, no agents yet",
+      "new": true
+    },
+    "composerPlaceholderTeam": {
+      "text": "Message your team…",
+      "new": true,
+      "note": "Drawn in Figma frame 05."
+    },
+    "composerTargetAgent": {
+      "text": "To: {name}",
+      "new": true
+    },
+    "waitingForBuilder": {
+      "text": "Waiting for a builder",
+      "new": true,
+      "note": "From flow-and-milestones.md any-order rules."
+    },
+    "helping": {
+      "text": "Helping {name}  ·  no conflicts",
+      "new": true,
+      "note": "From flow-and-milestones.md."
+    },
+    "otherStatuses": {
+      "Accessibility": {
+        "text": "No UI in this change",
+        "new": true
+      },
+      "Security": {
+        "text": "Watching for secrets  ·  no findings",
+        "new": true
+      },
+      "Docs": {
+        "text": "Drafting the CHANGELOG entry",
+        "new": true
+      },
+      "Performance": {
+        "text": "No hot paths changed",
+        "new": true
+      },
+      "Custom…": {
+        "text": "Standing by",
+        "new": true
+      }
+    },
+    "otherTypeLabel": {
+      "text": "TYPE",
+      "new": true
+    },
+    "otherDefaultName": {
+      "text": "{type} agent",
+      "new": true,
+      "note": "Custom… keeps roles.other.defaultName."
+    },
+    "teammateRoleLabel": {
+      "text": "ROLE",
+      "new": true
+    },
+    "teammateInvite": {
+      "text": "{name} gets an invite to join your constellation. Agents never act on a teammate’s behalf.",
+      "new": true
+    },
+    "editPrimary": {
+      "text": "Save changes",
+      "new": true
+    },
+    "connectNone": {
+      "text": "Everyone is already connected.",
+      "new": true
+    },
+    "connectRemove": {
+      "text": "Remove connection to {name}",
+      "new": true
+    },
+    "popover": {
+      "configuration": {
+        "text": "Configuration",
+        "new": true
+      },
+      "status": {
+        "text": "Status",
+        "new": true
+      },
+      "crossTeamOn": {
+        "text": "Can request other team configurations",
+        "new": true
+      },
+      "crossTeamOff": {
+        "text": "Uses your team’s configurations only",
+        "new": true
+      },
+      "edit": {
+        "text": "Edit",
+        "new": true
+      },
+      "openFile": {
+        "text": "Open {file}",
+        "new": true
+      },
+      "remove": {
+        "text": "Remove",
+        "new": true
+      },
+      "openSpec": {
+        "text": "Open recurring-investments.yaml",
+        "new": true
+      },
+      "youRole": {
+        "text": "Senior software engineer",
+        "new": true
+      }
+    },
+    "lineCard": {
+      "connected": {
+        "text": "Connected  ·  nothing flowing yet",
+        "new": true
+      },
+      "pending": {
+        "text": "Not added yet",
+        "new": true
+      }
+    },
+    "specViewer": {
+      "meta": {
+        "text": "Approved spec  ·  v1.2.0  ·  read-only",
+        "new": true
+      },
+      "locked": {
+        "text": "Approved specs are read-only for every agent.",
+        "new": true
+      }
+    },
+    "thinking": {
+      "text": "{agent} is thinking…",
+      "new": true
+    },
+    "bobName": {
+      "text": "IBM Bob",
+      "new": true
+    },
+    "nextSteps": {
+      "empty": {
+        "text": "add a builder with the + next to your dot",
+        "new": true
+      },
+      "ready": {
+        "text": "give {builder} the go to build",
+        "new": true
+      },
+      "build": {
+        "text": "add a reviewer so someone checks {builder}’s work",
+        "new": true
+      },
+      "issue": {
+        "text": "open the red line between {builder} and {reviewer}",
+        "new": true
+      },
+      "editor": {
+        "text": "edit the flagged lines, then Save",
+        "new": true
+      },
+      "review": {
+        "text": "reply to {teammate}’s comment",
+        "new": true
+      },
+      "done": {
+        "text": "nothing, you’re done",
+        "new": true
+      }
+    }
+  }
 }

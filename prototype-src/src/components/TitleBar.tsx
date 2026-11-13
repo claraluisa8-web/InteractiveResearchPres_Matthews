@@ -1,5 +1,6 @@
 import { KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { copy, t } from '../lib/copy';
+import { useEscape } from '../lib/escape';
 import { Icon } from './Icon';
 
 type Tab = 'constellation' | 'code';
@@ -30,6 +31,8 @@ export function TitleBar({ activeTab, onTab, onStartOver, onAbout }: TitleBarPro
     return () => document.removeEventListener('pointerdown', onDown);
   }, [menuOpen]);
 
+  useEscape(() => closeMenu(), menuOpen);
+
   const closeMenu = () => {
     setMenuOpen(false);
     buttonRef.current?.focus();
@@ -40,7 +43,6 @@ export function TitleBar({ activeTab, onTab, onStartOver, onAbout }: TitleBarPro
     const i = rows.indexOf(document.activeElement as HTMLElement);
     if (e.key === 'ArrowDown') { e.preventDefault(); rows[(i + 1) % rows.length]?.focus(); }
     if (e.key === 'ArrowUp') { e.preventDefault(); rows[(i - 1 + rows.length) % rows.length]?.focus(); }
-    if (e.key === 'Escape') { e.stopPropagation(); closeMenu(); }
     if (e.key === 'Tab') setMenuOpen(false);
   };
 

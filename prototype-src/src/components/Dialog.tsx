@@ -1,4 +1,5 @@
 import { ReactNode, useEffect, useRef } from 'react';
+import { useEscape } from '../lib/escape';
 
 interface DialogProps {
   title: string;
@@ -10,15 +11,12 @@ interface DialogProps {
 /** Small modal glass dialog. Esc and the scrim close it; focus moves in on open and back on close. */
 export function Dialog({ title, children, actions, onClose }: DialogProps) {
   const ref = useRef<HTMLDivElement>(null);
+  useEscape(onClose);
 
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     ref.current?.querySelector<HTMLElement>('button')?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.stopPropagation();
-        onClose();
-      }
       if (e.key === 'Tab' && ref.current) {
         const items = ref.current.querySelectorAll<HTMLElement>('button, [href], input, select, textarea');
         const first = items[0];

@@ -1,13 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { AddMenu } from './components/AddMenu';
+import { AgentPopover } from './components/AgentPopover';
 import { Canvas } from './components/Canvas';
+import { ConfigurePanel } from './components/ConfigurePanel';
+import { Constellation, type LineHover } from './components/Constellation';
 import { Composer } from './components/Composer';
 import { Dialog } from './components/Dialog';
+import { LineCard } from './components/LineCard';
+import { Replies } from './components/Replies';
+import { SpecViewer } from './components/SpecViewer';
 import { StatusPill } from './components/StatusPill';
+import { TeamRail } from './components/TeamRail';
 import { TitleBar } from './components/TitleBar';
 import { Toast } from './components/Toast';
 import { copy, t } from './lib/copy';
+import { computeGeometry } from './lib/geometry';
 import { startOver } from './lib/reset';
+import { statusPillText } from './lib/status';
+import { active, useScenario } from './lib/store';
 import { STAGE_H, STAGE_W, useStageScale } from './lib/useStageScale';
+import { fitView, isIdentity } from './lib/useView';
 
 const TOAST_MS = 3000;
 
@@ -16,7 +28,18 @@ export function App() {
   const [activeTab, setActiveTab] = useState<'constellation' | 'code'>('constellation');
   const [dialog, setDialog] = useState<'startOver' | 'about' | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [lineHover, setLineHover] = useState<LineHover | null>(null);
+  const [fitting, setFitting] = useState(false);
   const toastTimer = useRef<number>();
+
+  const collaborators = useScenario((s) => s.collaborators);
+  const addMenu = useScenario((s) => s.addMenu);
+  const configure = useScenario((s) => s.configure);
+  const popover = useScenario((s) => s.popover);
+  const specOpen = useScenario((s) => s.specOpen);
+  const view = useScenario((s) => s.view);
+  const setView = useScenario((s) => s.setView);
+  const openAddMenu = useScenario((s) => s.openAddMenu);
 
   const showToast = useCallback((message: string) => {
     window.clearTimeout(toastTimer.current);
@@ -38,31 +61,54 @@ export function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  // A line card for a line that no longer exists (agent removed) closes itself.
+  useEffect(() => {
+    if (!lineHover) return;
+    const ids = new Set(['you', ...collaborators.map((c) => c.id)]);
+    if (!ids.has(lineHover.line.a) || !ids.has(lineHover.line.b)) setLineHover(null);
+  }, [collaborators, lineHover]);
+
   const onTab = (tab: 'constellation' | 'code') => {
     // The Code tab opens the section editor from phase 3 on.
     if (tab === 'code') return notInPrototype();
     setActiveTab(tab);
   };
 
+  // "Show whole team": the only camera move, and only on request; eases over 200 ms.
+  const fitTeam = () => {
+    const g = computeGeometry(collaborators, null);
+    setFitting(true);
+    setView(fitView([g.you.point, ...g.nodes.map((n) => n.point)]));
+    window.setTimeout(() => setFitting(false), 220);
+  };
+
   const sc = copy.chrome.startOverConfirm;
+  const empty = active(collaborators).length === 0;
 
   return (
     <div className="viewport">
       <div
-        className="stage"
+        className={`stage${fitting ? ' is-fitting' : ''}`}
         style={{ width: STAGE_W, height: STAGE_H, transform: `translate(-50%, -50%) scale(${scale})` }}
       >
         <Canvas />
+        <Constellation scale={scale} onLineHover={(h) => setLineHover((cur) => (cur?.pinned && !h ? cur : h))} />
+        <TeamRail showFit={!isIdentity(view)} onFit={fitTeam} />
+        {lineHover && <LineCard hover={lineHover} onClose={() => setLineHover(null)} />}
+        {popover && <AgentPopover onNotYet={notInPrototype} />}
+        {addMenu && <AddMenu />}
+        {configure && <ConfigurePanel key={`${configure.id}-${configure.mode}`} />}
         <TitleBar
           activeTab={activeTab}
           onTab={onTab}
           onStartOver={() => setDialog('startOver')}
           onAbout={() => setDialog('about')}
         />
-        <main className="world" aria-label="Constellation" />
+        <Replies />
         <Toast message={toast} />
-        <Composer onAddNode={notInPrototype} onSend={notInPrototype} />
-        <StatusPill text={copy.emptyState.statusPill} />
+        <Composer />
+        <StatusPill text={statusPillText(collaborators)} onClick={empty && !addMenu ? () => openAddMenu('plus') : undefined} />
+        {specOpen && <SpecViewer />}
         {dialog === 'startOver' && (
           <Dialog
             title={t(sc.title)}

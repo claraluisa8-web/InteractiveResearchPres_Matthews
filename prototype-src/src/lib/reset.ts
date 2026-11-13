@@ -10,8 +10,11 @@ export function clearStoredState() {
   }
 }
 
-/** `?reset` clears saved state, then drops the param so a refresh doesn't reset again. */
-export function handleResetParam() {
+/**
+ * `?reset` clears saved state, then drops the param so a refresh doesn't reset again.
+ * Runs when this module is first imported, so main.tsx imports it before the store hydrates.
+ */
+function handleResetParam() {
   const url = new URL(window.location.href);
   if (!url.searchParams.has('reset')) return;
   clearStoredState();
@@ -23,3 +26,5 @@ export function startOver() {
   clearStoredState();
   window.location.reload();
 }
+
+handleResetParam();
