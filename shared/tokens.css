@@ -108,10 +108,13 @@
   --pmr-ease: cubic-bezier(0.2, 0, 0, 1);
   --pmr-t-hover: 120ms;
   --pmr-t-panel: 200ms;
+  /* Orbs, lines and the team slide move together on this clock (feedback round 5). */
+  --pmr-t-layout: 420ms;
+  --pmr-ease-move: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :root { --pmr-t-hover: 0ms; --pmr-t-panel: 0ms; }
+  :root { --pmr-t-hover: 0ms; --pmr-t-panel: 0ms; --pmr-t-layout: 0ms; }
 }
 
 /* Reusable surface recipes */

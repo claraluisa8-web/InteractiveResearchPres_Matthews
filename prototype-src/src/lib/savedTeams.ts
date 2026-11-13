@@ -2,6 +2,8 @@ import { useSyncExternalStore } from 'react';
 import { questionFor, reviewersOf, useScenario } from './store';
 import { topSections } from './sections';
 import type { Collaborator } from './types';
+import { resetLog } from './log';
+import { startOver } from './reset';
 
 // Feedback round 4: "Save constellation" keeps the team (and, if asked, this session's history) so it
 // can be used again. Stored apart from the scenario state so a plain Start over keeps it; ?reset and
@@ -105,4 +107,17 @@ export function saveTeam(input: { id?: string | null; name: string; options: Sav
   const others = teams.filter((t) => t.id !== team.id).map((t) => (input.options.isDefault ? { ...t, options: { ...t.options, isDefault: false } } : t));
   write([team, ...others]);
   return team;
+}
+
+/**
+ * Feedback round 5: after the merge, "Start a new session" resets the prototype (team, code, review)
+ * like Start over. The session log and saved constellations stay; a saved constellation first takes
+ * this finished session into its history, so the receipt and recap aren't lost.
+ */
+export function startNewSession(sessionTitle: string) {
+  const s = useScenario.getState();
+  const team = s.savedTeamId ? read().find((x) => x.id === s.savedTeamId) : undefined;
+  if (team?.options.history) saveTeam({ id: team.id, name: team.name, options: team.options, sessionTitle });
+  resetLog(true);
+  startOver(true);
 }

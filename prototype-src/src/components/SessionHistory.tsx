@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { copy, t } from '../lib/copy';
 import { useEscape } from '../lib/escape';
 import { log } from '../lib/log';
-import { saveTeam, useSavedTeams, type SavedTeam } from '../lib/savedTeams';
+import { saveTeam, startNewSession, useSavedTeams, type SavedTeam } from '../lib/savedTeams';
 import { useScenario } from '../lib/store';
 import { usePopupFocus } from '../lib/usePopupFocus';
 import { useOutside } from '../lib/useOutside';
@@ -94,6 +94,11 @@ function HistoryMenu({ onClose }: { onClose: () => void }) {
         </button>
       )}
       {!allClear && <p className="history-menu__empty">{t(sh.nothingYet)}</p>}
+      {merged && (
+        <button type="button" role="menuitem" className="menu__row history-menu__row" data-new-session-menu onClick={() => { log('click', { target: 'newSession:history' }); startNewSession(t(sh.sessionTitle)); }}>
+          <Icon name="refresh" size={14} />{t(sh.newSession)}
+        </button>
+      )}
       {teams.length > 0 && (
         <>
           <p className="pmr-label history-menu__label history-menu__label--saved">{t(sh.savedTeams)}</p>

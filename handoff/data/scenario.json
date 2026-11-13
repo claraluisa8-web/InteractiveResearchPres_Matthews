@@ -1383,6 +1383,14 @@
     "historyEmpty": {
       "text": "No review comments on this pull request.",
       "new": true
+    },
+    "newSession": {
+      "text": "Start a new session",
+      "new": true
+    },
+    "newSessionHelp": {
+      "text": "Clears the constellation and the code for a fresh start. Saved constellations and their history stay.",
+      "new": true
     }
   },
   "$newCopy": [
@@ -1775,6 +1783,10 @@
     },
     "statusOpen": {
       "text": "in progress",
+      "new": true
+    },
+    "newSession": {
+      "text": "Start a new session",
       "new": true
     }
   },

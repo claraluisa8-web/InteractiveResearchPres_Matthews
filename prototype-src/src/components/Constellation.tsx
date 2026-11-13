@@ -8,6 +8,7 @@ import { caughtPerLine } from '../lib/receipt';
 import { displayName, initials, mateTone } from '../lib/status';
 import type { Line } from '../lib/types';
 import { usePanZoom } from '../lib/useView';
+import { useTweenedGeometry } from '../lib/tween';
 import { Icon } from './Icon';
 import { Orb } from './Orb';
 
@@ -64,7 +65,7 @@ interface ConstellationProps {
 }
 
 export function Constellation({ scale, onLineHover }: ConstellationProps) {
-  const g = useGeometry();
+  const { g, moving } = useTweenedGeometry(useGeometry());
   const view = useScenario((s) => s.view);
   const collaborators = useScenario((s) => s.collaborators);
   const firstAdded = useScenario((s) => s.firstAdded);
@@ -145,7 +146,7 @@ export function Constellation({ scale, onLineHover }: ConstellationProps) {
                   <line className="line__hit" x1={p.x1} y1={p.y1} x2={p.x2} y2={p.y2} />
                   {line.kind === 'issue' && <line className="line line--issue-glow" x1={p.x1} y1={p.y1} x2={p.x2} y2={p.y2} />}
                   <line className={`line line--${line.kind}`} x1={p.x1} y1={p.y1} x2={p.x2} y2={p.y2} />
-                  {line.kind === 'working' && <FlowDots x1={p.x1} y1={p.y1} x2={p.x2} y2={p.y2} />}
+                  {line.kind === 'working' && !moving && <FlowDots x1={p.x1} y1={p.y1} x2={p.x2} y2={p.y2} />}
                 </g>
               );
             })}
