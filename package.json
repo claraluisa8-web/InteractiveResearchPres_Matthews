@@ -1,0 +1,9 @@
+{
+  "name": "interactive-research-pres-matthews",
+  "private": true,
+  "description": "Research tree map and the Pre-Merge Review prototype. No runtime dependencies; see OFFLINE.md.",
+  "scripts": {
+    "build:offline": "sh scripts/build-site.sh",
+    "serve:offline": "python3 -m http.server 8000 --directory _site"
+  }
+}

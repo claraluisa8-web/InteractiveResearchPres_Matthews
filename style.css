@@ -1,10 +1,14 @@
+/* Tree map, restyled onto the Pre-Merge Review's dark canvas (handoff/docs/treemap-restyle.md).
+   Colors, type and radii come from shared/tokens.css; the aliases below keep the selectors
+   readable. Layout and behavior are unchanged. */
 :root {
-  --bg: #fafaf8;
-  --text: #1d1d1b;
-  --muted: #6b6b66;
-  --line: #b9b9b2;
-  --accent: #c2410c;
-  --panel: #ffffff;
+  --text: var(--pmr-text);
+  --muted: var(--pmr-text-2);           /* the one secondary text color (AAA) */
+  --line: rgba(255, 255, 255, 0.16);    /* constellation lines and quiet strokes */
+  --accent: var(--pmr-lavender);        /* non-text accents: rings, bars, fills */
+  --accent-text: var(--pmr-link);       /* lavender for text, AAA on the canvas */
+  --surface-hover: var(--pmr-row-hover);
+  --ink: #050a12;                       /* canvas base, for label halos */
 }
 
 * { box-sizing: border-box; }
@@ -17,51 +21,64 @@ body {
   grid-template-columns: 280px minmax(0, 1fr);
   margin: 0;
   overflow: hidden;
-  background: var(--panel);
+  background: var(--pmr-canvas-gradient), var(--pmr-canvas);
   color: var(--text);
-  font-family: system-ui, -apple-system, "Helvetica Neue", sans-serif;
+  font-family: var(--pmr-font);
 }
 
-kbd { font: inherit; padding: 0 4px; border: 1px solid var(--line); border-radius: 3px; }
+kbd {
+  font: 500 0.75rem var(--pmr-mono);
+  padding: 0 5px 1px;
+  color: var(--text);
+  background: var(--pmr-input);
+  border: 1px solid var(--pmr-btn-2-stroke);
+  border-radius: 4px;
+}
 
-/* Left sidebar */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Left sidebar: a glass panel on the canvas. */
 #sidebar {
   display: flex;
   flex-direction: column;
   gap: 16px;
   height: 100vh;
   padding: 20px 16px 12px;
-  background: var(--bg);
-  border-right: 1px solid var(--line);
+  background: linear-gradient(var(--pmr-glass-tint), var(--pmr-glass-tint)), var(--pmr-glass);
+  border-right: 1px solid var(--pmr-stroke);
+  backdrop-filter: blur(var(--pmr-blur));
 }
-#sidebar h1 { margin: 0; font-size: 1.05rem; line-height: 1.3; }
+#sidebar h1 { margin: 0; font-size: 1.05rem; font-weight: 600; line-height: 1.3; }
 
 .help { color: var(--muted); font-size: 0.8rem; }
 .help summary { cursor: pointer; }
 .help summary:hover { color: var(--text); }
-.help ul { margin: 8px 0 0; padding-left: 18px; line-height: 1.5; }
+.help ul { margin: 8px 0 0; padding-left: 18px; line-height: 1.6; }
 
 #search {
   width: 100%;
-  padding: 8px 10px;
+  padding: 8px 10px 9px;
   font: inherit;
   font-size: 0.9rem;
   color: var(--text);
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 6px;
+  background: var(--pmr-input);
+  border: 1px solid var(--pmr-stroke);
+  border-radius: var(--pmr-r-input);
 }
+#search::placeholder { color: var(--muted); opacity: 1; }
+#search:hover { border-color: var(--pmr-btn-2-stroke); }
 #search:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
 
 #search-results {
   max-height: 40vh;
   margin: 8px 0 0;
-  padding: 0;
+  padding: 4px;
   overflow-y: auto;
   list-style: none;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 6px;
+  background: linear-gradient(var(--pmr-glass-tint), var(--pmr-glass-tint)), var(--pmr-popup);
+  border: 1px solid var(--pmr-stroke);
+  border-radius: var(--pmr-r-input);
+  box-shadow: var(--pmr-shadow);
 }
 #search-results button {
   display: block;
@@ -72,10 +89,10 @@ kbd { font: inherit; padding: 0 4px; border: 1px solid var(--line); border-radiu
   color: var(--text);
   background: none;
   border: 0;
-  border-bottom: 1px solid var(--bg);
+  border-radius: 4px;
   cursor: pointer;
 }
-#search-results button.active { background: var(--bg); box-shadow: inset 3px 0 var(--accent); }
+#search-results button.active { background: var(--surface-hover); box-shadow: inset 3px 0 var(--accent); }
 #search-results .empty { padding: 8px 10px; color: var(--muted); font-size: 0.85rem; }
 .result-name {
   display: -webkit-box;
@@ -86,26 +103,37 @@ kbd { font: inherit; padding: 0 4px; border: 1px solid var(--line); border-radiu
   line-height: 1.35;
 }
 .result-path { display: block; margin-top: 2px; color: var(--muted); font-size: 0.75rem; }
-mark { color: inherit; background: color-mix(in srgb, var(--accent) 22%, transparent); border-radius: 2px; }
+mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px; }
 
 #progress-text { margin: 0 0 6px; color: var(--muted); font-size: 0.8rem; }
-.progress-bar { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.progress-bar { height: 4px; background: rgba(255, 255, 255, 0.08); border-radius: 2px; overflow: hidden; }
 #progress-fill { width: 0; height: 100%; background: var(--accent); transition: width 0.4s ease; }
 
+/* Secondary buttons (tokens.css .pmr-button--secondary) */
 .stepper { display: flex; gap: 8px; margin-top: 12px; }
+.stepper button, #reset, #detail-map, #detail-open-all, #map-close {
+  font: inherit;
+  color: var(--text);
+  background: var(--pmr-btn-2);
+  border: 1px solid var(--pmr-btn-2-stroke);
+  border-radius: var(--pmr-r-input);
+  cursor: pointer;
+  transition: background var(--pmr-t-hover) var(--pmr-ease), border-color var(--pmr-t-hover) var(--pmr-ease);
+}
+.stepper button:hover:not(:disabled), #reset:hover, #detail-map:hover, #detail-open-all:hover, #map-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.32);
+}
+.stepper button:active:not(:disabled), #reset:active, #detail-map:active, #detail-open-all:active, #map-close:active {
+  background: rgba(255, 255, 255, 0.04);
+}
 .stepper button {
   flex: 1;
-  padding: 6px 8px;
-  font: inherit;
+  padding: 6px 8px 7px;
   font-size: 0.85rem;
-  color: var(--text);
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  cursor: pointer;
 }
-.stepper button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
-.stepper button:disabled { opacity: 0.4; cursor: default; }
+/* Disabled keeps full-strength text (AAA) and reads as disabled from its fill and border. */
+.stepper button:disabled { background: var(--pmr-btn-disabled); border-color: var(--pmr-stroke); color: var(--muted); cursor: default; }
 
 #outline {
   position: relative;
@@ -123,8 +151,8 @@ mark { color: inherit; background: color-mix(in srgb, var(--accent) 22%, transpa
   border-radius: 4px;
 }
 #outline li[hidden] { display: none; }
-#outline li:hover { background: var(--panel); }
-#outline li:has(.current) { background: var(--panel); }
+#outline li:hover { background: var(--surface-hover); }
+#outline li:has(.current) { background: var(--surface-hover); box-shadow: inset 2px 0 var(--accent); }
 
 /* Open/close arrow for categories; an empty spacer keeps end topics aligned. */
 #outline .toggle {
@@ -148,7 +176,7 @@ mark { color: inherit; background: color-mix(in srgb, var(--accent) 22%, transpa
   transition: transform 0.15s ease;
 }
 #outline button.toggle[aria-expanded="true"]::before { transform: rotate(90deg); }
-#outline button.toggle:hover::before { border-left-color: var(--accent); }
+#outline button.toggle:hover::before { border-left-color: var(--accent-text); }
 
 /* Label: one line, cut off with an ellipsis; the full name shows on hover. */
 #outline .label {
@@ -176,7 +204,7 @@ mark { color: inherit; background: color-mix(in srgb, var(--accent) 22%, transpa
   top: calc(50% - 4px);
   width: 7px;
   height: 7px;
-  border: 1.5px solid var(--line);
+  border: 1.5px solid var(--muted);
   border-radius: 50%;
 }
 #outline .label:hover { color: var(--text); }
@@ -186,6 +214,7 @@ mark { color: inherit; background: color-mix(in srgb, var(--accent) 22%, transpa
 #outline .label.visited::before { background: var(--muted); border-color: var(--muted); }
 #outline .label.current { font-weight: 600; }
 #outline .label.current::before { background: var(--accent); border-color: var(--accent); }
+#outline .label:focus-visible { outline-offset: -2px; }
 #outline .map-mark { flex: none; padding-right: 8px; font-size: 0.85rem; }
 
 /* The stage: the tree fills it, with controls and the notes card floating on top.
@@ -197,60 +226,71 @@ mark { color: inherit; background: color-mix(in srgb, var(--accent) 22%, transpa
   height: 100vh;
   min-width: 0;
   overflow: hidden;
-  background: var(--panel);
+  background: var(--pmr-canvas-gradient), var(--pmr-canvas);
 }
+/* The prototype's canvas behind the tree: floor glow, perspective grid, vignette. */
+#chart::before, #chart::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+#chart::before {
+  background:
+    radial-gradient(ellipse 75% 45% at 50% 112%, var(--pmr-floor-glow), transparent 72%),
+    url("shared/canvas-grid.svg") center / cover no-repeat;
+}
+#chart::after { background: var(--pmr-vignette); }
 
 #reset {
   position: absolute;
   bottom: 16px;
   left: 16px;
   z-index: 1;
-  padding: 6px 12px;
-  font: inherit;
+  padding: 6px 12px 7px;
   font-size: 0.85rem;
-  color: var(--text);
-  background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  cursor: pointer;
 }
-#reset:hover { border-color: var(--accent); color: var(--accent); }
 
 /* Tree */
-.tree { position: absolute; inset: 0; display: block; width: 100%; height: 100%; font-size: 13px; user-select: none; cursor: grab; }
+.tree { position: absolute; inset: 0; z-index: 1; display: block; width: 100%; height: 100%; font-size: 13px; user-select: none; cursor: grab; }
 .tree:active { cursor: grabbing; }
 .tree .links path { fill: none; stroke: var(--line); stroke-width: 1.5; }
+.tree .links path.on-path { stroke: var(--pmr-working-line); }
 .tree .nodes g { cursor: pointer; }
-.tree circle { fill: var(--panel); stroke: var(--muted); stroke-width: 1.5; }
-.tree .has-children circle { fill: var(--muted); }
-.tree .collapsed circle { fill: var(--accent); stroke: var(--accent); }
-.tree .selected circle { stroke: var(--accent); stroke-width: 3; }
-/* Responses (dashed boxes in the mind map): dashed circle, italic label. */
-.tree .response circle { stroke-dasharray: 2 2; }
+/* Flat orbs: 8px for topics, 10px for categories (circles are drawn at r=5). */
+.tree circle { fill: url(#node-gradient); stroke: rgba(255, 255, 255, 0.22); stroke-width: 1; transform: scale(0.8); }
+.tree .has-children circle { transform: none; }
+.tree .collapsed circle { stroke: rgba(138, 130, 253, 0.7); stroke-width: 1.5; }
+.tree .selected circle { stroke: var(--accent); stroke-width: 2.5; }
+/* Responses (dashed boxes in the mind map): dashed ring, italic label. */
+.tree .response circle { fill: none; stroke: var(--muted); stroke-dasharray: 2 2; }
 .tree .response text { font-style: italic; fill: var(--muted); }
 .tree .response.selected text { fill: var(--text); }
+.tree text { font-weight: 500; }
 .tree .selected text { font-weight: 600; }
 .tree text {
   fill: var(--text);
-  stroke: var(--panel);
+  stroke: rgba(5, 10, 18, 0.85);
   stroke-width: 4;
   stroke-linejoin: round;
   paint-order: stroke;
 }
 
 /* Map marker (✱) and viewer */
-.map-mark { color: var(--accent); font-weight: 700; }
-.tree .map-badge { fill: var(--accent); font-weight: 700; font-size: 15px; cursor: zoom-in; }
+.map-mark { color: var(--accent-text); font-weight: 700; }
+.tree .map-badge { fill: var(--accent-text); font-weight: 700; font-size: 15px; cursor: zoom-in; }
 .tree .map-badge:hover { fill: var(--text); }
 
-/* The map viewer covers the stage up to the notes card, which stays visible for hotspot notes. */
+/* The map viewer covers the stage up to the notes card, which stays visible for hotspot notes.
+   The research maps stay light: each sits on an off-white card on the dark overlay. */
 #map-viewer {
   position: absolute;
   inset: 0 var(--panel-space) 0 0;
   z-index: 2;
   display: flex;
   flex-direction: column;
-  background: var(--panel);
+  background: var(--pmr-scrim);
+  backdrop-filter: blur(6px);
   opacity: 0;
   transform: scale(0.98);
   transition: opacity 0.2s ease, transform 0.2s ease;
@@ -263,29 +303,25 @@ mark { color: inherit; background: color-mix(in srgb, var(--accent) 22%, transpa
   align-items: baseline;
   gap: 12px;
   padding: 16px;
-  border-bottom: 1px solid var(--bg);
+  border-bottom: 1px solid var(--pmr-divider);
 }
-.map-header h2 { margin: 0; font-size: 1rem; }
+.map-header h2 { margin: 0; font-size: 1rem; font-weight: 600; }
 .map-hint { flex: 1; margin: 0; color: var(--muted); font-size: 0.8rem; }
 #map-close {
   width: 28px;
   height: 28px;
-  font: inherit;
   font-size: 1.2rem;
   line-height: 1;
   color: var(--muted);
-  background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  cursor: pointer;
 }
-#map-close:hover { color: var(--accent); border-color: var(--accent); }
+#map-close:hover { color: var(--text); }
 
 #map-canvas {
   position: relative;
   flex: 1;
   min-height: 0;
   overflow: hidden;
+  padding: 24px;
   cursor: grab;
 }
 #map-canvas:active { cursor: grabbing; }
@@ -294,9 +330,12 @@ mark { color: inherit; background: color-mix(in srgb, var(--accent) 22%, transpa
   width: 100%;
   height: 100%;
   transform-origin: 0 0;
+  background: #F5F5FA;
+  border-radius: 16px;
+  box-shadow: var(--pmr-shadow);
 }
 
-/* Hotspots: hovering one fades the others; the clicked one stays outlined. */
+/* Hotspots: hovering one fades the others; the clicked one stays outlined in lavender. */
 #map-canvas .hotspot { cursor: pointer; transition: opacity 0.2s ease; }
 #map-canvas svg:has(.hotspot:hover) .hotspot:not(:hover) { opacity: 0.45; }
 #map-canvas .hotspot.active > :first-child { stroke: var(--accent); stroke-width: 3; }
@@ -305,19 +344,13 @@ mark { color: inherit; background: color-mix(in srgb, var(--accent) 22%, transpa
 .detail-actions:not(:has(button:not([hidden]))) { display: none; }
 
 #detail-map, #detail-open-all {
-  padding: 8px 12px;
-  font: inherit;
-  font-size: 0.9rem;
-  color: var(--text);
-  background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  cursor: pointer;
+  padding: 8px 12px 9px;
+  font-size: 0.85rem;
+  font-weight: 500;
 }
-#detail-map:hover, #detail-open-all:hover { border-color: var(--accent); }
 #detail-map[hidden], #detail-open-all[hidden] { display: none; }
 
-/* Notes card, floating top-right over the tree. */
+/* Notes card: a glass card floating top-right over the tree. */
 #details {
   position: absolute;
   top: 16px;
@@ -326,15 +359,16 @@ mark { color: inherit; background: color-mix(in srgb, var(--accent) 22%, transpa
   width: calc(var(--panel-space) - 32px);
   max-height: calc(100% - 32px);
   overflow-y: auto;
-  padding: 20px;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgb(0 0 0 / 0.06);
+  padding: 18px 20px 22px 18px;
+  background: linear-gradient(var(--pmr-glass-tint), var(--pmr-glass-tint)), var(--pmr-glass);
+  border: 1px solid var(--pmr-stroke);
+  border-radius: var(--pmr-r-panel);
+  box-shadow: var(--pmr-shadow);
+  backdrop-filter: blur(var(--pmr-blur));
 }
-#detail-path { margin: 0; color: var(--muted); font-size: 0.8rem; min-height: 1em; }
-#detail-title { margin: 4px 0 12px; font-size: 1.3rem; }
-#detail-note { margin: 0; line-height: 1.5; }
+#detail-path { margin: 0; color: var(--muted); font-size: 0.75rem; line-height: 1.4; min-height: 1em; }
+#detail-title { margin: 6px 0 10px; font-size: 18px; font-weight: 600; line-height: 24px; }
+#detail-note { margin: 0; font-size: 13px; line-height: 20px; }
 
 /* Medium screens: narrower sidebar and notes card. */
 @media (max-width: 1100px) {
@@ -346,7 +380,7 @@ mark { color: inherit; background: color-mix(in srgb, var(--accent) 22%, transpa
    its bottom edge. */
 @media (max-width: 760px) {
   body { display: block; height: auto; overflow: auto; }
-  #sidebar { height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+  #sidebar { height: auto; border-right: 0; border-bottom: 1px solid var(--pmr-stroke); }
   #outline { max-height: 200px; }
   #chart { --panel-space: 0px; height: 80vh; }
   #map-viewer { inset: 0; }
@@ -354,15 +388,20 @@ mark { color: inherit; background: color-mix(in srgb, var(--accent) 22%, transpa
   #reset { top: 12px; bottom: auto; }
 }
 
-/* Prototype entry: the pearl orb node, its badge and sidebar dot (handoff/docs/embed-and-deploy.md). */
-.tree .prototype .pearl-body { fill: url(#pearl-gradient); stroke: none; }
-.tree .prototype .pearl-edge { fill: none; stroke: rgb(255 255 255 / 0.22); stroke-width: 1; }
-.tree .prototype .pearl-ring { fill: none; stroke: transparent; stroke-width: 2; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0ms !important; animation-duration: 0ms !important; }
+}
+
+/* Prototype entry: the pearl orb node, its badge and sidebar dot (handoff/docs/embed-and-deploy.md).
+   The brightest thing on the canvas. */
+.tree .prototype .pearl-body { fill: url(#pearl-gradient); stroke: none; transform: none; }
+.tree .prototype .pearl-edge { fill: none; stroke: rgb(255 255 255 / 0.22); stroke-width: 1; transform: none; }
+.tree .prototype .pearl-ring { fill: none; stroke: transparent; stroke-width: 2; transform: none; }
 .tree .prototype .pearl-reflection { fill: rgb(185 168 255 / 0.35); filter: blur(2px); }
 .tree .prototype .pearl { transition: filter 0.15s ease; }
 .tree .prototype:hover .pearl, .tree .prototype:focus-visible .pearl { filter: url(#pearl-glow) brightness(1.08) drop-shadow(0 0 4px rgb(185 168 255 / 0.55)); }
 .tree .prototype:focus { outline: none; }
-.tree .prototype:focus-visible .pearl-ring { stroke: #8A82FD; }
+.tree .prototype:focus-visible .pearl-ring { stroke: var(--accent); }
 .tree .prototype-badge { cursor: pointer; }
 .pearl-dot {
   flex: none;
@@ -370,8 +409,8 @@ mark { color: inherit; background: color-mix(in srgb, var(--accent) 22%, transpa
   height: 10px;
   margin-right: 10px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #F6F2FF, #DDD4FF 50%, #C3D6FF);
-  box-shadow: 0 0 0 1px rgb(124 92 255 / 0.35), 0 0 4px rgb(185 168 255 / 0.6);
+  background: var(--pmr-orb-you);
+  box-shadow: 0 0 0 1px rgb(124 92 255 / 0.35), 0 0 6px rgb(185 168 255 / 0.7);
 }
 
 /* The prototype viewer covers the whole chart; the prototype keeps its 1440×900 ratio,
@@ -382,7 +421,7 @@ mark { color: inherit; background: color-mix(in srgb, var(--accent) 22%, transpa
   z-index: 4;
   display: flex;
   flex-direction: column;
-  background: #050A12;
+  background: var(--pmr-canvas);
   opacity: 0;
   transition: opacity 0.2s ease;
 }
@@ -393,27 +432,27 @@ mark { color: inherit; background: color-mix(in srgb, var(--accent) 22%, transpa
   align-items: center;
   gap: 12px;
   padding: 10px 12px 10px 16px;
-  color: #F2F5FA;
-  background: #03060C;
-  border-bottom: 1px solid rgb(255 255 255 / 0.08);
+  color: var(--text);
+  background: var(--pmr-title-bar);
+  border-bottom: 1px solid var(--pmr-divider);
 }
 .prototype-header h2 { flex: 1; margin: 0; font-size: 0.95rem; font-weight: 600; }
 .prototype-header .pearl-dot { margin-right: 0; }
-#prototype-new-tab { color: #B3ADFF; font-size: 0.85rem; text-underline-offset: 3px; }
-#prototype-new-tab:hover { color: #F2F5FA; }
+#prototype-new-tab { color: var(--accent-text); font-size: 0.85rem; text-underline-offset: 3px; }
+#prototype-new-tab:hover { color: var(--text); }
 #prototype-close {
   display: grid;
   place-items: center;
   width: 32px;
   height: 32px;
   padding: 0;
-  color: #B8CAE2;
+  color: var(--muted);
   background: transparent;
-  border: 1px solid rgb(255 255 255 / 0.16);
-  border-radius: 8px;
+  border: 1px solid var(--pmr-btn-2-stroke);
+  border-radius: var(--pmr-r-input);
   cursor: pointer;
 }
-#prototype-close:hover { color: #F2F5FA; border-color: rgb(255 255 255 / 0.32); }
-#prototype-close:focus-visible, #prototype-new-tab:focus-visible { outline: 2px solid #8A82FD; outline-offset: 2px; }
+#prototype-close:hover { color: var(--text); border-color: rgba(255, 255, 255, 0.32); }
+#prototype-close:focus-visible, #prototype-new-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 #prototype-frame { flex: 1; min-height: 0; display: grid; place-items: center; }
-#prototype-frame iframe { display: block; border: 0; background: #050A12; }
+#prototype-frame iframe { display: block; border: 0; background: var(--pmr-canvas); }

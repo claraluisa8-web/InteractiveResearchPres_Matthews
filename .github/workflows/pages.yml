@@ -9,13 +9,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 20, cache: npm, cache-dependency-path: prototype-src/package-lock.json }
-      - run: npm ci && npm run build
-        working-directory: prototype-src
-      - name: Assemble site
-        run: |
-          mkdir -p _site
-          rsync -a --exclude '.git*' --exclude '.github' --exclude '.claude' --exclude 'prototype-src' --exclude 'handoff' --exclude '_site' ./ _site/
-          mkdir -p _site/prototype && cp -r prototype-src/dist/. _site/prototype/
+      # The same script builds the offline copy for the symposium (OFFLINE.md).
+      - name: Build and assemble site
+        run: sh scripts/build-site.sh
       - uses: actions/upload-pages-artifact@v3
         with: { path: _site }
   deploy:

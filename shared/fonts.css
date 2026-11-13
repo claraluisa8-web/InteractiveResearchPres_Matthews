@@ -1,0 +1,10 @@
+/* Red Hat Text and Red Hat Mono, self-hosted for the tree map so it works offline.
+   The prototype bundles the same files through @fontsource. Latin subset only. */
+@font-face { font-family: "Red Hat Text"; font-style: normal; font-weight: 400; font-display: swap; src: url("fonts/red-hat-text-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Red Hat Text"; font-style: normal; font-weight: 500; font-display: swap; src: url("fonts/red-hat-text-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "Red Hat Text"; font-style: normal; font-weight: 600; font-display: swap; src: url("fonts/red-hat-text-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Red Hat Text"; font-style: normal; font-weight: 700; font-display: swap; src: url("fonts/red-hat-text-latin-700-normal.woff2") format("woff2"); }
+@font-face { font-family: "Red Hat Text"; font-style: italic; font-weight: 400; font-display: swap; src: url("fonts/red-hat-text-latin-400-italic.woff2") format("woff2"); }
+@font-face { font-family: "Red Hat Text"; font-style: italic; font-weight: 500; font-display: swap; src: url("fonts/red-hat-text-latin-500-italic.woff2") format("woff2"); }
+@font-face { font-family: "Red Hat Mono"; font-style: normal; font-weight: 400; font-display: swap; src: url("fonts/red-hat-mono-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Red Hat Mono"; font-style: normal; font-weight: 500; font-display: swap; src: url("fonts/red-hat-mono-latin-500-normal.woff2") format("woff2"); }

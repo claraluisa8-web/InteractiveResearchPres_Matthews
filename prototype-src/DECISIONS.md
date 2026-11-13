@@ -97,3 +97,16 @@ Each entry records what changed from the design or the handoff, why, and which f
 - **Inside the iframe, Esc closes the topmost layer first.** With nothing left, the prototype posts `pmr:close` to the parent, and the tree map accepts it only from its own iframe.
 - **The tree map's colors aren't touched**, beyond the overlay and pearl styles, until the Phase 7 restyle.
 - **Local check:** `.claude/launch.json` has a `site-built` entry that serves `_site/`, assembled the way CI does it. It's gitignored.
+
+## Phase 7
+
+- **Restyle is styling only, apart from two hooks in `script.js`:** a `node-gradient` SVG gradient for the flat orbs (CSS can't fill SVG with a gradient on its own), and an `on-path` class on the links from the root to the selected node, for the `--pmr-working-line` color. Data, interactions, shortcuts, search, progress and map viewer behavior are unchanged.
+- **Node sizes** come from CSS (`transform: scale(0.8)` on the existing r=5 circles, giving 8px topics and 10px categories) rather than changing the drawing code. That works in Safari, unlike the CSS `r` property.
+- **Lavender for text uses `--pmr-link` (#B3ADFF)**, not `--pmr-lavender`. Lavender as text on the canvas is 5.9:1, under AAA, so it's used only for rings, bars, fills and focus outlines. This covers the map badge, map marks, link and arrow hovers.
+- **Disabled Previous/Next** keep readable text (AAA) and show as disabled through a dimmer fill and border, instead of the old 40% opacity.
+- **The canvas grid** is a static SVG (`shared/canvas-grid.svg`) with the same geometry as the prototype's canvas. The floor glow and vignette are CSS gradients from the tokens.
+- **The tree map keeps its ✱ map marks and ‹ › on Previous/Next.** The restyle doc says "View map keeps its mark", and these are part of the existing tree map's own design. New marks use text or SVG: "Open prototype" and the overlay's close button.
+- **The research maps stay light** on a #F5F5FA card with a 16px radius. Their own colors come from your SVG exports. The placeholder maps' grey caption (#6b6b66 on #F5F5FA, about 5:1) is below AAA, so check this when you replace them with your real exports.
+- **Fonts for the tree map** are self-hosted in `shared/fonts/` (Red Hat Text 400/500/600/700 plus 400/500 italic for responses, Red Hat Mono 400/500, SIL OFL). D3 7.9.0 is vendored in `vendor/` from the npm package, with its license.
+- **One build script, `scripts/build-site.sh`,** builds the site for GitHub Pages (the workflow now calls it) and for the offline copy (`npm run build:offline`), so the two can't drift. It leaves `handoff/`, `CLAUDE.md`, `OFFLINE.md`, `scripts/` and `package.json` out of the published site.
+- **The offline check was simulated:** headless Chrome with every non-localhost host blocked, plus a scan of the built site for external URLs (none). Wi-Fi itself wasn't switched off; OFFLINE.md has the real-world check for the day before.

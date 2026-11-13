@@ -42,6 +42,13 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
   // The pearl orb for a topic with a prototype (handoff/docs/embed-and-deploy.md): the "You"
   // orb from the prototype, drawn in SVG so it scales with the tree.
   const defs = svg.append("defs");
+  // Flat orbs for every other node: a subtle 135° gradient in the canvas blues (style.css).
+  const nodeGradient = defs.append("linearGradient")
+      .attr("id", "node-gradient")
+      .attr("x1", "0").attr("y1", "0").attr("x2", "1").attr("y2", "1");
+  nodeGradient.append("stop").attr("offset", "0%").attr("stop-color", "#5B7BC4");
+  nodeGradient.append("stop").attr("offset", "100%").attr("stop-color", "#22335C");
+
   const pearl = defs.append("linearGradient")
       .attr("id", "pearl-gradient")
       .attr("x1", "0").attr("y1", "0").attr("x2", "1").attr("y2", "1");
@@ -220,6 +227,8 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
           return diagonal({source: o, target: o});
         });
 
+    if (selected) markPath();
+
     // Stash the old positions for transition.
     root.eachBefore(d => {
       d.x0 = d.x;
@@ -241,10 +250,17 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
 
   let selected = root;
 
+  // The links on the way from the root to the selected node, so they can be styled.
+  function markPath() {
+    const onPath = new Set(selected.ancestors());
+    gLink.selectAll("path").classed("on-path", l => onPath.has(l.target));
+  }
+
   // Highlight the clicked node, zoom to it, and pass it to the side panel.
   function select(d, event) {
     selected = d;
     gNode.selectAll("g").classed("selected", n => n === d);
+    markPath();
     focus(d, event);
     onSelect(d);
   }
