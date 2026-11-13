@@ -19,9 +19,9 @@ export const SLOTS: Point[] = [
   { x: 1180, y: 470 },
   { x: 500, y: 690 },
   { x: 1270, y: 230 },
-  { x: 160, y: 520 },
+  { x: 180, y: 610 },
   { x: 820, y: 690 },
-  { x: 280, y: 170 },
+  { x: 240, y: 470 },
   { x: 1300, y: 660 },
   { x: 470, y: 160 },
   { x: 960, y: 160 },
@@ -30,19 +30,41 @@ export const SLOTS: Point[] = [
 const ROLE_SLOT: Partial<Record<AgentRole, number>> = { builder: 0, reviewer: 1, tester: 2, teammate: 3 };
 const SHARED_START = 4;
 
-export function pickSlot(role: AgentRole, taken: number[]): number {
+/** Distance from p to the segment a–b. */
+function segDist(p: Point, a: Point, b: Point) {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const len2 = dx * dx + dy * dy || 1;
+  const u = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2));
+  return Math.hypot(p.x - (a.x + u * dx), p.y - (a.y + u * dy));
+}
+
+// Feedback round 4: a new orb keeps its distance from the others, and neither its line to You nor
+// anyone else's line to You runs through an orb (a second builder used to sit behind the first).
+const MIN_GAP = 150;
+const LINE_CLEAR = 60;
+
+export function pickSlot(role: AgentRole, taken: number[], links: Point[] = [YOU_TEAM]): number {
   const own = ROLE_SLOT[role];
   if (own !== undefined && !taken.includes(own)) return own;
   // "Other" agents start from the first shared slot; a second builder looks near the builder slot.
   const anchor = own !== undefined ? SLOTS[own] : SLOTS[SHARED_START];
+  const placed = taken.map(slotPoint);
+  const clear = (p: Point) =>
+    placed.every((q) => Math.hypot(q.x - p.x, q.y - p.y) >= MIN_GAP) &&
+    links.every((l) => placed.every((q) => (q.x === l.x && q.y === l.y) || segDist(q, p, l) >= LINE_CLEAR)) &&
+    placed.every((q) => segDist(p, q, YOU_TEAM) >= LINE_CLEAR);
   let best = -1;
   let bestD = Infinity;
-  for (let i = SHARED_START; i < SLOTS.length; i++) {
-    if (taken.includes(i)) continue;
-    const d = Math.hypot(SLOTS[i].x - anchor.x, SLOTS[i].y - anchor.y);
-    if (d < bestD) { bestD = d; best = i; }
+  // First pass: slots that are clear of everything; second pass: any free slot.
+  for (const strict of [true, false]) {
+    for (let i = SHARED_START; i < SLOTS.length; i++) {
+      if (taken.includes(i) || (strict && !clear(SLOTS[i]))) continue;
+      const d = Math.hypot(SLOTS[i].x - anchor.x, SLOTS[i].y - anchor.y);
+      if (d < bestD) { bestD = d; best = i; }
+    }
+    if (best >= 0) return best;
   }
-  if (best >= 0) return best;
   // Out of slots: spiral outward so nothing ever stacks exactly.
   return SLOTS.length + taken.filter((t) => t >= SLOTS.length).length;
 }

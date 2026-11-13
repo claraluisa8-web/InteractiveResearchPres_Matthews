@@ -1,5 +1,6 @@
 import { KeyboardEvent, useEffect, useRef, useState } from 'react';
-import { copy } from '../lib/copy';
+import { copy, t } from '../lib/copy';
+import { useSavedTeams } from '../lib/savedTeams';
 import { useEscape } from '../lib/escape';
 import { toScreen, useGeometry } from '../lib/geometry';
 import { useScenario } from '../lib/store';
@@ -10,11 +11,12 @@ import { Orb } from './Orb';
 
 const ROLES: AgentRole[] = ['builder', 'reviewer', 'tester', 'teammate', 'other'];
 const MENU_W = 320;
-const MENU_H = 354;
+const BASE_H = 354;
+const SAVED_ROW_H = 56;
 const SUB_W = 200;
 
 /** Frame 02: the add menu, anchored to the + beside You or to the composer's Add node pill. */
-export function AddMenu() {
+export function AddMenu({ onLoaded }: { onLoaded?: (message: string) => void } = {}) {
   const addMenu = useScenario((s) => s.addMenu)!;
   const view = useScenario((s) => s.view);
   const closeAddMenu = useScenario((s) => s.closeAddMenu);
@@ -23,6 +25,10 @@ export function AddMenu() {
   const stageWidth = useScenario((s) => s.stageWidth);
   const ref = useRef<HTMLDivElement>(null);
   const [subOpen, setSubOpen] = useState(false);
+  const loadTeam = useScenario((s) => s.loadTeam);
+  // Feedback round 4: saved constellations can be added in one go (at most two shown).
+  const saved = useSavedTeams().filter((x) => x.members.length).slice(0, 2);
+  const MENU_H = BASE_H + (saved.length ? 30 + saved.length * SAVED_ROW_H : 0);
 
   let left: number;
   let top: number;
@@ -107,6 +113,27 @@ export function AddMenu() {
             </button>
           );
         })}
+        {saved.length > 0 && (
+          <>
+            <p className="pmr-label add-menu__label add-menu__label--saved" aria-hidden="true">{t(copy.saveTeam.addMenuLabel)}</p>
+            {saved.map((team) => (
+              <button
+                key={team.id}
+                type="button"
+                role="menuitem"
+                tabIndex={-1}
+                className="menu__row add-menu__row"
+                onClick={() => { loadTeam(team.members); onLoaded?.(t(copy.saveTeam.loadedToast, { name: team.name })); }}
+              >
+                <span className="add-menu__icon"><Icon name="organization" /></span>
+                <span className="add-menu__text">
+                  <span className="add-menu__title">{team.name}</span>
+                  <span className="add-menu__body">{t(copy.saveTeam.addMenuRow, { n: team.members.length })}</span>
+                </span>
+              </button>
+            ))}
+          </>
+        )}
         <div className="add-menu__footer">{copy.addMenu.footer}</div>
       </div>
       {subOpen && (

@@ -32,7 +32,6 @@ export function Composer({ onToast }: { onToast: (message: string) => void }) {
   const attachments = useScenario((s) => s.attachments);
   const setAttachments = useScenario((s) => s.setAttachments);
   const allClear = useScenario((s) => s.milestones.allSectionsVerified);
-  const reviewStage = useScenario((s) => s.reviewStage);
   const [attachOpen, setAttachOpen] = useState(false);
   const collaborators = useScenario((s) => s.collaborators);
   const buildStarted = useScenario((s) => s.milestones.buildStarted);
@@ -70,7 +69,7 @@ export function Composer({ onToast }: { onToast: (message: string) => void }) {
 
   const mateFirst = targetMate?.name.split(' ')[0];
   const placeholder = targetMate
-    ? t(reviewStage === 'commented' && targetMate.id === useScenario.getState().pr.reviewer ? copy.teammateReview.replyPlaceholder : copy.teammateReview.messagePlaceholder, { teammateFirst: mateFirst })
+    ? t(targetMate.reviewStage === 'commented' ? copy.teammateReview.replyPlaceholder : copy.teammateReview.messagePlaceholder, { teammateFirst: mateFirst })
     : both
     ? copy.editor.composerPlaceholder
     : targetAgent
@@ -85,16 +84,19 @@ export function Composer({ onToast }: { onToast: (message: string) => void }) {
     // To a human teammate: a message on your line with them. During the review it's the reply
     // to their comment, which is what unlocks the approval.
     if (targetMate) {
-      const isReply = state.reviewStage === 'commented' && targetMate.id === state.pr.reviewer;
+      const isReply = targetMate.reviewStage === 'commented';
       log('input', { field: isReply ? 'commentReply' : 'teammateMessage', text: input, attachments: state.attachments });
-      if (isReply) state.replyToTeammate(input);
+      if (isReply) state.replyToTeammate(targetMate.id, input);
       else state.messageTeammate(targetMate.id, input);
       return;
     }
     // Frame 10: while the review is open, anything sent To: Team is a reply to the teammate's comment.
-    if (ctx === 'review' && state.reviewStage === 'commented') {
+    // With several comments waiting, it answers the one that's open, else the earliest.
+    const waiting = state.collaborators.filter((c) => c.role === 'teammate' && c.reviewStage === 'commented');
+    if (ctx === 'review' && waiting.length) {
+      const to = waiting.find((c) => c.id === state.commentWith) ?? waiting[0];
       log('input', { field: 'composer', text: input, intent: 'replyToTeammate', score: 0 });
-      state.replyToTeammate(input);
+      state.replyToTeammate(to.id, input);
       state.setCommentOpen(true);
       return;
     }

@@ -8,6 +8,9 @@ export const TIMING = {
   // no approval without a reply; the old 20 s auto-approve is gone, the idle hint covers a stall).
   teammateReview: 4000,
   teammateReadReply: 3500,
+  // Feedback round 4: several reviewers comment a little apart; approval merges after a beat of success.
+  reviewStagger: 2500,
+  autoMerge: 2200,
   idleHint: 25000,
   replyThinking: [700, 1200] as const,
 };

@@ -18,14 +18,16 @@ interface OrbProps {
   otherType?: string;
   /** Dashed outline only: suggested agents and the "add" rows in the menu. */
   outline?: boolean;
+  /** Teammates: 1–4, so two people never share a ring colour. */
+  tone?: number;
 }
 
 /** Iridescent orb: CSS gradient body, blurred swirls, glow and a glyph (tokens.orb). Always decorative. */
-export function Orb({ role, size, name = '', otherType, outline }: OrbProps) {
+export function Orb({ role, size, name = '', otherType, outline, tone }: OrbProps) {
   const icon = role === 'other' ? OTHER_ICON[otherType ?? ''] ?? 'gear' : ROLE_ICON[role as Role];
   const glyph = Math.round(size * 0.42);
   return (
-    <span className={`orb orb--${role}${outline ? ' orb--outline' : ''}`} style={{ width: size, height: size }} aria-hidden="true">
+    <span className={`orb orb--${role}${outline ? ' orb--outline' : ''}${tone && tone > 1 ? ` orb--tone-${tone}` : ''}`} style={{ width: size, height: size }} aria-hidden="true">
       {!outline && role !== 'teammate' && (
         <>
           <span className="orb__swirl orb__swirl--a" />

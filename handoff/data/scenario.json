@@ -1094,7 +1094,7 @@
     },
     "noReviewer": {
       "title": {
-        "text": "No reviewer yet",
+        "text": "No human reviewer",
         "new": true
       },
       "body": {
@@ -1109,6 +1109,10 @@
         "text": "Cancel",
         "new": true
       }
+    },
+    "reviewersHelp": {
+      "text": "Everyone on your team who’s a person reviews this pull request.",
+      "new": true
     }
   },
   "teammateReview": {
@@ -1175,7 +1179,7 @@
       "new": true
     },
     "statusApproved": {
-      "text": "Approved  ·  ready to merge",
+      "text": "Approved  ·  merging",
       "new": true
     },
     "you": {
@@ -1245,11 +1249,62 @@
       "new": true
     },
     "noReviewerHelp": {
-      "text": "Add a teammate to review. Merging unlocks when they approve.",
+      "text": "Add a teammate to review. It merges on its own once they approve.",
       "new": true
     },
     "addReviewer": {
       "text": "Add a reviewer",
+      "new": true
+    },
+    "questions": [
+      {
+        "body": "Can the 409 response include the original plan id so clients can recover?",
+        "answer": "Makes sense, thanks. Approving.",
+        "new": true,
+        "note": "Round 4: one question per human reviewer, in the order they joined. The first is the original comment."
+      },
+      {
+        "body": "Should the 409 path log the duplicate key? Support will want to trace client retries.",
+        "answer": "Got it, that works for me. Approving.",
+        "new": true
+      },
+      {
+        "body": "Is the Idempotency-Key header documented in the OpenAPI spec so client teams know to send it?",
+        "answer": "Great, thanks for confirming. Approving.",
+        "new": true
+      },
+      {
+        "body": "Do the contract tests cover a retry that arrives after the first request failed?",
+        "answer": "Thanks, that covers it. Approving.",
+        "new": true
+      }
+    ],
+    "reviewRow": {
+      "text": "Review  ·  {teammate}",
+      "new": true
+    },
+    "waitingOn": {
+      "text": "Waiting on {teammateFirst}",
+      "new": true
+    },
+    "waitingReply": {
+      "text": "Waiting on your reply",
+      "new": true
+    },
+    "reviewsPill": {
+      "text": "Waiting on {n} reviews",
+      "new": true
+    },
+    "autoMergeHelp": {
+      "text": "Merges on its own once every reviewer approves.",
+      "new": true
+    },
+    "merging": {
+      "text": "Everyone approved. Merging into main…",
+      "new": true
+    },
+    "mergedToast": {
+      "text": "Pull request #482 merged into main.",
       "new": true
     }
   },
@@ -1315,6 +1370,18 @@
     },
     "receiptTitleMerged": {
       "text": "Verification receipt  ·  #482",
+      "new": true
+    },
+    "metaMany": {
+      "text": "#482  ·  approved by {teammates}  ·  no repeat review",
+      "new": true
+    },
+    "historyLabel": {
+      "text": "Review conversations",
+      "new": true
+    },
+    "historyEmpty": {
+      "text": "No review comments on this pull request.",
       "new": true
     }
   },
@@ -1645,6 +1712,147 @@
     },
     "teammateSuggestions": {
       "text": "People in your org",
+      "new": true
+    }
+  },
+  "sessionHistory": {
+    "$note": "Round 4: session history and saved constellations, in the team rail.",
+    "button": {
+      "text": "Session history",
+      "new": true
+    },
+    "thisSession": {
+      "text": "This session",
+      "new": true
+    },
+    "sessionTitle": {
+      "text": "Recurring Investments API  ·  today",
+      "new": true
+    },
+    "receipt": {
+      "text": "Verification receipt",
+      "new": true
+    },
+    "recap": {
+      "text": "Productivity recap",
+      "new": true
+    },
+    "conversations": {
+      "text": "Review conversations",
+      "new": true
+    },
+    "nothingYet": {
+      "text": "The receipt appears here once every section is verified.",
+      "new": true
+    },
+    "savedTeams": {
+      "text": "Saved constellations",
+      "new": true
+    },
+    "savedMeta": {
+      "text": "{n} members  ·  {sessions}",
+      "new": true
+    },
+    "sessionsOne": {
+      "text": "1 session",
+      "new": true
+    },
+    "sessionsMany": {
+      "text": "{n} sessions",
+      "new": true
+    },
+    "sessionsNone": {
+      "text": "no sessions",
+      "new": true
+    },
+    "savedSession": {
+      "text": "{title}  ·  {status}",
+      "new": true
+    },
+    "statusMerged": {
+      "text": "merged",
+      "new": true
+    },
+    "statusOpen": {
+      "text": "in progress",
+      "new": true
+    }
+  },
+  "saveTeam": {
+    "button": {
+      "text": "Save constellation",
+      "new": true
+    },
+    "title": {
+      "text": "Save this constellation",
+      "new": true
+    },
+    "body": {
+      "text": "Keep this team so you can start other work with it. Saved constellations show up in Session history and in the Add menu.",
+      "new": true
+    },
+    "nameLabel": {
+      "text": "Name",
+      "new": true
+    },
+    "nameDefault": {
+      "text": "Recurring Investments team",
+      "new": true
+    },
+    "nameError": {
+      "text": "Give the constellation a name.",
+      "new": true
+    },
+    "include": {
+      "text": "Include",
+      "new": true
+    },
+    "optAgents": {
+      "text": "Agents with their configuration and permissions",
+      "new": true
+    },
+    "optTeammates": {
+      "text": "Human teammates",
+      "new": true
+    },
+    "optHistory": {
+      "text": "Session history (receipt, recap and review conversations)",
+      "new": true
+    },
+    "optDefault": {
+      "text": "Start new projects in brokerage-api with this team",
+      "new": true
+    },
+    "save": {
+      "text": "Save",
+      "new": true
+    },
+    "cancel": {
+      "text": "Cancel",
+      "new": true
+    },
+    "savedToast": {
+      "text": "Saved “{name}”. Find it under Session history.",
+      "new": true
+    },
+    "updatedToast": {
+      "text": "Updated “{name}”.",
+      "new": true
+    },
+    "addMenuLabel": {
+      "text": "Saved constellations",
+      "new": true
+    },
+    "addMenuRow": {
+      "text": "Add {n} members",
+      "new": true
+    },
+    "loadedToast": {
+      "text": "Added your “{name}” constellation.",
+      "new": true
+    },
+    "membersLabel": {
+      "text": "Members",
       "new": true
     }
   }

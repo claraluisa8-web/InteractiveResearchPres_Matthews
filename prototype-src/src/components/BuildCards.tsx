@@ -141,10 +141,12 @@ export function RecommendationCard() {
 
 /** Bottom-left legend, shown only once its encoding is on screen. */
 export function Legend({ items }: { items: { kind: 'ring' | 'issue' | 'dashed'; text: string }[] }) {
-  if (items.length === 0) return null;
+  // The suggestion and the review can both explain the lavender ring; say it once.
+  const unique = items.filter((i, n) => items.findIndex((x) => x.text === i.text) === n);
+  if (unique.length === 0) return null;
   return (
     <ul className="legend" aria-label={t(copy.recommendation.legendLabel)}>
-      {items.map((i) => (
+      {unique.map((i) => (
         <li key={i.text}>
           <span className={`legend__sample legend__sample--${i.kind}`} aria-hidden="true" />
           {i.text}

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { copy, t } from './copy';
 import { codeFile } from './code';
-import { pickSlot } from './layout';
+import { pickSlot, slotPoint, YOU_TEAM } from './layout';
 import { applyFix, changedLines, diffLines, initialIssues, initialSections, issueMet, originalFile, safeRange, sectionById } from './sections';
 import { isGhost, type AgentRole, type Collaborator, type IssueState, type Milestones, type Recommendation, type ReviewStage, type RightPanel, type SectionState, type ThreadMessage, type View } from './types';
 
@@ -51,11 +51,15 @@ interface ScenarioState {
   fileDrafts: Record<string, string>;
   sections: Record<string, SectionState>;
   issues: Record<number, IssueState>;
-  pr: { title: string; description: string; reviewer: string | null; attachReceipt: boolean };
+  pr: { title: string; description: string; attachReceipt: boolean };
   thread: ThreadMessage[];
+  /** Across all reviewers: the most urgent stage (see aggregateStage). */
   reviewStage: ReviewStage;
-  /** Where in the thread the teammate's PR comment arrived, so earlier messages stay above it. */
-  commentAt: number;
+  /** The saved constellation this session was saved as, so saving again updates it. */
+  savedTeamId: string | null;
+  setSavedTeamId: (id: string | null) => void;
+  /** Add a saved constellation's members (frames: Add menu, feedback round 4). */
+  loadTeam: (members: Collaborator[]) => void;
   /** M1: the coach card is gone for good once anyone is added. */
   firstAdded: boolean;
   view: View;
@@ -103,6 +107,8 @@ interface ScenarioState {
   startDraft: (role: AgentRole, otherType?: string) => void;
   /** Add a teammate from the PR panel or PR status card; they become the reviewer once saved. */
   addReviewer: () => void;
+  /** A teammate's review moves on (reviewing to commented); see useReviewFlow. */
+  setMateStage: (id: string, stage: ReviewStage) => void;
   /** Where a teammate draft came from, so saving it can make them the reviewer. */
   draftFor: 'pr' | 'review' | null;
   editCollaborator: (id: string, opts?: { focusName?: boolean; prefillName?: string }) => void;
@@ -150,14 +156,13 @@ interface ScenarioState {
   setAttachments: (files: string[]) => void;
   openThread: (teammateId: string) => void;
   messageTeammate: (teammateId: string, text: string) => void;
-  setReviewStage: (stage: ReviewStage) => void;
   openPR: () => void;
   closePR: () => void;
   setPR: (patch: Partial<ScenarioState['pr']>) => void;
   createPR: () => void;
   setCommentOpen: (v: boolean) => void;
-  replyToTeammate: (text: string) => void;
-  approve: (auto: boolean) => void;
+  replyToTeammate: (id: string, text: string) => void;
+  approve: (id: string) => void;
   merge: () => void;
   showLine: () => void;
   pushReply: (reply: Omit<Reply, 'id'>) => number;
@@ -181,6 +186,36 @@ export function defaultName(role: AgentRole, otherType?: string) {
 }
 
 /** Auto-connect rules (flow-and-milestones.md): prefilled into CONNECTS TO, still toggleable. */
+/** Where a new orb's lines will go, so its slot keeps them clear of other orbs. */
+const linkPoints = (ids: string[], cs: Collaborator[]) =>
+  ids.map((id) => (id === 'you' ? YOU_TEAM : slotPoint(cs.find((c) => c.id === id)?.slot ?? 0)));
+
+/** Every human teammate in the constellation reviews the pull request (feedback round 4). */
+export const reviewersOf = (cs: Collaborator[]) => cs.filter((c) => c.role === 'teammate' && c.status === 'active');
+
+/** Their scripted question and answer, by the order they joined. */
+export function questionFor(c: Collaborator) {
+  const qs = copy.teammateReview.questions;
+  return qs[(c.question ?? 0) % qs.length];
+}
+
+function startReview(cs: Collaborator[], ids: string[]): Collaborator[] {
+  const mates = cs.filter((c) => c.role === 'teammate');
+  return cs.map((c) =>
+    ids.includes(c.id) && c.review !== 'approved'
+      ? { ...c, status: 'active', review: 'pending', reviewStage: 'reviewing', question: mates.indexOf(c), connectsTo: c.connectsTo.includes('you') ? c.connectsTo : [...c.connectsTo, 'you'] }
+      : c,
+  );
+}
+
+/** One stage for the pill and hints: a comment waiting on you first, then reading, then reviewing. */
+export function aggregateStage(cs: Collaborator[]): ReviewStage {
+  const stages = reviewersOf(cs).map((c) => c.reviewStage).filter(Boolean) as ReviewStage[];
+  if (!stages.length) return 'none';
+  for (const st of ['commented', 'reading', 'reviewing'] as const) if (stages.includes(st)) return st;
+  return stages.every((x) => x === 'approved') ? 'approved' : 'none';
+}
+
 export function defaultConnects(role: AgentRole, cs: Collaborator[]): string[] {
   const builder = firstOf(cs, 'builder');
   const reviewer = firstOf(cs, 'reviewer');
@@ -235,10 +270,35 @@ export const useScenario = create<ScenarioState>()(
       fileDrafts: {},
       sections: initialSections(),
       issues: initialIssues(),
-      pr: { title: copy.pullRequest.titleValue, description: copy.pullRequest.descriptionValue, reviewer: null, attachReceipt: true },
+      pr: { title: copy.pullRequest.titleValue, description: copy.pullRequest.descriptionValue, attachReceipt: true },
       thread: [],
       reviewStage: 'none',
-      commentAt: 0,
+      savedTeamId: null,
+      setSavedTeamId: (id) => set({ savedTeamId: id }),
+      loadTeam: (members) => {
+        const s = get();
+        let seq = s.seq;
+        let kept = s.collaborators.filter((c) => c.status !== 'draft');
+        const idMap: Record<string, string> = { you: 'you' };
+        for (const m of members) idMap[m.id] = `${m.role}-${seq++}`;
+        for (const m of members) {
+          const connectsTo = m.connectsTo.map((x) => idMap[x]).filter(Boolean);
+          const c: Collaborator = {
+            ...m,
+            id: idMap[m.id],
+            connectsTo: connectsTo.length ? connectsTo : ['you'],
+            status: 'active',
+            review: undefined,
+            reviewStage: undefined,
+            commentAt: undefined,
+            question: undefined,
+            addedAt: Date.now(),
+            slot: pickSlot(m.role, kept.map((x) => x.slot), linkPoints(connectsTo, kept)),
+          };
+          kept = [...kept, c];
+        }
+        set({ collaborators: kept, seq, addMenu: null, firstAdded: true, milestones: roleMilestones(kept, s.milestones) });
+      },
       firstAdded: false,
       view: IDENTITY_VIEW,
       seq: 1,
@@ -285,7 +345,7 @@ export const useScenario = create<ScenarioState>()(
           connectsTo: defaultConnects(role, kept),
           status: 'draft',
           addedAt: Date.now(),
-          slot: pickSlot(role, kept.map((c) => c.slot)),
+          slot: pickSlot(role, kept.map((c) => c.slot), linkPoints(defaultConnects(role, kept), kept)),
         };
         set({
           collaborators: [...kept, draft],
@@ -332,21 +392,14 @@ export const useScenario = create<ScenarioState>()(
           ),
         );
         set({ collaborators: next, configure: null, firstAdded: true, milestones: roleMilestones(next, milestones) });
-        // Feedback round 3: a teammate is the reviewer only when the person picks or adds them for it.
+        // Feedback round 4: every teammate reviews. One added after the PR exists starts reviewing too.
         const s = get();
         const isNewMate = target.role === 'teammate' && target.status === 'draft';
-        if (isNewMate && s.draftFor === 'pr') {
-          set({ pr: { ...s.pr, reviewer: target.id }, rightPanel: 'pr', draftFor: null });
-        } else if (isNewMate && s.milestones.prCreated && !s.pr.reviewer) {
-          // Added after "Proceed anyway": they join the PR and the review starts.
-          set({
-            pr: { ...s.pr, reviewer: target.id },
-            collaborators: s.collaborators.map((c) => (c.id === target.id ? { ...c, review: 'pending' } : c)),
-            reviewStage: 'reviewing',
-            commentWith: target.id,
-            commentOpen: false,
-            draftFor: null,
-          });
+        if (isNewMate && s.milestones.prCreated && !s.milestones.merged) {
+          const collaborators = startReview(s.collaborators, [target.id]);
+          set({ collaborators, reviewStage: aggregateStage(collaborators), draftFor: null });
+        } else if (isNewMate && s.draftFor === 'pr') {
+          set({ rightPanel: 'pr', draftFor: null });
         } else set({ draftFor: null });
       },
 
@@ -532,21 +585,25 @@ export const useScenario = create<ScenarioState>()(
           commentWith: teammateId,
           commentOpen: true,
         })),
-      setReviewStage: (stage) =>
-        set((s) => ({
-          reviewStage: stage,
-          commentOpen: stage === 'commented' ? true : s.commentOpen,
-          commentWith: stage === 'commented' ? s.pr.reviewer : s.commentWith,
-          commentAt: stage === 'commented' && s.reviewStage !== 'commented' ? s.thread.length : s.commentAt,
-        })),
+      setMateStage: (id, stage) =>
+        set((s) => {
+          const collaborators = s.collaborators.map((c) =>
+            c.id === id ? { ...c, reviewStage: stage, commentAt: stage === 'commented' && c.reviewStage !== 'commented' ? s.thread.length : c.commentAt } : c,
+          );
+          // A new comment opens its card, unless another teammate's comment is already open and waiting.
+          const busy = s.commentOpen && s.commentWith !== id && collaborators.some((c) => c.id === s.commentWith && c.reviewStage === 'commented');
+          return {
+            collaborators,
+            reviewStage: aggregateStage(collaborators),
+            ...(stage === 'commented' && !busy ? { commentOpen: true, commentWith: id } : {}),
+          };
+        }),
       setRightPanel: (p) => set({ rightPanel: p, sectionsLine: null, popover: null, updateCardOpen: false }),
 
-      // M8: the PR panel. No teammate is added or picked for the person (feedback round 3).
+      // M8: the PR panel. Every teammate in the constellation reviews (feedback round 4).
       openPR: () => {
         const s = get();
-        const reviewer = s.pr.reviewer && s.collaborators.some((c) => c.id === s.pr.reviewer && c.status === 'active') ? s.pr.reviewer : null;
         set({
-          pr: { ...s.pr, reviewer },
           rightPanel: 'pr',
           sectionsLine: null,
           editor: null,
@@ -562,48 +619,58 @@ export const useScenario = create<ScenarioState>()(
         })),
       setPR: (patch) => set((s) => ({ pr: { ...s.pr, ...patch } })),
 
-      // M9: the PR exists; the teammate joins (or is already there) and starts reviewing.
+      // M9: the PR exists; every teammate starts reviewing. With none ("Proceed anyway") merging waits for one.
       createPR: () => {
         const s = get();
-        const id = s.pr.reviewer;
-        if (!id) {
-          // "Proceed anyway": the PR exists with no reviewer; merging stays locked until one approves.
-          set({ rightPanel: null, commentOpen: false, reviewStage: 'none', milestones: { ...s.milestones, prCreated: true } });
-          return;
-        }
+        const ids = reviewersOf(s.collaborators).map((c) => c.id);
+        const collaborators = startReview(s.collaborators, ids);
         set({
-          collaborators: s.collaborators.map((c) =>
-            c.id === id ? { ...c, status: 'active', review: 'pending', connectsTo: c.connectsTo.includes('you') ? c.connectsTo : [...c.connectsTo, 'you'] } : c,
-          ),
+          collaborators,
           rightPanel: null,
-          // The comment arrives after the teammate has looked at the PR (useReviewFlow).
+          // Comments arrive after each teammate has looked at the PR (useReviewFlow).
           commentOpen: false,
-          commentWith: id,
-          reviewStage: 'reviewing',
+          commentWith: null,
+          reviewStage: aggregateStage(collaborators),
           firstAdded: true,
           milestones: { ...s.milestones, prCreated: true },
         });
       },
       setCommentOpen: (v) => set({ commentOpen: v }),
-      replyToTeammate: (text) =>
-        set((s) => ({
-          thread: [...s.thread, { from: 'you', text, with: s.pr.reviewer ?? undefined, attachments: s.attachments.length ? s.attachments : undefined }],
-          attachments: [],
-          reviewStage: 'reading',
-          commentWith: s.pr.reviewer,
-          commentOpen: true,
-        })),
+      replyToTeammate: (id, text) =>
+        set((s) => {
+          const collaborators = s.collaborators.map((c) => (c.id === id ? { ...c, reviewStage: 'reading' as const } : c));
+          return {
+            collaborators,
+            thread: [...s.thread, { from: 'you', text, with: id, attachments: s.attachments.length ? s.attachments : undefined }],
+            attachments: [],
+            reviewStage: aggregateStage(collaborators),
+            commentWith: id,
+            commentOpen: true,
+          };
+        }),
 
-      // M10: approved after a reply (any text) or 20 s of quiet.
-      approve: (auto) => {
+      // M10: each teammate approves after reading a reply. When the last one does, the PR merges itself (useReviewFlow).
+      approve: (id) => {
         const s = get();
-        if (s.milestones.teammateApproved) return;
-        const tr = copy.teammateReview;
+        const mate = s.collaborators.find((c) => c.id === id);
+        if (!mate || mate.review === 'approved') return;
+        const q = questionFor(mate);
+        const collaborators = s.collaborators.map((c) => (c.id === id ? { ...c, review: 'approved' as const, reviewStage: 'approved' as const } : c));
+        const all = reviewersOf(collaborators).every((c) => c.review === 'approved');
         set({
-          collaborators: s.collaborators.map((c) => (c.id === s.pr.reviewer ? { ...c, review: 'approved' } : c)),
-          thread: [...s.thread, { from: 'teammate', text: t(auto ? tr.autoApprove : tr.answer), with: s.pr.reviewer ?? undefined }],
-          reviewStage: 'approved',
-          milestones: { ...s.milestones, teammateApproved: true },
+          collaborators,
+          thread: [...s.thread, { from: 'teammate', text: q.answer, with: id }],
+          reviewStage: aggregateStage(collaborators),
+          // Resolved: the comment card closes with the last approval; its history lives in the recap.
+          ...(all
+            ? {
+                milestones: { ...s.milestones, teammateApproved: true },
+                commentOpen: false,
+                // The conversation is resolved, so the composer goes back to who it addressed before.
+                composerTarget: s.prevComposerTarget ?? s.composerTarget,
+                prevComposerTarget: null,
+              }
+            : {}),
         });
       },
 
@@ -658,7 +725,7 @@ export const useScenario = create<ScenarioState>()(
           connectsTo: defaultConnects(role, kept),
           status: 'active',
           addedAt: Date.now(),
-          slot: pickSlot(role, kept.map((x) => x.slot)),
+          slot: pickSlot(role, kept.map((x) => x.slot), linkPoints(defaultConnects(role, kept), kept)),
         };
         const next = [...kept, c];
         set({ collaborators: next, seq: seq + 1, configure: null, firstAdded: true, milestones: roleMilestones(next, milestones) });
@@ -680,6 +747,7 @@ export const useScenario = create<ScenarioState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({
         collaborators: s.collaborators.filter((c) => c.status !== 'draft'),
+        savedTeamId: s.savedTeamId,
         milestones: s.milestones,
         recommendation: s.recommendation,
         files: s.files,
@@ -687,9 +755,7 @@ export const useScenario = create<ScenarioState>()(
         sections: s.sections,
         pr: s.pr,
         thread: s.thread,
-        // A review stage waiting on a timer resumes as if the timer had just finished.
-        reviewStage: s.reviewStage === 'reviewing' ? 'commented' : s.reviewStage === 'reading' ? 'commented' : s.reviewStage,
-        commentAt: s.commentAt,
+        reviewStage: s.reviewStage,
         // A recheck in flight when the page closed goes back to open; nothing is left hanging.
         issues: Object.fromEntries(
           Object.entries(s.issues).map(([k, i]) => [k, i.status === 'savedAwaitingAgents' || i.status === 'fixPreview' ? { ...i, status: 'open' as const } : i]),

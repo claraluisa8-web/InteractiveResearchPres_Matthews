@@ -7,9 +7,9 @@ import { caughtPerLine, footnote, receiptRows, receiptText } from '../lib/receip
 import { topSections } from '../lib/sections';
 import { log } from '../lib/log';
 import { usePopupFocus } from '../lib/usePopupFocus';
-import { initials } from '../lib/status';
-import type { ThreadMessage } from '../lib/types';
-import { useScenario } from '../lib/store';
+import { initials, mateTone } from '../lib/status';
+import type { Collaborator, ThreadMessage } from '../lib/types';
+import { questionFor, reviewersOf, useScenario } from '../lib/store';
 import { Icon } from './Icon';
 
 const ac = copy.allClear;
@@ -106,13 +106,12 @@ export function PRPanel() {
   useEffect(() => {
     ref.current?.querySelector<HTMLElement>('input')?.focus();
   }, []);
-  const mates = collaborators.filter((c) => c.role === 'teammate' && c.status === 'active');
-  // Nobody is picked for the person (feedback round 3).
-  const reviewer = mates.find((c) => c.id === form.reviewer);
+  // Feedback round 4: every human teammate in the constellation reviews; none is picked for you.
+  const mates = reviewersOf(collaborators);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    if (!reviewer) {
+    if (!mates.length) {
       log('click', { target: 'createPR', noReviewer: true });
       setWarn(true);
       return;
@@ -149,26 +148,22 @@ export function PRPanel() {
       <div className="field">
         <span className="pmr-label field__label" id="pr-reviewers">{pr.reviewersLabel}</span>
         {mates.length > 0 ? (
-          <label className="select pr-panel__select">
-            <span className="sr-only">{t(pr.reviewerSelect)}</span>
-            <select value={reviewer?.id ?? ''} onChange={(e) => setPR({ reviewer: e.target.value || null })} aria-labelledby="pr-reviewers" data-reviewer-select>
-              <option value="">{t(pr.reviewerPlaceholder)}</option>
-              {mates.map((m) => <option key={m.id} value={m.id}>{m.email ? `${m.name} (${m.email})` : m.name}</option>)}
-            </select>
-            <Icon name="chevron-down" />
-          </label>
+          <>
+            <ul className="pr-panel__reviewers" aria-labelledby="pr-reviewers">
+              {mates.map((m) => (
+                <li key={m.id} className="pr-panel__reviewer">
+                  <span className={`avatar avatar--tone-${mateTone(m.id, collaborators) ?? 1}`}>{initials(m.name)}</span>
+                  <span className="pr-panel__reviewer-text">
+                    <span className="pr-panel__reviewer-name">{m.name}</span>
+                    {m.email && <span className="field__help pr-panel__email">{m.email}</span>}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="field__help">{t(pr.reviewersHelp)}</p>
+          </>
         ) : (
           <p className="field__help">{t(pr.noTeammates)}</p>
-        )}
-        {reviewer && (
-          <div className="pr-panel__reviewer">
-            <span className="avatar">{initials(reviewer.name)}</span>
-            <span className="pr-panel__reviewer-text">
-              <span className="pr-panel__reviewer-name">{reviewer.name}</span>
-              {reviewer.email && <span className="field__help pr-panel__email">{reviewer.email}</span>}
-              <span className="field__help">{copy.roles.teammate.menuBody}</span>
-            </span>
-          </div>
         )}
         <button type="button" className="pmr-button pmr-button--secondary pr-panel__add" onClick={addReviewer}>
           <Icon name="add" size={14} />{t(pr.addTeammate)}
@@ -183,7 +178,7 @@ export function PRPanel() {
       {warn && (
         <NoReviewerDialog
           onProceed={() => { setWarn(false); log('click', { target: 'proceedWithoutReviewer' }); createPR(); }}
-          onCancel={() => { setWarn(false); requestAnimationFrame(() => ref.current?.querySelector<HTMLElement>('[data-reviewer-select], .pr-panel__add')?.focus()); }}
+          onCancel={() => { setWarn(false); requestAnimationFrame(() => ref.current?.querySelector<HTMLElement>('.pr-panel__add')?.focus()); }}
         />
       )}
     </form>
@@ -214,18 +209,14 @@ function NoReviewerDialog({ onProceed, onCancel }: { onProceed: () => void; onCa
   );
 }
 
-/** Frame 10: PR #482 with its checks; Merge unlocks when the teammate approves. */
+/** Frame 10: PR #482 with its checks, one review row per teammate. It merges itself once all approve (round 4). */
 export function PRStatusCard() {
   const collaborators = useScenario((s) => s.collaborators);
-  const reviewerId = useScenario((s) => s.pr.reviewer);
   const attach = useScenario((s) => s.pr.attachReceipt);
   const approved = useScenario((s) => s.milestones.teammateApproved);
-  const stage = useScenario((s) => s.reviewStage);
-  const merge = useScenario((s) => s.merge);
   const addReviewer = useScenario((s) => s.addReviewer);
-  const mate = collaborators.find((c) => c.id === reviewerId);
-  const name = mate?.name ?? copy.people.teammate.fullName;
-  const total = useScenario((s) => s.collaborators.some((c) => c.role === 'tester' && c.status === 'active')) ? 8 : 7;
+  const mates = reviewersOf(collaborators);
+  const total = collaborators.some((c) => c.role === 'tester' && c.status === 'active') ? 8 : 7;
   const hasTester = total === 8;
   const [receipt, tests, review] = tr.checks;
   return (
@@ -245,48 +236,89 @@ export function PRStatusCard() {
             <span><span className="pr-status__title">{tests.title}</span><span className="pr-status__meta">{tests.meta}</span></span>
           </li>
         )}
-        <li>
-          <Icon name={approved ? 'pass-filled' : mate ? review.icon : 'circle-large-outline'} className={approved ? 'is-pass' : undefined} />
-          <span>
-            <span className="pr-status__title">{review.title}</span>
-            <span className="pr-status__meta">
-              {approved ? t(tr.approvedCheck, { teammate: name }) : mate ? t(review.meta, { teammate: name }) : t(tr.noReviewerCheck)}
-            </span>
-          </span>
-        </li>
+        {mates.map((m) => {
+          const first = m.name.split(' ')[0];
+          const done = m.review === 'approved';
+          return (
+            <li key={m.id}>
+              <Icon name={done ? 'pass-filled' : review.icon} className={done ? 'is-pass' : undefined} />
+              <span>
+                <span className="pr-status__title">{t(tr.reviewRow, { teammate: m.name })}</span>
+                <span className="pr-status__meta">
+                  {done ? t(tr.approvedCheck, { teammate: m.name })
+                    : m.reviewStage === 'commented' ? t(tr.waitingReply)
+                    : m.reviewStage === 'reading' ? t(tr.readingReply, { teammateFirst: first })
+                    : t(tr.waitingOn, { teammateFirst: first })}
+                </span>
+              </span>
+            </li>
+          );
+        })}
+        {!mates.length && (
+          <li>
+            <Icon name="circle-large-outline" />
+            <span><span className="pr-status__title">{review.title}</span><span className="pr-status__meta">{t(tr.noReviewerCheck)}</span></span>
+          </li>
+        )}
       </ul>
-      <button
-        type="button"
-        className={`pmr-button right-panel__wide${approved ? '' : ' pmr-button--locked'}`}
-        aria-disabled={!approved}
-        data-merge
-        onClick={() => approved && merge()}
-      >
-        {!approved && <Icon name="lock" size={14} />}
-        {tr.merge}
-      </button>
-      {!mate && (
-        <button type="button" className="pmr-button pmr-button--secondary right-panel__wide" data-add-reviewer onClick={addReviewer}>
-          <Icon name="add" size={14} />{t(tr.addReviewer)}
-        </button>
-      )}
-      {!approved && !mate && <p className="pr-status__help">{t(tr.noReviewerHelp)}</p>}
-      {!approved && mate && (
-        <p className="pr-status__help">
-          {t(stage === 'commented' ? tr.mergeLockedReply : stage === 'reading' ? tr.readingReply : tr.mergeLocked, { teammateFirst: name.split(' ')[0] })}
+      {approved ? (
+        <p className="pr-status__success" role="status">
+          <Icon name="pass-filled" className="is-pass" />{t(tr.merging)}
         </p>
+      ) : mates.length ? (
+        <p className="pr-status__help">{t(tr.autoMergeHelp)}</p>
+      ) : (
+        <>
+          <button type="button" className="pmr-button pmr-button--secondary right-panel__wide" data-add-reviewer onClick={addReviewer}>
+            <Icon name="add" size={14} />{t(tr.addReviewer)}
+          </button>
+          <p className="pr-status__help">{t(tr.noReviewerHelp)}</p>
+        </>
       )}
     </section>
   );
 }
 
+/** A teammate's conversation: messages before their PR comment, the comment, then the reply and answer. */
+function MateThread({ mate, thread, render }: { mate: Collaborator; thread: ThreadMessage[]; render: (m: ThreadMessage, i: number) => JSX.Element }) {
+  const hasComment = !!mate.reviewStage && mate.reviewStage !== 'reviewing';
+  const indexed = thread.map((m, i) => ({ m, i })).filter(({ m }) => m.with === mate.id);
+  const at = mate.commentAt ?? 0;
+  const before = hasComment ? indexed.filter(({ i }) => i < at) : indexed;
+  const after = hasComment ? indexed.filter(({ i }) => i >= at) : [];
+  return (
+    <>
+      {before.map(({ m, i }) => render(m, i))}
+      {hasComment && (
+        <p className="comment-card__body comment-card__pr-comment">
+          <span className="comment-card__who">{mate.name}  ·  {tr.comment.meta}</span>
+          {questionFor(mate).body}
+        </p>
+      )}
+      {after.map(({ m, i }) => render(m, i))}
+    </>
+  );
+}
+
+const messageRenderer = (mate: Collaborator) => (m: ThreadMessage, i: number) => (
+  <div key={i} className={`comment-card__reply comment-card__reply--${m.from}`}>
+    <span className="comment-card__who">{m.from === 'you' ? t(tr.you) : mate.name}</span>
+    {m.text}
+    {m.attachments && (
+      <span className="comment-card__attachments">
+        {m.attachments.map((f) => (
+          <span key={f} className="chip chip--static"><Icon name="file" size={12} />{f}</span>
+        ))}
+      </span>
+    )}
+  </div>
+);
+
 /** Frame 10: the teammate's comment on the You line, with a real reply field. */
 export function CommentCard() {
   const collaborators = useScenario((s) => s.collaborators);
-  const reviewerId = useScenario((s) => s.pr.reviewer);
   const commentWith = useScenario((s) => s.commentWith);
   const allThread = useScenario((s) => s.thread);
-  const approved = useScenario((s) => s.milestones.teammateApproved);
   const view = useScenario((s) => s.view);
   const addressTeammate = useScenario((s) => s.addressTeammate);
   const closeComment = useScenario((s) => s.closeComment);
@@ -294,21 +326,14 @@ export function CommentCard() {
   const showLine = useScenario((s) => s.showLine);
   const g = useGeometry();
   const cardRef = useRef<HTMLElement>(null);
-  const stage = useScenario((s) => s.reviewStage);
-  const mateId = commentWith ?? reviewerId;
-  const mate = collaborators.find((c) => c.id === mateId);
-  const isReviewer = !!mate && mate.id === reviewerId;
-  // Their PR comment is on the line once the review has reached it.
-  const hasComment = isReviewer && (stage === 'commented' || stage === 'reading' || stage === 'approved');
-  const commentAt = useScenario((s) => s.commentAt);
-  // Messages before the PR comment stay above it; the reply and answer come after.
-  const indexed = allThread.map((m, i) => ({ m, i })).filter(({ m }) => !m.with || m.with === mateId);
-  const before = hasComment ? indexed.filter(({ i }) => i < commentAt) : indexed;
-  const after = hasComment ? indexed.filter(({ i }) => i >= commentAt) : [];
+  const mate = collaborators.find((c) => c.id === commentWith);
+  const stage = mate?.reviewStage;
+  // Their PR comment is on the line once their review has reached it.
+  const hasComment = !!stage && stage !== 'reviewing';
   const replied = stage === 'reading' || stage === 'approved';
+  const lastCount = allThread.filter((m) => m.with === commentWith).length;
   useEscape(closeComment);
   // Feedback round 3: new messages scroll into view on their own.
-  const lastCount = indexed.length;
   useEffect(() => {
     const el = threadRef.current;
     if (el) el.scrollTop = el.scrollHeight;
@@ -341,20 +366,6 @@ export function CommentCard() {
   // Bottom-anchored 45px above the line (frame 10) so a growing thread rises instead of covering You.
   const bottomEdge = Math.max(mid.y - 45, 200);
 
-  const renderMessage = (m: ThreadMessage, i: number) => (
-    <div key={i} className={`comment-card__reply comment-card__reply--${m.from}`}>
-      <span className="comment-card__who">{m.from === 'you' ? t(tr.you) : mate.name}</span>
-      {m.text}
-      {m.attachments && (
-        <span className="comment-card__attachments">
-          {m.attachments.map((f) => (
-            <span key={f} className="chip chip--static"><Icon name="file" size={12} />{f}</span>
-          ))}
-        </span>
-      )}
-    </div>
-  );
-
   // Feedback round 2: replying happens in the composer below ("To: {name}", with an attach button),
   // not in a field squeezed into this card.
   const reply = () => {
@@ -374,7 +385,7 @@ export function CommentCard() {
         aria-labelledby="comment-author"
       >
         <header className="comment-card__header">
-          <span className="avatar avatar--small">{initials(mate.name)}</span>
+          <span className={`avatar avatar--small avatar--tone-${mateTone(mate.id, collaborators) ?? 1}`}>{initials(mate.name)}</span>
           <span id="comment-author" className="comment-card__author">{hasComment ? mate.name : t(tr.messageLine)}</span>
           <span className="comment-card__meta" />
           <button type="button" className="icon-button comment-card__close" aria-label={t(tr.closeComment)} data-tip={t(tr.closeComment)} onClick={closeComment}>
@@ -382,20 +393,13 @@ export function CommentCard() {
           </button>
         </header>
         <div ref={threadRef} className="comment-card__thread">
-          {before.map(({ m, i }) => renderMessage(m, i))}
-          {hasComment && (
-            <p className="comment-card__body comment-card__pr-comment">
-              <span className="comment-card__who">{mate.name}  ·  {tr.comment.meta}</span>
-              {tr.comment.body}
-            </p>
-          )}
-          {after.map(({ m, i }) => renderMessage(m, i))}
-          {stage === 'reading' && isReviewer && (
+          <MateThread mate={mate} thread={allThread} render={messageRenderer(mate)} />
+          {stage === 'reading' && (
             <p className="comment-card__reply comment-card__reading" aria-live="polite">{t(tr.readingReply, { teammateFirst: first })}</p>
           )}
         </div>
         <div className="comment-card__actions">
-          {!(isReviewer && (replied || approved) && hasComment) && (
+          {!(replied && hasComment) && (
             <button type="button" className="pmr-button" data-reply onClick={reply}>
               <Icon name="reply" size={14} />
               {hasComment ? tr.comment.actions[0] : t(copy.constellation.popover.message, { first })}
@@ -411,10 +415,10 @@ export function CommentCard() {
 /** Frame 11: the recap after the merge. */
 export function RecapPanel() {
   const collaborators = useScenario((s) => s.collaborators);
-  const reviewerId = useScenario((s) => s.pr.reviewer);
+  const thread = useScenario((s) => s.thread);
   const setRightPanel = useScenario((s) => s.setRightPanel);
-  const mate = collaborators.find((c) => c.id === reviewerId);
-  const lines = caughtPerLine(collaborators, reviewerId);
+  const mates = reviewersOf(collaborators).filter((c) => c.review === 'approved');
+  const lines = caughtPerLine(collaborators, mates[0]?.id ?? null);
   const max = Math.max(...lines.map((l) => l.n), 1);
   const nameOf = (id: string) => (id === 'you' ? copy.people.you.displayName : collaborators.find((c) => c.id === id)?.name ?? '');
   const done = () => setRightPanel(null);
@@ -426,7 +430,7 @@ export function RecapPanel() {
         <Icon name="git-merge" size={18} />
         <div>
           <h2 id="recap-title" className="right-panel__title">{rc.title}</h2>
-          <p className="right-panel__meta">{t(rc.meta, { teammate: mate?.name ?? copy.people.teammate.fullName })}</p>
+          <p className="right-panel__meta">{t(rc.metaMany, { teammates: listNames(mates.map((m) => m.name)) || copy.people.teammate.fullName })}</p>
         </div>
         <button type="button" className="icon-button" aria-label={t(rc.close)} data-tip={t(rc.close)} onClick={done}>
           <Icon name="close" />
@@ -462,6 +466,26 @@ export function RecapPanel() {
           {rc.month.map((m, i) => <li key={m} className={i === 0 ? 'is-lead' : undefined}>{m}</li>)}
         </ul>
       </div>
+      {/* Feedback round 4: resolved comments leave the canvas; their history lives here. */}
+      <p className="pmr-label recap__group">{t(rc.historyLabel)}</p>
+      {mates.some((m) => m.reviewStage) ? (
+        <div className="recap__history">
+          {mates.filter((m) => m.reviewStage).map((m) => (
+            <details key={m.id} className="recap__thread">
+              <summary>
+                <span className={`avatar avatar--small avatar--tone-${mateTone(m.id, collaborators) ?? 1}`}>{initials(m.name)}</span>
+                <span>{m.name}</span>
+                <Icon name="chevron-down" size={14} />
+              </summary>
+              <div className="comment-card__thread recap__thread-body">
+                <MateThread mate={m} thread={thread} render={messageRenderer(m)} />
+              </div>
+            </details>
+          ))}
+        </div>
+      ) : (
+        <p className="field__help">{t(rc.historyEmpty)}</p>
+      )}
       <div className="right-panel__actions recap__actions">
         <button type="button" className="pmr-button pmr-button--secondary" onClick={() => setRightPanel('receipt')}>{rc.actions[0]}</button>
         <button type="button" className="pmr-button" data-done onClick={done}>{rc.actions[1]}</button>
@@ -502,4 +526,9 @@ export function AllClearPopup() {
       </div>
     </div>
   );
+}
+
+/** "A", "A and B", "A, B and C". */
+function listNames(names: string[]) {
+  return names.length <= 1 ? names[0] ?? '' : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
 }

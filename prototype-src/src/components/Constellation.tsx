@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { copy, t } from '../lib/copy';
-import { FLOOR_Y, type Point } from '../lib/layout';
+import { type Point } from '../lib/layout';
 import { SUGGESTED_ID, useGeometry, type Node } from '../lib/geometry';
 import { subtitleFor } from '../lib/status';
 import { firstOf, useScenario } from '../lib/store';
 import { caughtPerLine } from '../lib/receipt';
-import { displayName, initials } from '../lib/status';
+import { displayName, initials, mateTone } from '../lib/status';
 import type { Line } from '../lib/types';
 import { usePanZoom } from '../lib/useView';
 import { Icon } from './Icon';
@@ -74,11 +74,9 @@ export function Constellation({ scale, onLineHover }: ConstellationProps) {
   const linkIds = useScenario((s) => s.linkIds);
   const allClear = useScenario((s) => s.milestones.allSectionsVerified);
   const merged = useScenario((s) => s.milestones.merged);
-  const reviewerId = useScenario((s) => s.pr.reviewer);
-  const reviewStage = useScenario((s) => s.reviewStage);
   const thread = useScenario((s) => s.thread);
   const openThread = useScenario((s) => s.openThread);
-  const caught = merged ? caughtPerLine(collaborators, reviewerId) : [];
+  const caught = merged ? caughtPerLine(collaborators, collaborators.find((c) => c.role === 'teammate' && c.review === 'approved')?.id ?? null) : [];
   const openSections = useScenario((s) => s.openSections);
   // Orbs ringed from elsewhere: a section row rings its line's two ends; a rail row rings one orb.
   const linkSet = linkIds ? new Set(linkIds) : hoverId ? new Set([hoverId]) : null;
@@ -125,15 +123,6 @@ export function Constellation({ scale, onLineHover }: ConstellationProps) {
     >
       <div className="world" style={{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.k})` }}>
         <div className="world__layout" style={{ transform: `translate(${g.shift.x + g.dx}px, ${g.shift.y}px)` }}>
-          {/* Floor reflections sit on the grid floor under each orb. */}
-          {[g.you, ...g.nodes].map((n) => (
-            <span
-              key={`floor-${n.id}`}
-              className={`floor floor--${n.c?.role ?? 'you'}${n.c?.status === 'draft' ? ' is-draft' : ''}`}
-              style={{ left: n.point.x - n.size * 0.45, top: FLOOR_Y - 5, width: n.size * 0.9 }}
-            />
-          ))}
-
           <svg className="lines" width="1440" height="900">
             {alone && !configure && <line className="line line--attach" x1={642} y1={500} x2={692} y2={452} />}
             {showCoach && <line className="line line--attach" x1={g.plus.x + 15} y1={g.plus.y - 9} x2={834} y2={392} />}
@@ -216,10 +205,12 @@ export function Constellation({ scale, onLineHover }: ConstellationProps) {
           {g.lines.filter((l) => l.a === 'you').map((line) => {
             const b = g.byId(line.b);
             if (!b?.c || b.c.role !== 'teammate') return null;
-            // A comment node marks the conversation on this line: the PR comment, or messages sent to them.
-            const hasReviewComment = b.c.review === 'pending' && reviewStage !== 'reviewing';
-            const hasMessages = thread.some((m) => m.with === b.c!.id);
-            if (!hasReviewComment && !hasMessages) return null;
+            // A comment node marks an open conversation on this line: a PR comment waiting on you or
+            // being read, or messages before the review. Resolved (approved) or merged, it goes; the
+            // history stays in the recap (feedback round 4).
+            const openComment = b.c.reviewStage === 'commented' || b.c.reviewStage === 'reading';
+            const chatting = !b.c.review && !merged && thread.some((m) => m.with === b.c!.id);
+            if (!openComment && !chatting) return null;
             const mx = (g.you.point.x + b.point.x) / 2;
             const my = (g.you.point.y + b.point.y) / 2;
             const label = t(copy.teammateReview.commentNode, { teammateFirst: b.c.name.split(' ')[0] });
@@ -377,7 +368,7 @@ function CollaboratorNode({ n, linked, dim }: { n: Node; linked: boolean; dim: b
           aria-expanded={popover === c.id}
           onClick={() => (suggesting ? setRecCardOpen(true) : openPopover(popover === c.id ? null : c.id))}
         >
-          <Orb role={c.role} size={n.size} name={c.name} otherType={c.otherType} />
+          <Orb role={c.role} size={n.size} name={c.name} otherType={c.otherType} tone={mateTone(c.id, collaborators)} />
         </button>
       )}
       <div

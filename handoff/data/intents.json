@@ -54,7 +54,7 @@
         "build": "{builder} is working from recurring-investments.yaml. Open {builder} to see its code, or add a reviewer so someone checks the work.",
         "issue": "There’s a red line between {builder} and {reviewer}. Click it to see the sections they disagree on.",
         "editor": "Click into the code to edit it, then Save. When both agents agree, Verify section unlocks.",
-        "review": "{teammate} is reviewing the pull request. Reply to her comment, or wait for her approval to merge.",
+        "review": "Your teammates are reviewing the pull request. Reply to each comment; it merges on its own once everyone approves.",
         "done": "Everything is merged. Start over from the menu if you want to run it again.",
         "ready": "{builder} is ready. Tell it what to build, or click Start from the spec. The approved spec already defines the API.",
         "buildReviewing": "{builder} is working from recurring-investments.yaml and {reviewer} is checking it against the spec. Open {builder} to see its code.",
@@ -338,7 +338,7 @@
       "replies": {
         "issue": "Not yet: {issues} issues are still open on the line between {builder} and {reviewer}. Once every section is verified you can open a pull request.",
         "editor": "Not yet: {issues} issues are still open on the line between {builder} and {reviewer}. Once every section is verified you can open a pull request.",
-        "review": "Merging unlocks when {teammate} approves.",
+        "review": "It merges on its own once every reviewer approves.",
         "*": "Open the pull request from the receipt when all lines are clear.",
         "allClear": "Every line is clear. Here’s the pull request, drafted from the receipt.",
         "done": "It’s merged. #482 went in with the receipt attached."

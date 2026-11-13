@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { copy, t } from './copy';
 import { log } from './log';
 import { topSections } from './sections';
@@ -142,32 +142,53 @@ export function useIssueFlow() {
  * (any text); the teammate reads it for a beat before approving. The idle hint points at Reply.
  */
 export function useReviewFlow() {
-  const stage = useScenario((s) => s.reviewStage);
   const thread = useScenario((s) => s.thread);
+  const collaborators = useScenario((s) => s.collaborators);
+  const approved = useScenario((s) => s.milestones.teammateApproved);
+  const merged = useScenario((s) => s.milestones.merged);
 
   // A message outside the review (before the PR, or after approval) gets a short answer.
   useEffect(() => {
     const last = thread[thread.length - 1];
     if (!last || last.from !== 'you') return;
     const s = useScenario.getState();
-    if (s.reviewStage === 'commented' || s.reviewStage === 'reading') return;
-    const answer = s.reviewStage === 'approved' ? copy.teammateReview.afterApprovalAnswer : copy.teammateReview.preReviewAnswer;
+    const mate = s.collaborators.find((c) => c.id === last.with);
+    if (mate?.reviewStage === 'commented' || mate?.reviewStage === 'reading') return;
+    const answer = mate?.review === 'approved' ? copy.teammateReview.afterApprovalAnswer : copy.teammateReview.preReviewAnswer;
     const id = window.setTimeout(() => {
       useScenario.setState((x) => ({ thread: [...x.thread, { from: 'teammate', text: t(answer), with: last.with }] }));
     }, 1600);
     return () => window.clearTimeout(id);
   }, [thread]);
-  const setReviewStage = useScenario((s) => s.setReviewStage);
-  const approve = useScenario((s) => s.approve);
 
+  // Feedback round 4: each reviewer runs their own clock. Timers are keyed by teammate and stage so
+  // one teammate moving on never restarts another's wait. Comments arrive a little apart.
+  const timers = useRef(new Map<string, number>());
+  const pending = collaborators
+    .filter((c) => c.role === 'teammate' && (c.reviewStage === 'reviewing' || c.reviewStage === 'reading'))
+    .map((c) => `${c.id}:${c.reviewStage}`);
+  const key = pending.join('|');
   useEffect(() => {
-    if (stage === 'reviewing') {
-      const id = window.setTimeout(() => setReviewStage('commented'), TIMING.teammateReview);
-      return () => window.clearTimeout(id);
-    }
-    if (stage === 'reading') {
-      const id = window.setTimeout(() => approve(false), TIMING.teammateReadReply);
-      return () => window.clearTimeout(id);
-    }
-  }, [stage, setReviewStage, approve]);
+    const map = timers.current;
+    for (const [k, id] of map) if (!pending.includes(k)) { window.clearTimeout(id); map.delete(k); }
+    pending.forEach((k, i) => {
+      if (map.has(k)) return;
+      const [mateId, stage] = k.split(':');
+      const s = useScenario.getState();
+      const delay = stage === 'reviewing' ? TIMING.teammateReview + i * TIMING.reviewStagger : TIMING.teammateReadReply;
+      map.set(k, window.setTimeout(() => {
+        map.delete(k);
+        if (stage === 'reviewing') s.setMateStage(mateId, 'commented');
+        else useScenario.getState().approve(mateId);
+      }, delay));
+    });
+  }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => () => { for (const id of timers.current.values()) window.clearTimeout(id); }, []);
+
+  // Feedback round 4: approval merges the pull request; no Merge button. A beat of success first.
+  useEffect(() => {
+    if (!approved || merged) return;
+    const id = window.setTimeout(() => useScenario.getState().merge(), TIMING.autoMerge);
+    return () => window.clearTimeout(id);
+  }, [approved, merged]);
 }

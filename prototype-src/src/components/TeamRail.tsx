@@ -1,12 +1,13 @@
 import { copy, t } from '../lib/copy';
-import { displayName, subtitleFor } from '../lib/status';
+import { displayName, mateTone, subtitleFor } from '../lib/status';
 import { SUGGESTED_ID, countOpen } from '../lib/geometry';
 import { firstOf, useScenario } from '../lib/store';
 import { Icon } from './Icon';
 import { Orb } from './Orb';
+import { RailFooter } from './SessionHistory';
 
 /** Team rail (from frame 05 on): appears once three or more are in the constellation, You included. */
-export function TeamRail({ showFit, onFit }: { showFit: boolean; onFit: () => void }) {
+export function TeamRail({ showFit, onFit, onToast }: { showFit: boolean; onFit: () => void; onToast: (message: string) => void }) {
   const collaborators = useScenario((s) => s.collaborators);
   const popover = useScenario((s) => s.popover);
   const openPopover = useScenario((s) => s.openPopover);
@@ -62,7 +63,7 @@ export function TeamRail({ showFit, onFit }: { showFit: boolean; onFit: () => vo
               }
             >
               <span className={r.draft ? 'rail__ghost' : undefined}>
-                <Orb role={r.role} size={24} name={r.name} otherType={r.otherType} outline={r.draft} />
+                <Orb role={r.role} size={24} name={r.name} otherType={r.otherType} outline={r.draft} tone={mateTone(r.id, collaborators)} />
               </span>
               <span className="rail__text">
                 <span className="rail__name">{r.name}</span>
@@ -77,6 +78,7 @@ export function TeamRail({ showFit, onFit }: { showFit: boolean; onFit: () => vo
           </li>
         ))}
       </ul>
+      <RailFooter onToast={onToast} />
     </nav>
   );
 }

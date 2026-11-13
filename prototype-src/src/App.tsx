@@ -74,9 +74,7 @@ export function App() {
   const openFile = useScenario((s) => s.openFile);
   const rightPanel = useScenario((s) => s.rightPanel);
   const commentOpen = useScenario((s) => s.commentOpen);
-  const reviewStage = useScenario((s) => s.reviewStage);
   const allClearOpen = useScenario((s) => s.allClearOpen);
-  const threadCount = useScenario((s) => s.thread.length);
   const setRightPanel = useScenario((s) => s.setRightPanel);
   const setCommentOpen = useScenario((s) => s.setCommentOpen);
   const collaboratorsAll = collaborators;
@@ -93,6 +91,13 @@ export function App() {
     toastTimer.current = window.setTimeout(() => setToast(null), TOAST_MS);
   }, []);
   const closeDialog = useCallback(() => setDialog(null), []);
+
+  // Feedback round 4: the merge happens on its own; say so as the recap opens.
+  const wasMerged = useRef(milestones.merged);
+  useEffect(() => {
+    if (milestones.merged && !wasMerged.current) showToast(t(copy.teammateReview.mergedToast));
+    wasMerged.current = milestones.merged;
+  }, [milestones.merged, showToast]);
 
   // Hidden reset: Ctrl/Cmd+Shift+R handled in-app so it clears pmr: state, not just reloads.
   useEffect(() => {
@@ -190,8 +195,13 @@ export function App() {
       case 'sections': return () => (editor ? undefined : openSections());
       case 'receipt': return () => useScenario.getState().setAllClearOpen(true);
       case 'recap': return () => setRightPanel('recap');
-      case 'comment': return () => setCommentOpen(true);
-      case 'merge': return () => document.querySelector<HTMLElement>('[data-merge]')?.focus();
+      case 'comment': return () => {
+        // The pill opens the comment that's waiting on you.
+        const s = useScenario.getState();
+        const waiting = s.collaborators.find((c) => c.role === 'teammate' && c.reviewStage === 'commented');
+        if (waiting) s.openThread(waiting.id);
+        else setCommentOpen(true);
+      };
       default: return undefined;
     }
   })();
@@ -204,7 +214,7 @@ export function App() {
       >
         <Canvas />
         <Constellation scale={scale} onLineHover={onLineHover} />
-        <TeamRail showFit={!isIdentity(view)} onFit={fitTeam} />
+        <TeamRail showFit={!isIdentity(view)} onFit={fitTeam} onToast={showToast} />
         <BuildCard />
         {suggestion && recCardOpen && <RecommendationCard />}
         {sectionsLine && <SectionsPanel />}
@@ -212,7 +222,7 @@ export function App() {
         {rightPanel === 'pr' && <PRPanel />}
         {rightPanel === 'recap' && <RecapPanel />}
         {milestones.prCreated && !milestones.merged && !rightPanel && <PRStatusCard />}
-        {commentOpen && !milestones.merged && (threadCount > 0 || (milestones.prCreated && reviewStage !== 'reviewing')) && <CommentCard />}
+        {commentOpen && !milestones.merged && <CommentCard />}
         {allClearOpen && milestones.allSectionsVerified && !milestones.prOpened && <AllClearPopup />}
         {floatingFile && <FloatingEditor onToast={showToast} />}
         {lineHover && (
@@ -224,7 +234,7 @@ export function App() {
           />
         )}
         {popover && <AgentPopover />}
-        {addMenu && <AddMenu />}
+        {addMenu && <AddMenu onLoaded={showToast} />}
         {configure && <ConfigurePanel key={`${configure.id}-${configure.mode}`} />}
         <TitleBar
           activeTab={activeTab}

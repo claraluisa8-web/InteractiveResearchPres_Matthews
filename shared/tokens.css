@@ -73,6 +73,13 @@
   --pmr-orb-tester: linear-gradient(135deg, #0faf8a 0%, #3ee6a8 55%, #d7f26b 100%);
   --pmr-orb-other: linear-gradient(135deg, #b5800f 0%, #ffc857 55%, #fff1bf 100%);
   --pmr-orb-teammate-ring: conic-gradient(#f6f2ff 0%, #c3a6ff 30%, #5ce1ff 60%, #d7f26b 85%, #f6f2ff 100%);
+  /* More teammates each get their own ring (feedback round 4), from the role palette. */
+  --pmr-orb-teammate-ring-2: conic-gradient(#fff1bf 0%, #ffc857 35%, #ff9e7a 65%, #fff1bf 100%);
+  --pmr-orb-teammate-ring-3: conic-gradient(#d7f26b 0%, #3ee6a8 40%, #5ce1ff 70%, #d7f26b 100%);
+  --pmr-orb-teammate-ring-4: conic-gradient(#c3d6ff 0%, #3d7bff 40%, #5ce1ff 70%, #c3d6ff 100%);
+  --pmr-orb-teammate-glow-2: rgba(255, 200, 87, 0.35);
+  --pmr-orb-teammate-glow-3: rgba(62, 230, 168, 0.35);
+  --pmr-orb-teammate-glow-4: rgba(61, 123, 255, 0.4);
 
   /* Code */
   --pmr-code: #dce3ee;

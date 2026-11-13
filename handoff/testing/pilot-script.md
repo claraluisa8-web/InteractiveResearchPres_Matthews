@@ -25,8 +25,8 @@ Then stop talking. Don't name buttons.
 | Sections | Open Idempotency key | They open a verified row first, or miss the subsections |
 | Fix | Edit and Save, or Accept fix, or Reject | They save nonsense and how they read the reviewer's reply; whether they find Verify |
 | Finish the rest | Next section or quick Verify | They try to verify issue rows from the panel |
-| Receipt, then PR | Open pull request, choose or add a reviewer, then Create pull request | They skip reading the receipt, or choose Proceed anyway without a reviewer |
-| Review | Reply to the reviewer's comment in the composer, then Merge | They wait for an approval that only comes after a reply |
+| Receipt, then PR | Open pull request (every teammate reviews), then Create pull request | They skip reading the receipt, or choose Proceed anyway with no teammate |
+| Review | Reply to each teammate's comment in the composer; it merges on its own | They look for a Merge button, or miss a second teammate's comment |
 
 If they're stuck for over a minute, ask "What are you looking for?" before you help. Note that you helped.
 

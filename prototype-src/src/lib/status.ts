@@ -32,14 +32,16 @@ export function statusPill(all: Collaborator[], m: Milestones, rec: Recommendati
   if (m.merged) return { text: copy.recap.statusPill, tone: 'neutral', target: 'recap' };
   if (m.prCreated && !m.teammateApproved) {
     const s = useScenario.getState();
-    const mate = s.collaborators.find((c) => c.id === s.pr.reviewer);
-    // Once the comment is in, the wait is on the user, and the pill says so.
-    if (s.reviewStage === 'commented' && mate) {
-      return { text: t(copy.teammateReview.waitingReplyCheck, { teammateFirst: mate.name.split(' ')[0] }), tone: 'lavender', target: 'comment' };
+    // Once a comment is in, the wait is on the user, and the pill says so.
+    const waiting = all.find((c) => c.role === 'teammate' && c.reviewStage === 'commented');
+    if (waiting) {
+      return { text: t(copy.teammateReview.waitingReplyCheck, { teammateFirst: waiting.name.split(' ')[0] }), tone: 'lavender', target: 'comment' };
     }
-    return { text: copy.teammateReview.statusPill, tone: 'lavender', target: s.reviewStage === 'reviewing' ? undefined : 'comment' };
+    const n = all.filter((c) => c.role === 'teammate' && c.review === 'pending').length;
+    const text = n > 1 ? t(copy.teammateReview.reviewsPill, { n }) : copy.teammateReview.statusPill;
+    return { text, tone: 'lavender', target: s.reviewStage === 'reviewing' || n === 0 ? undefined : 'comment' };
   }
-  if (m.prCreated) return { text: t(copy.teammateReview.statusApproved), tone: 'neutral', target: 'merge' };
+  if (m.prCreated) return { text: t(copy.teammateReview.statusApproved), tone: 'neutral' };
   if (m.issueRaised && counts) {
     if (counts.editorIssue) return { text: t(copy.editor.statusPill, counts.editorIssue), tone: 'issue', target: 'sections' };
     if (counts.open > 0) {
@@ -62,6 +64,13 @@ function orbitText(all: Collaborator[]): string {
   if (agents === 0) return t(copy.constellation.statusTeammatesOnly, { n: list.length });
   if (agents === 1) return t(copy.constellation.statusOrbitOne);
   return t(copy.constellation.statusOrbit, { n: agents });
+}
+
+/** Teammates in the order they joined get ring tones 1–4 (feedback round 4). */
+export function mateTone(id: string, all: Collaborator[]): number | undefined {
+  const mates = all.filter((c) => c.role === 'teammate');
+  const i = mates.findIndex((c) => c.id === id);
+  return i < 0 ? undefined : (i % 4) + 1;
 }
 
 export function initials(name: string) {

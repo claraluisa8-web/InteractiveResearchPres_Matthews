@@ -23,11 +23,11 @@ function handleResetParam() {
 }
 
 export function startOver(keepLog = false) {
-  // Session logs (pmr:session:*) survive a Start over; clearing only drops the pointer to the current one.
+  // Session logs (pmr:session:*) and saved constellations survive a Start over; clearing drops them too.
   if (keepLog) {
     try {
       Object.keys(localStorage)
-        .filter((k) => k.startsWith(PREFIX) && !k.startsWith('pmr:session:'))
+        .filter((k) => k.startsWith(PREFIX) && !k.startsWith('pmr:session:') && k !== 'pmr:saved-teams')
         .forEach((k) => localStorage.removeItem(k));
     } catch {
       // Storage blocked: the reload still resets the in-memory state.

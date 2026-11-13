@@ -20,6 +20,12 @@ export interface Collaborator {
   email?: string;
   /** Human teammate reviewing the pull request (frames 10–11). */
   review?: 'pending' | 'approved';
+  /** Feedback round 4: every human teammate reviews on their own clock. */
+  reviewStage?: ReviewStage;
+  /** Where in the thread this teammate's PR comment arrived. */
+  commentAt?: number;
+  /** Which of the scripted review questions this teammate asks. */
+  question?: number;
 }
 
 /** Not yet in the constellation: a draft being configured, or a teammate being added for the PR. */

@@ -1,7 +1,7 @@
 import { copy } from './copy';
 import { countOpen } from './geometry';
 import { sectionById } from './sections';
-import { firstOf, useScenario } from './store';
+import { firstOf, reviewersOf, useScenario } from './store';
 
 type State = ReturnType<typeof useScenario.getState>;
 
@@ -19,9 +19,9 @@ export function expectedStep(s: State): Expected {
   const reviewer = firstOf(s.collaborators, 'reviewer');
 
   if (m.merged) return { key: 'done', selector: s.rightPanel === 'recap' ? '[data-done]' : null };
-  if (m.prCreated && m.teammateApproved) return { key: 'approved', selector: '[data-merge]' };
+  if (m.prCreated && m.teammateApproved) return { key: 'approved', selector: null };
   if (m.prCreated) {
-    if (!s.pr.reviewer) return { key: 'review:noReviewer', selector: '[data-add-reviewer]' };
+    if (!reviewersOf(s.collaborators).length) return { key: 'review:noReviewer', selector: '[data-add-reviewer]' };
     if (s.reviewStage !== 'commented') return { key: `review:${s.reviewStage}`, selector: null };
     return { key: 'review:commented', selector: s.commentOpen ? '[data-reply]' : '[data-comment-node]' };
   }
