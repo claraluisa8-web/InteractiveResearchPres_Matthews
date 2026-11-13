@@ -1,0 +1,347 @@
+{
+  "$description": "Scripted, forgiving replies for the composer and the code pop-up. No live AI. Match by intent, never by exact phrase. Replies use the user's own agent names via {builder}, {reviewer}, {tester}, {teammate}. NEW COPY: none of these replies exist in Figma; Clara should skim and adjust tone.",
+  "matching": {
+    "normalize": "lowercase, strip punctuation, collapse whitespace, expand common contractions (don't → do not, what's → what is)",
+    "algorithm": "Score every intent available in the current context: +2 per keyword hit, +3 per phrase hit, +1 if the intent matches the current milestone's 'expected' intent. Highest score wins; ties go to the expected intent. Score 0 → fallback.",
+    "typoTolerance": "Treat a word as a keyword hit if its Damerau-Levenshtein distance to the keyword is ≤ 1 for words of 5+ letters.",
+    "replyDelay": "Show a '{agent} is thinking…' row for 700–1200 ms (random) before the reply, so it feels like an agent.",
+    "speaker": "Reply as the agent the composer is addressed to. 'To: Team' → the most relevant agent for the intent (fix → builder, why/spec → reviewer, tests → tester), else Bob as 'IBM Bob'."
+  },
+  "contexts": {
+    "empty": "only You exists",
+    "build": "a builder exists, no issue yet",
+    "issue": "issue line exists, sections not all verified",
+    "editor": "code pop-up is open (07)",
+    "review": "pull request open, waiting on teammate",
+    "done": "merged",
+    "ready": "a builder exists and is waiting for the user to start the build (ready card showing)"
+  },
+  "intents": [
+    {
+      "id": "help",
+      "contexts": [
+        "*"
+      ],
+      "keywords": [
+        "help",
+        "how",
+        "what can",
+        "stuck",
+        "confused",
+        "lost",
+        "start"
+      ],
+      "replies": {
+        "empty": "Add your first collaborator with the + next to your dot. A builder writes code from your spec; a reviewer checks it against the spec.",
+        "build": "{builder} is working from recurring-investments.yaml. Open {builder} to see its code, or add a reviewer so someone checks the work.",
+        "issue": "There’s a red line between {builder} and {reviewer}. Click it to see the sections they disagree on.",
+        "editor": "Click into the code to edit it, then Save. When both agents agree, Verify section unlocks.",
+        "review": "{teammate} is reviewing the pull request. Reply to her comment, or wait for her approval to merge.",
+        "done": "Everything is merged. Start over from the menu if you want to run it again.",
+        "ready": "{builder} is ready. Tell it what to build, or click Start from the spec. The approved spec already defines the API."
+      }
+    },
+    {
+      "id": "build",
+      "contexts": [
+        "empty",
+        "ready",
+        "build"
+      ],
+      "keywords": [
+        "build",
+        "start",
+        "generate",
+        "implement",
+        "write",
+        "code",
+        "go",
+        "begin",
+        "scaffold",
+        "create"
+      ],
+      "phrases": [
+        "build the api",
+        "start building",
+        "implement the spec"
+      ],
+      "effect": "In 'ready': ANY message addressed to the builder or the team starts the build (fires M2), even if no keyword matches; see 'anyMessageStartsBuild'. In 'empty': open the add menu with Builder highlighted. In 'build': acknowledge only.",
+      "replies": {
+        "empty": "You’ll need a builder for that. I’ve opened the add menu for you.",
+        "ready": "Building createPlan, listPlans and updatePlanStatus from the spec.",
+        "build": "Already on it. I’m generating the controller and DTOs from recurring-investments.yaml."
+      }
+    },
+    {
+      "id": "addAgent",
+      "contexts": [
+        "*"
+      ],
+      "keywords": [
+        "add",
+        "need",
+        "bring",
+        "invite",
+        "include"
+      ],
+      "roleWords": {
+        "builder": [
+          "builder",
+          "coder",
+          "developer",
+          "coding agent"
+        ],
+        "reviewer": [
+          "reviewer",
+          "review agent",
+          "checker"
+        ],
+        "tester": [
+          "tester",
+          "tests agent",
+          "qa"
+        ],
+        "teammate": [
+          "teammate",
+          "dana",
+          "human",
+          "person",
+          "colleague"
+        ],
+        "other": [
+          "security",
+          "accessibility",
+          "a11y",
+          "docs",
+          "documentation",
+          "performance",
+          "agent"
+        ]
+      },
+      "effect": "Open the configure panel for the detected role (default: open the add menu). Never auto-add without the user confirming in the panel.",
+      "replies": {
+        "*": "Here’s a {role} to configure. Name it anything you like."
+      }
+    },
+    {
+      "id": "fix",
+      "contexts": [
+        "issue",
+        "editor"
+      ],
+      "keywords": [
+        "fix",
+        "check",
+        "add",
+        "resolve",
+        "handle",
+        "accept",
+        "do it",
+        "apply",
+        "patch",
+        "correct",
+        "solve"
+      ],
+      "phrases": [
+        "check the key",
+        "fix it",
+        "add the check",
+        "return 409"
+      ],
+      "effect": "Highlight the 'Accept {reviewer}’s fix' button and preview the fix as a diff. Applying still needs the user’s click.",
+      "replies": {
+        "*": "{builder} can add the check before the plan is created and return 409 on a reused key. I’ve previewed it; click Accept {reviewer}’s fix to apply it, or edit the code yourself."
+      }
+    },
+    {
+      "id": "why",
+      "contexts": [
+        "issue",
+        "editor"
+      ],
+      "keywords": [
+        "why",
+        "explain",
+        "what",
+        "wrong",
+        "problem",
+        "mean",
+        "understand",
+        "idempotency",
+        "duplicate"
+      ],
+      "replies": {
+        "*": "{reviewer} flagged it because the spec says a reused Idempotency-Key returns 409, but the handler never reads the key. {builder} assumed the API gateway handles duplicates, and the gateway isn’t part of this spec."
+      }
+    },
+    {
+      "id": "sideBuilder",
+      "contexts": [
+        "issue",
+        "editor"
+      ],
+      "keywords": [
+        "gateway",
+        "builder is right",
+        "ignore",
+        "fine",
+        "not needed",
+        "skip",
+        "dismiss",
+        "upstream"
+      ],
+      "replies": {
+        "*": "{reviewer}: The approved spec is the contract, and it doesn’t mention a gateway. If you’re sure, you can Reject this, and the decision is recorded on the receipt with your name."
+      }
+    },
+    {
+      "id": "spec",
+      "contexts": [
+        "*"
+      ],
+      "keywords": [
+        "spec",
+        "yaml",
+        "openapi",
+        "contract",
+        "409",
+        "schema"
+      ],
+      "replies": {
+        "*": "recurring-investments.yaml v1.2.0 is approved and read-only. createPlan requires an Idempotency-Key header and returns 409 DuplicateRequest when a key is reused."
+      }
+    },
+    {
+      "id": "tests",
+      "contexts": [
+        "build",
+        "issue",
+        "editor",
+        "review"
+      ],
+      "keywords": [
+        "test",
+        "tests",
+        "coverage",
+        "contract",
+        "qa",
+        "passing"
+      ],
+      "replies": {
+        "build": "No contract tests yet. A tester could cover the 3 operations in the spec.",
+        "*": "{tester}: 24 contract tests, all passing once the open issues are resolved.",
+        "noTester": "There’s no tester in your constellation yet. Add one to cover the 3 operations in the spec."
+      }
+    },
+    {
+      "id": "status",
+      "contexts": [
+        "*"
+      ],
+      "keywords": [
+        "status",
+        "progress",
+        "left",
+        "remaining",
+        "done",
+        "how many",
+        "where",
+        "next"
+      ],
+      "replies": {
+        "*": "{verified} of {total} sections verified, {issues} open issues. Next: {nextStep}."
+      }
+    },
+    {
+      "id": "merge",
+      "contexts": [
+        "*"
+      ],
+      "keywords": [
+        "merge",
+        "pull request",
+        "pr",
+        "ship",
+        "push",
+        "release",
+        "deploy"
+      ],
+      "replies": {
+        "issue": "Not yet: {issues} issues are still open on the line between {builder} and {reviewer}. Once every section is verified you can open a pull request.",
+        "editor": "Not yet: {issues} issues are still open on the line between {builder} and {reviewer}. Once every section is verified you can open a pull request.",
+        "review": "Merging unlocks when {teammate} approves.",
+        "*": "Open the pull request from the receipt when all lines are clear."
+      }
+    },
+    {
+      "id": "rename",
+      "contexts": [
+        "*"
+      ],
+      "keywords": [
+        "rename",
+        "call it",
+        "name it",
+        "change name"
+      ],
+      "effect": "Open the configure panel for the agent mentioned, focus the NAME field.",
+      "replies": {
+        "*": "Sure, change the name here. Everything else will use the new name."
+      }
+    },
+    {
+      "id": "thanks",
+      "contexts": [
+        "*"
+      ],
+      "keywords": [
+        "thanks",
+        "thank you",
+        "great",
+        "nice",
+        "cool",
+        "perfect",
+        "ok",
+        "okay"
+      ],
+      "replies": {
+        "*": "Anytime."
+      }
+    },
+    {
+      "id": "replyToTeammate",
+      "contexts": [
+        "review"
+      ],
+      "keywords": [
+        "*"
+      ],
+      "effect": "Any text sent while the comment is open counts as a reply. After 1.5 s the teammate answers and approves.",
+      "replies": {
+        "*": "{teammate}: Makes sense, thanks. Approving."
+      }
+    }
+  ],
+  "fallback": {
+    "replies": [
+      "I didn’t quite follow that. {nextStepHint}",
+      "Not sure I can help with that one here. {nextStepHint}",
+      "That’s outside what I can do in this prototype. {nextStepHint}"
+    ],
+    "nextStepHints": {
+      "empty": "Try adding a builder with the + next to your dot.",
+      "build": "Try adding a reviewer so someone checks {builder}’s work.",
+      "issue": "Try clicking the red line between {builder} and {reviewer}.",
+      "editor": "Try editing the flagged lines, then Save.",
+      "review": "Try replying to {teammate}’s comment.",
+      "done": "You’re all done. Start over from the menu to run it again.",
+      "ready": "Tell {builder} what to build, or click Start from the spec."
+    }
+  },
+  "safety": "Stay in character as the agent; don't mention scripts or the prototype unless the fallback says so. Never claim to run real code. Keep replies to 1–3 sentences, plain words, no emoji.",
+  "anyMessageStartsBuild": {
+    "context": "ready",
+    "rule": "While the ready card is showing, any non-empty message to {builder} or To: Team starts the build. Skip intent scoring EXCEPT for addAgent, rename and spec questions (those keep their own replies and do not start the build). Reply with build.startReply, prefixed by a short echo when the user named a specific operation (e.g. 'Starting with createPlan. ').",
+    "new": true
+  }
+}

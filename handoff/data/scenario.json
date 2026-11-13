@@ -1,0 +1,699 @@
+{
+  "$description": "Everything the prototype says and shows. Copy is taken from Figma 'Hi-Fi Screens (Spatial) v9'. Agent NAMES are placeholders the user can change; the app keys everything off ROLE. Line ranges are computed from data/code at runtime; the ranges noted here are for reference only. Wherever '↔' appears in copy, render the Codicon link (arrow-both) icon, never the text glyph.",
+  "project": {
+    "product": "The Pre-Merge Review",
+    "repo": "brokerage-api",
+    "branch": "feature/recurring-investments",
+    "baseBranch": "main",
+    "windowTitle": "brokerage-api  —  feature/recurring-investments",
+    "ticket": "INV-2143",
+    "spec": {
+      "file": "openapi/recurring-investments.yaml",
+      "shortName": "recurring-investments.yaml",
+      "version": "v1.2.0",
+      "status": "Approved spec  ·  v1.2.0  ·  attached to you"
+    },
+    "model": {
+      "name": "IBM Bob",
+      "lockedNote": "Required by IBM"
+    },
+    "strictness": {
+      "value": "Strict",
+      "lockedNote": "Set by org policy",
+      "help": "Every mismatch with the spec is flagged, including small ones."
+    }
+  },
+  "people": {
+    "you": {
+      "displayName": "You",
+      "fullName": "Leila Moreno",
+      "role": "Senior software engineer"
+    },
+    "teammate": {
+      "fullName": "Dana Kim",
+      "initials": "DK",
+      "role": "Human teammate"
+    }
+  },
+  "tabs": {
+    "constellation": "Constellation",
+    "code": "Code"
+  },
+  "chrome": {
+    "overflowLabel": {
+      "text": "More actions",
+      "new": true
+    },
+    "overflowMenu": {
+      "startOver": {
+        "text": "Start over",
+        "new": true
+      },
+      "exportLog": {
+        "text": "Export session log",
+        "new": true
+      },
+      "about": {
+        "text": "About this prototype",
+        "new": true
+      }
+    },
+    "about": {
+      "title": {
+        "text": "The Pre-Merge Review",
+        "new": true
+      },
+      "body": {
+        "text": "A working prototype of a graduate design concept (NC State MGXD, GD 503, in collaboration with IBM). Agent replies are scripted. Nothing you type leaves this browser.",
+        "new": true
+      },
+      "close": {
+        "text": "Close",
+        "new": true
+      }
+    },
+    "notInPrototypeToast": {
+      "text": "Not part of this prototype",
+      "new": true
+    },
+    "sendLabel": {
+      "text": "Send",
+      "new": true
+    },
+    "composerInputLabel": {
+      "text": "Message",
+      "new": true
+    },
+    "startOverConfirm": {
+      "title": {
+        "text": "Start over?",
+        "new": true
+      },
+      "body": {
+        "text": "This clears your constellation and everything you changed, and returns to the empty start.",
+        "new": true
+      },
+      "confirm": {
+        "text": "Start over",
+        "new": true
+      },
+      "cancel": {
+        "text": "Cancel",
+        "new": true
+      }
+    },
+    "composerAddNode": {
+      "text": "Add node",
+      "new": true,
+      "note": "Drawn in Figma frame 01; not previously in scenario.json."
+    },
+    "composerTargetLabel": {
+      "text": "Send to",
+      "new": true
+    }
+  },
+  "emptyState": {
+    "coachTitle": "Start your team",
+    "coachBody": "Add a builder, reviewer, tester or teammate with the + next to your dot.",
+    "statusPill": "Just you so far",
+    "composerPlaceholder": "Describe what to build, or add a node…",
+    "composerTarget": "To: Team"
+  },
+  "roles": {
+    "builder": {
+      "menuTitle": "Builder",
+      "menuBody": "Writes code from your spec",
+      "defaultName": "Builder",
+      "orb": "builder",
+      "defaultConfig": "Default  ·  your team",
+      "subtitle": "IBM Bob  ·  Default",
+      "allowedToEdit": [
+        "Source code"
+      ]
+    },
+    "reviewer": {
+      "menuTitle": "Reviewer",
+      "menuBody": "Checks work against the spec",
+      "defaultName": "Reviewer",
+      "orb": "reviewer",
+      "defaultConfig": "Spec review",
+      "subtitle": "IBM Bob  ·  Spec review",
+      "allowedToEdit": []
+    },
+    "tester": {
+      "menuTitle": "Tester",
+      "menuBody": "Writes and runs tests",
+      "defaultName": "Tester",
+      "orb": "tester",
+      "defaultConfig": "Contract tests",
+      "subtitle": "IBM Bob  ·  Contract tests",
+      "allowedToEdit": [
+        "Test files"
+      ]
+    },
+    "teammate": {
+      "menuTitle": "Human teammate",
+      "menuBody": "Reviews or pairs with you",
+      "defaultName": "Dana Kim",
+      "orb": "teammate",
+      "subtitle": "Human teammate"
+    },
+    "other": {
+      "menuTitle": "Other agent",
+      "menuBody": "Accessibility, security, docs or your own",
+      "defaultName": "Other agent",
+      "orb": "other",
+      "subtypes": [
+        "Accessibility",
+        "Security",
+        "Docs",
+        "Performance",
+        "Custom…"
+      ],
+      "defaultConfig": "Default  ·  your team",
+      "subtitle": "IBM Bob  ·  Default"
+    }
+  },
+  "addMenu": {
+    "label": "ADD TO YOUR CONSTELLATION",
+    "footer": "Add as many of each as you need."
+  },
+  "configurePanel": {
+    "subtitle": "Set up how this collaborator works.",
+    "fields": {
+      "name": "NAME",
+      "model": "MODEL",
+      "configuration": "CONFIGURATION",
+      "configurationOptions": [
+        "Default  ·  your team",
+        "Spec review",
+        "Contract tests",
+        "Strict security review"
+      ],
+      "crossTeamCheckbox": "Let Bob request other team configurations on your behalf",
+      "checksAgainst": "CHECKS AGAINST",
+      "checksAgainstValue": "openapi/recurring-investments.yaml",
+      "checksAgainstChip": "Auto",
+      "strictness": "STRICTNESS",
+      "allowedToEdit": "ALLOWED TO EDIT",
+      "allowedToEditHelp": "Files this agent can change without asking you.",
+      "allowedOptions": [
+        "Source code",
+        "Test files",
+        "The spec"
+      ],
+      "lockedOption": "The spec",
+      "lockedHelp": "Approved specs are read-only for every agent.",
+      "connectsTo": "CONNECTS TO",
+      "connectAction": "+ Connect"
+    },
+    "primary": "Add to constellation",
+    "secondary": "Cancel",
+    "ghostLabel": "Not added yet"
+  },
+  "build": {
+    "builderUpdate": {
+      "title": "{builder}",
+      "meta": "IBM Bob  ·  Default  ·  just now",
+      "body": "Generated PlanController and 4 DTOs from recurring-investments.yaml. PlanService is ready for your scheduling logic.",
+      "chips": [
+        "PlanController.java",
+        "CreatePlanRequest.java  +3",
+        "PlanService.java"
+      ]
+    },
+    "floatingFile": {
+      "file": "PlanService.java",
+      "meta": "Opened from {builder}  ·  agent-written",
+      "typingNote": "You’re typing on line {line}",
+      "save": "Save"
+    },
+    "statusPill": "Building  ·  no issues",
+    "composerTarget": "To: {builder}",
+    "composerPlaceholder": "Message {builder}…",
+    "readyCard": {
+      "title": "{builder}",
+      "meta": "IBM Bob  ·  Default  ·  ready",
+      "body": "Ready to build from recurring-investments.yaml.",
+      "primary": "Start from the spec",
+      "new": true
+    },
+    "promptChip": {
+      "text": "Build the API from the spec",
+      "new": true,
+      "note": "Shown above the composer while the ready card is up; clicking it sends this text to {builder}."
+    },
+    "composerPlaceholderReady": "Tell {builder} what to build…",
+    "startReply": {
+      "text": "Building createPlan, listPlans and updatePlanStatus from the spec.",
+      "new": true
+    },
+    "statusPillReady": {
+      "text": "{builder} ready to build",
+      "new": true
+    }
+  },
+  "recommendation": {
+    "from": "reviewer",
+    "title": "{reviewer} spotted a gap in test coverage",
+    "meta": "IBM Bob  ·  Spec review  ·  just now",
+    "body": "3 operations in recurring-investments.yaml have no contract tests yet. Adding a tester to your constellation could cover them before review.",
+    "chips": [
+      "IBM Bob  ·  Contract tests",
+      "Edits tests only"
+    ],
+    "actions": [
+      "Add tester",
+      "Adjust first",
+      "Not now"
+    ],
+    "suggestedSubtitle": "Suggested by {reviewer}",
+    "legend": "Lavender ring = worth a look, not urgent",
+    "statusPill": "1 suggestion",
+    "skipIfTesterExists": "If the user already added a tester, skip this beat and go straight to the issue milestone."
+  },
+  "issueLine": {
+    "between": [
+      "builder",
+      "reviewer"
+    ],
+    "badgeCount": 2,
+    "hoverTitle": "{builder} ↔ {reviewer}",
+    "hoverTitleNote": "Render ↔ as the Codicon link/arrow-both icon, never as a text glyph.",
+    "hoverBody": "2 issues in createPlan. They disagree on how duplicate requests are handled.",
+    "hoverAction": "See sections",
+    "legend": "Red line = issue between two collaborators",
+    "statusPill": "2 issues on 1 line",
+    "teamRailFlag": "!"
+  },
+  "sectionsPanel": {
+    "subtitle": "Sections this line touched  ·  {issueCount} issues",
+    "progress": "{verified} of {total} sections verified",
+    "progressRight": "against recurring-investments.yaml",
+    "groupOnLine": "ON THIS LINE",
+    "groupElsewhere": "ELSEWHERE IN THIS CHANGE",
+    "primary": "Open {firstIssueSection}",
+    "statusLabels": {
+      "verified": "Verified",
+      "open": "Not verified"
+    }
+  },
+  "sections": [
+    {
+      "id": "createPlan",
+      "label": "createPlan",
+      "mono": true,
+      "file": "PlanController.java",
+      "anchor": {
+        "start": "@PostMapping(\"/plans\")",
+        "end": "closing brace of createPlan"
+      },
+      "refRangeBefore": "L18–27",
+      "refRangeAfterEdit": "L18–31",
+      "line": [
+        "builder",
+        "reviewer"
+      ],
+      "wrote": [
+        "builder"
+      ],
+      "reviewed": "reviewer",
+      "tested": "tester",
+      "initial": "issues",
+      "subsections": [
+        {
+          "id": "idempotencyKey",
+          "label": "Idempotency key",
+          "issue": 1,
+          "tag": "Agents disagree",
+          "anchor": {
+            "start": "@PostMapping(\"/plans\")",
+            "end": "Plan plan = planService.create(request);"
+          },
+          "refRangeBefore": "L18–24",
+          "refRangeAfterEdit": "L18–28"
+        },
+        {
+          "id": "planCreation",
+          "label": "Plan creation",
+          "issue": null,
+          "tag": "Not verified",
+          "anchor": {
+            "start": "Plan plan = planService.create(request);",
+            "end": "Plan plan = planService.create(request);"
+          }
+        },
+        {
+          "id": "createdResponse",
+          "label": "Created response",
+          "issue": 2,
+          "tag": "No Location header",
+          "anchor": {
+            "start": "return ResponseEntity.status(HttpStatus.CREATED)",
+            "end": ".body(PlanResponse.from(plan));"
+          }
+        }
+      ]
+    },
+    {
+      "id": "listPlans",
+      "label": "listPlans",
+      "mono": true,
+      "file": "PlanController.java",
+      "anchor": {
+        "start": "@GetMapping(\"/plans\")",
+        "end": "closing brace of listPlans"
+      },
+      "line": [
+        "builder",
+        "reviewer"
+      ],
+      "wrote": [
+        "builder"
+      ],
+      "reviewed": "reviewer",
+      "tested": "tester",
+      "initial": "verified"
+    },
+    {
+      "id": "updatePlanStatus",
+      "label": "updatePlanStatus",
+      "mono": true,
+      "file": "PlanController.java",
+      "anchor": {
+        "start": "@PatchMapping",
+        "end": "closing brace of updatePlanStatus"
+      },
+      "line": [
+        "builder",
+        "reviewer"
+      ],
+      "wrote": [
+        "builder"
+      ],
+      "reviewed": "reviewer",
+      "tested": "tester",
+      "initial": "verified"
+    },
+    {
+      "id": "amountHandling",
+      "label": "Amount handling",
+      "mono": false,
+      "file": "PlanService.java",
+      "anchor": {
+        "start": "// Amounts are stored in cents",
+        "end": "closing brace of toCents"
+      },
+      "line": [
+        "builder",
+        "reviewer"
+      ],
+      "wrote": [
+        "builder"
+      ],
+      "reviewed": "reviewer",
+      "tested": "tester",
+      "initial": "open"
+    },
+    {
+      "id": "errorResponses",
+      "label": "Error responses",
+      "mono": false,
+      "file": "ApiExceptionHandler.java",
+      "anchor": {
+        "start": "first @ExceptionHandler",
+        "end": "last handler's closing brace"
+      },
+      "line": [
+        "builder",
+        "reviewer"
+      ],
+      "wrote": [
+        "builder"
+      ],
+      "reviewed": "reviewer",
+      "tested": "tester",
+      "initial": "open"
+    },
+    {
+      "id": "generatedDtos",
+      "label": "Generated DTOs",
+      "mono": false,
+      "file": "model/",
+      "fileNote": "4 files",
+      "line": [
+        "builder",
+        "reviewer"
+      ],
+      "wrote": [
+        "builder"
+      ],
+      "reviewed": "Skimmed",
+      "tested": "tester",
+      "initial": "verified"
+    },
+    {
+      "id": "contractTests",
+      "label": "Contract tests",
+      "mono": false,
+      "file": "PlanContractTest.java",
+      "line": [
+        "tester",
+        "reviewer"
+      ],
+      "wrote": [
+        "tester"
+      ],
+      "reviewed": "reviewer",
+      "tested": "—",
+      "initial": "open",
+      "onlyIfRolePresent": "tester"
+    },
+    {
+      "id": "changelog",
+      "label": "CHANGELOG.md",
+      "mono": true,
+      "file": "CHANGELOG.md",
+      "line": [
+        "you"
+      ],
+      "wrote": [
+        "you"
+      ],
+      "reviewed": "—",
+      "tested": "—",
+      "initial": "open"
+    }
+  ],
+  "issues": [
+    {
+      "id": 1,
+      "section": "idempotencyKey",
+      "title": "Idempotency-Key is never checked",
+      "builderSays": "The API gateway already rejects duplicate requests, so the handler doesn’t check the key.",
+      "reviewerSays": "The gateway isn’t in this spec. The spec returns 409 when a key is reused, so check it here.",
+      "specExcerpt": {
+        "file": "recurring-investments.yaml",
+        "lines": [
+          25,
+          28
+        ]
+      },
+      "flaggedLines": [
+        "// Gateway rejects duplicate requests upstream",
+        "Plan plan = planService.create(request);"
+      ],
+      "lineNotes": {
+        "@RequestHeader(\"Idempotency-Key\")": "read, never checked",
+        "// Gateway rejects duplicate requests upstream": "{reviewer}: check the key here"
+      },
+      "acceptFixResult": "data/code/PlanController.reviewer-fix.java (issue 1 part)",
+      "resolvedWhen": "The saved createPlan body references idempotencyKey in a condition before planService.create(...) (any reasonable check counts), OR the user clicks Accept {reviewer}’s fix."
+    },
+    {
+      "id": 2,
+      "section": "createdResponse",
+      "title": "201 response has no Location header",
+      "builderSays": "The response body already includes the plan id, so clients can find the plan.",
+      "reviewerSays": "The spec’s PlanCreated response includes a Location header. Return it with the 201.",
+      "specExcerpt": {
+        "file": "recurring-investments.yaml",
+        "lines": [
+          17,
+          20
+        ]
+      },
+      "flaggedLines": [
+        "return ResponseEntity.status(HttpStatus.CREATED)"
+      ],
+      "acceptFixResult": "data/code/PlanController.reviewer-fix.java (issue 2 part)",
+      "resolvedWhen": "The saved code mentions Location / URI / ResponseEntity.created(...), OR the user accepts the fix.",
+      "new": true
+    }
+  ],
+  "editor": {
+    "breadcrumb": "{builder} ↔ {reviewer}  ·  createPlan  ·  {section}  ·  issue {n} of {total}",
+    "meta": "Written by {builder}  ·  edited by you",
+    "unsaved": "Unsaved changes",
+    "save": "Save",
+    "sectionMarker": "SECTION  ·  {SECTION}  ·  L{start}–{end}",
+    "yourLineNote": "You  ·  not saved yet",
+    "thisSection": "THIS SECTION",
+    "verify": "Verify section",
+    "next": "Next section",
+    "verifyHelpLocked": "Save your edit, then verify once both agents agree.",
+    "resolveWithout": "OR RESOLVE WITHOUT EDITING",
+    "accept": "Accept {reviewer}’s fix",
+    "reject": "Reject",
+    "afterSaveToast": "Sent to {builder} and {reviewer} to recheck",
+    "agentsAgree": "{builder} and {reviewer} agree. You can verify this section.",
+    "composerTarget": "To: {builder} + {reviewer}",
+    "composerPlaceholder": "Message both agents…",
+    "statusPill": "Issue {n} of {total} on this line"
+  },
+  "allClear": {
+    "receiptTitle": "Verification receipt",
+    "receiptMeta": "{total} of {total} sections verified  ·  against recurring-investments.yaml v1.2.0",
+    "columns": [
+      "SECTION",
+      "WROTE",
+      "REVIEWED",
+      "TESTED"
+    ],
+    "footnote": "You edited {n} sections by hand. Both were re-reviewed and re-tested.",
+    "footnoteNote": "Generate from state: count sections the user edited; pluralize properly.",
+    "primary": "Open pull request",
+    "secondary": "Copy",
+    "statusPill": "All lines clear"
+  },
+  "pullRequest": {
+    "title": "Open a pull request",
+    "branches": [
+      "feature/recurring-investments",
+      "main"
+    ],
+    "titleLabel": "TITLE",
+    "titleValue": "INV-2143: Recurring Investments API",
+    "descriptionLabel": "DESCRIPTION",
+    "descriptionValue": "Adds the Recurring Investments API from recurring-investments.yaml v1.2.0.\n\n•  POST /plans, GET /plans, PATCH /plans/{id}/status\n•  Idempotency-Key enforced, 409 on reuse\n•  24 contract tests, all passing\n•  Verification receipt attached",
+    "draftNote": "Drafted from the receipt. Click in to edit.",
+    "reviewersLabel": "REVIEWERS",
+    "reviewerHint": "Joins the constellation as a teammate",
+    "attachReceipt": "Attach verification receipt",
+    "primary": "Create pull request",
+    "teammateAddingSubtitle": "Human teammate  ·  adding"
+  },
+  "teammateReview": {
+    "prTitle": "Pull request #482",
+    "prMeta": "Opened with the receipt  ·  just now",
+    "checks": [
+      {
+        "icon": "pass-filled",
+        "title": "Receipt attached",
+        "meta": "{total} of {total} sections verified"
+      },
+      {
+        "icon": "pass-filled",
+        "title": "Contract tests",
+        "meta": "24 passed"
+      },
+      {
+        "icon": "history",
+        "title": "Required review",
+        "meta": "Waiting on {teammate}"
+      }
+    ],
+    "merge": "Merge",
+    "mergeLocked": "Merging unlocks when {teammateFirst} approves.",
+    "comment": {
+      "author": "{teammate}",
+      "meta": "commented on this line  ·  2m",
+      "body": "Can the 409 response include the original plan id so clients can recover?",
+      "actions": [
+        "Reply",
+        "Show line"
+      ]
+    },
+    "teammateSubtitle": "Reviewing  ·  pending",
+    "legends": [
+      "Lavender ring = worth a look, not urgent",
+      "Dashed line = waiting on a teammate’s review"
+    ],
+    "statusPill": "Waiting on 1 review",
+    "approveAfter": "After the user replies (any text) or after ~20 s of no action, {teammate} approves: 'Approved #482'. Merge unlocks."
+  },
+  "recap": {
+    "title": "Pull request merged",
+    "meta": "#482  ·  approved by {teammate}  ·  no repeat review",
+    "stats": [
+      {
+        "value": "7",
+        "label": "issues caught before review"
+      },
+      {
+        "value": "6 hrs",
+        "label": "rework saved (est.)"
+      },
+      {
+        "value": "0",
+        "label": "repeat pull requests"
+      }
+    ],
+    "perLineLabel": "CAUGHT ON EACH LINE",
+    "perLine": [
+      {
+        "a": "builder",
+        "b": "reviewer",
+        "n": 3
+      },
+      {
+        "a": "tester",
+        "b": "reviewer",
+        "n": 2
+      },
+      {
+        "a": "you",
+        "b": "builder",
+        "n": 1
+      },
+      {
+        "a": "you",
+        "b": "teammate",
+        "n": 1
+      }
+    ],
+    "perLineNote": "Draw only lines that exist in the user's constellation; redistribute counts so the total stays 7.",
+    "monthLabel": "THIS MONTH",
+    "month": [
+      "21.5 hrs rework saved",
+      "5 repeat pull requests avoided",
+      "4 pull requests merged with receipts"
+    ],
+    "monthSpark": "last 4 weeks",
+    "lineTag": "{n} caught",
+    "teammateSubtitle": "Approved #482",
+    "actions": [
+      "View receipt",
+      "Done"
+    ],
+    "statusPill": "Merged  ·  all lines clear",
+    "doneBehavior": "Done closes the panel and leaves the settled constellation. A small 'Start over' control (and the hidden reset) returns to the empty state."
+  },
+  "$newCopy": [
+    "issues[1].builderSays",
+    "issues[1].reviewerSays",
+    "issues[0].resolvedWhen (behavior, not copy)",
+    "editor.afterSaveToast",
+    "editor.agentsAgree",
+    "build.floatingFile save toast 'Saved · {builder} will pick this up' (see docs)",
+    "allClear receipt value 'Rejected by you'",
+    "configurePanel.fields.configurationOptions beyond 'Default · your team'",
+    "roles.other.subtypes",
+    "all of data/intents.json",
+    "build.readyCard",
+    "build.promptChip",
+    "build.startReply",
+    "build.statusPillReady",
+    "chrome (title-bar overflow menu, About dialog, toast, composer aria labels)"
+  ]
+}

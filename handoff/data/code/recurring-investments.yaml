@@ -1,0 +1,38 @@
+openapi: 3.1.0
+info:
+  title: Recurring Investments API
+  version: 1.2.0
+  x-ticket: INV-2143
+  description: Approved spec for INV-2143. Agents may read it but never edit it.
+servers:
+  - url: /v1
+components:
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, maxLength: 64 }
+  responses:
+    PlanCreated:
+      description: Plan created.
+      headers:
+        Location: { schema: { type: string } }
+    DuplicateRequest:
+      description: Idempotency-Key already used for this account.
+paths:
+  /plans:
+    post:
+      operationId: createPlan
+      parameters: [ $ref: IdempotencyKey ]
+      responses: { '409': DuplicateRequest }
+      x-also-returns: { '201': PlanCreated, '400': ValidationError }
+    get:
+      operationId: listPlans
+      parameters: [ { name: accountId, in: query, required: true } ]
+      responses: { '200': PlanList }
+  /plans/{id}/status:
+    patch:
+      operationId: updatePlanStatus
+      requestBody: { $ref: UpdatePlanStatusRequest }
+      responses: { '200': Plan, '404': PlanNotFound, '409': InvalidStatusTransition }

@@ -1,0 +1,134 @@
+/* The Pre-Merge Review: shared tokens for the prototype AND the restyled tree map.
+   Source of truth: tokens.json (same values). Dark only. All text pairings pass WCAG AAA. */
+
+/* Fonts are self-hosted: the prototype bundles @fontsource/red-hat-text and
+   @fontsource/red-hat-mono, so nothing loads from a CDN (offline symposium build). */
+
+:root {
+  color-scheme: dark;
+
+  /* Canvas */
+  --pmr-canvas: #050a12;
+  --pmr-canvas-gradient: linear-gradient(to bottom, #050a12 0%, #07101e 55%, #0c1a36 100%);
+  --pmr-floor-glow: rgba(48, 80, 255, 0.22);
+  --pmr-grid: rgba(107, 143, 204, 0.16);
+  --pmr-grid-center: rgba(107, 143, 204, 0.22);
+  --pmr-vignette: radial-gradient(closest-corner, transparent 62%, rgba(0, 0, 0, 0.55) 100%);
+  --pmr-scrim: rgba(5, 10, 18, 0.6);
+
+  /* Text: ONE secondary color; hierarchy by size and weight */
+  --pmr-text: #f2f5fa;
+  --pmr-text-2: #b8cae2;
+  --pmr-text-on-accent: #0b0f1a;
+  --pmr-link: #b3adff;
+
+  /* Accent */
+  --pmr-lavender: #8a82fd;          /* non-text only */
+  --pmr-button: #9d96ff;            /* primary button fill, dark text 7.5:1 */
+  --pmr-chip-tint: rgba(138, 130, 253, 0.18);
+  --pmr-chip-text: #d4d0ff;
+
+  /* Status (red = issues only) */
+  --pmr-issue: #ff4d5e;
+  --pmr-issue-badge: #a8182a;       /* white text 7.4:1 */
+  --pmr-issue-text: #ffb8bf;
+  --pmr-issue-row: rgba(255, 77, 94, 0.12);
+  --pmr-issue-pill: rgba(255, 77, 94, 0.16);
+  --pmr-issue-pill-stroke: rgba(255, 77, 94, 0.55);
+  --pmr-cleared: #3ee6a8;
+  --pmr-working: #7cc4ff;
+  --pmr-working-line: rgba(124, 196, 255, 0.6);
+  --pmr-connected-line: rgba(255, 255, 255, 0.16);
+
+  /* Surfaces */
+  --pmr-glass: rgba(20, 28, 48, 0.72);
+  --pmr-glass-tint: rgba(138, 130, 253, 0.05);
+  --pmr-popup: rgba(20, 28, 48, 0.9);
+  --pmr-stroke: rgba(255, 255, 255, 0.1);
+  --pmr-blur: 24px;
+  --pmr-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  --pmr-code-panel: #1e2a47;
+  --pmr-input: rgba(255, 255, 255, 0.04);
+  --pmr-input-locked: rgba(255, 255, 255, 0.02);
+  --pmr-btn-2: rgba(255, 255, 255, 0.06);
+  --pmr-btn-2-stroke: rgba(255, 255, 255, 0.16);
+  --pmr-btn-disabled: rgba(255, 255, 255, 0.03);
+  --pmr-row-hover: rgba(255, 255, 255, 0.06);
+  --pmr-row-selected: rgba(255, 255, 255, 0.04);
+  --pmr-row-highlight: rgba(255, 255, 255, 0.05);
+  --pmr-divider: rgba(255, 255, 255, 0.08);
+  --pmr-title-bar: rgba(3, 6, 12, 0.92);
+  --pmr-active-tab: #0e1628;
+
+  /* Agents */
+  --pmr-builder: #3d7bff;
+  --pmr-reviewer: #7c5cff;
+  --pmr-tester: #3ee6a8;
+  --pmr-other: #ffc857;
+  --pmr-builder-card-stroke: rgba(61, 123, 255, 0.35);
+  --pmr-reviewer-card-stroke: rgba(124, 92, 255, 0.35);
+  --pmr-orb-you: linear-gradient(135deg, #f6f2ff 0%, #ddd4ff 50%, #c3d6ff 100%);
+  --pmr-orb-builder: linear-gradient(135deg, #1e3bff 0%, #3d7bff 55%, #5ce1ff 100%);
+  --pmr-orb-reviewer: linear-gradient(135deg, #4b2bd9 0%, #7c5cff 55%, #c3a6ff 100%);
+  --pmr-orb-tester: linear-gradient(135deg, #0faf8a 0%, #3ee6a8 55%, #d7f26b 100%);
+  --pmr-orb-other: linear-gradient(135deg, #b5800f 0%, #ffc857 55%, #fff1bf 100%);
+  --pmr-orb-teammate-ring: conic-gradient(#f6f2ff 0%, #c3a6ff 30%, #5ce1ff 60%, #d7f26b 85%, #f6f2ff 100%);
+
+  /* Code */
+  --pmr-code: #dce3ee;
+  --pmr-code-keyword: #d4c2ff;
+  --pmr-code-type: #9dd4ff;
+  --pmr-code-string: #9be7c4;
+  --pmr-code-annotation: #ffc857;
+  --pmr-code-comment: #b8cae2;
+  --pmr-code-line-number: #b8cae2;
+
+  /* Type */
+  --pmr-font: "Red Hat Text", system-ui, sans-serif;
+  --pmr-mono: "Red Hat Mono", ui-monospace, monospace;
+
+  /* Radii */
+  --pmr-r-panel: 16px;
+  --pmr-r-popup: 20px;
+  --pmr-r-card: 12px;
+  --pmr-r-button: 10px;
+  --pmr-r-input: 8px;
+  --pmr-r-chip: 11.5px;
+  --pmr-r-pill: 20px;
+  --pmr-r-composer: 28px;
+
+  /* Motion */
+  --pmr-ease: cubic-bezier(0.2, 0, 0, 1);
+  --pmr-t-hover: 120ms;
+  --pmr-t-panel: 200ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --pmr-t-hover: 0ms; --pmr-t-panel: 0ms; }
+}
+
+/* Reusable surface recipes */
+.pmr-glass {
+  background: linear-gradient(var(--pmr-glass-tint), var(--pmr-glass-tint)), var(--pmr-glass);
+  border: 1px solid var(--pmr-stroke);
+  border-radius: var(--pmr-r-panel);
+  box-shadow: var(--pmr-shadow);
+  backdrop-filter: blur(var(--pmr-blur));
+}
+.pmr-label {
+  font: 600 11px/15px var(--pmr-font);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pmr-text-2);
+}
+.pmr-button {
+  height: 34px;
+  padding: 0 16px 1px; /* text sits ~1px below center */
+  border-radius: var(--pmr-r-button);
+  font: 500 13px var(--pmr-font);
+  color: var(--pmr-text-on-accent);
+  background: var(--pmr-button);
+  border: 0;
+}
+.pmr-button--secondary { color: var(--pmr-text); background: var(--pmr-btn-2); border: 1px solid var(--pmr-btn-2-stroke); }
+.pmr-button:focus-visible, .pmr-focusable:focus-visible { outline: 2px solid var(--pmr-lavender); outline-offset: 2px; }
