@@ -19,11 +19,22 @@ export function subtitleFor(c: Collaborator, all: Collaborator[]): string {
   return `${copy.project.model.name}  ·  ${c.configuration.split('·')[0].trim()}`;
 }
 
-export interface Pill { text: string; tone: PillTone; target?: 'add' | 'ready' | 'build' | 'suggestion' }
+export interface Pill { text: string; tone: PillTone; target?: 'add' | 'ready' | 'build' | 'suggestion' | 'sections' }
+
+export interface IssueCounts { open: number; verified: number; total: number; editorIssue?: { n: number; total: number } }
 
 /** Status pill by milestone: suggestion > building > ready > team size > empty. */
-export function statusPill(all: Collaborator[], m: Milestones, rec: Recommendation): Pill {
+export function statusPill(all: Collaborator[], m: Milestones, rec: Recommendation, counts?: IssueCounts): Pill {
   const builder = firstOf(all, 'builder');
+  if (m.issueRaised && counts) {
+    if (counts.editorIssue) return { text: t(copy.editor.statusPill, counts.editorIssue), tone: 'issue', target: 'sections' };
+    if (counts.open > 0) {
+      const text = counts.open === 1 ? t(copy.issueLine.statusPillOne) : copy.issueLine.statusPill.replace('2', String(counts.open));
+      return { text, tone: 'issue', target: 'sections' };
+    }
+    if (m.allSectionsVerified) return { text: copy.allClear.statusPill, tone: 'neutral', target: 'sections' };
+    return { text: t(copy.sectionsPanel.progress, { verified: counts.verified, total: counts.total }), tone: 'neutral', target: 'sections' };
+  }
   if (rec === 'shown' || rec === 'dismissed') return { text: copy.recommendation.statusPill, tone: 'lavender', target: 'suggestion' };
   if (m.buildStarted && builder) return { text: copy.build.statusPill, tone: 'neutral', target: 'build' };
   if (builder) return { text: t(copy.build.statusPillReady, { builder: builder.name }), tone: 'neutral', target: 'ready' };

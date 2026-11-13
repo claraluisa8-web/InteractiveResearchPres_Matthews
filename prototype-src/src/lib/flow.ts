@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { copy, t } from './copy';
+import { topSections } from './sections';
 import { firstOf, useScenario } from './store';
 import { TIMING, thinkingDelay } from './timing';
 
@@ -72,4 +73,52 @@ export function useFlow() {
     if (pending && tester) setRecommendation('accepted', false);
     else if (pending && !reviewer) setRecommendation('none', false);
   }, [recommendation, tester, reviewer, setRecommendation]);
+}
+
+/** After a save: both agents recheck for recheckDelay, then the issue resolves or the reviewer says why not. */
+export function scheduleRecheck(ids: number[]) {
+  if (ids.length === 0) return;
+  window.setTimeout(() => {
+    const s = useScenario.getState();
+    s.recheck(ids);
+    const after = useScenario.getState();
+    const ar = copy.editor.afterResolve;
+    // The cards speak for the issue on screen; others keep their result on the issue itself.
+    const onScreen = after.editor ? copy.issues.find((i) => i.section === after.editor!.section)?.id : undefined;
+    for (const id of ids.filter((x) => x === onScreen)) {
+      const i = after.issues[id];
+      if (i?.status === 'resolved') {
+        after.setCardNote('builder', t(ar.builder));
+        after.setCardNote('reviewer', t(ar.reviewer));
+      } else if (i?.note) {
+        after.setCardNote('reviewer', i.note);
+      }
+    }
+  }, TIMING.recheckDelay);
+}
+
+/** M4 (issue raised once the suggestion is handled) and M7 (every section verified). */
+export function useIssueFlow() {
+  const collaborators = useScenario((s) => s.collaborators);
+  const m = useScenario((s) => s.milestones);
+  const recommendation = useScenario((s) => s.recommendation);
+  const sections = useScenario((s) => s.sections);
+  const raiseIssue = useScenario((s) => s.raiseIssue);
+  const builder = firstOf(collaborators, 'builder');
+  const reviewer = firstOf(collaborators, 'reviewer');
+  const handled = recommendation === 'accepted' || recommendation === 'dismissed' || recommendation === 'skipped';
+
+  useEffect(() => {
+    if (m.issueRaised || !m.buildStarted || !builder || !reviewer || !handled) return;
+    const id = window.setTimeout(raiseIssue, TIMING.issueDelay);
+    return () => window.clearTimeout(id);
+  }, [m.issueRaised, m.buildStarted, builder, reviewer, handled, raiseIssue]);
+
+  useEffect(() => {
+    if (!m.issueRaised || m.allSectionsVerified) return;
+    const tops = topSections(collaborators);
+    if (tops.every((sec) => sections[sec.id]?.status === 'verified')) {
+      useScenario.setState((s) => ({ milestones: { ...s.milestones, allSectionsVerified: true } }));
+    }
+  }, [m.issueRaised, m.allSectionsVerified, sections, collaborators]);
 }

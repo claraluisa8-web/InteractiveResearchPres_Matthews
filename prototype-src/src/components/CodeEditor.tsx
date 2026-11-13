@@ -2,7 +2,7 @@ import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirro
 import { java } from '@codemirror/lang-java';
 import { yaml } from '@codemirror/lang-yaml';
 import { bracketMatching, indentOnInput } from '@codemirror/language';
-import { EditorState } from '@codemirror/state';
+import { Compartment, EditorState, type Extension } from '@codemirror/state';
 import { EditorView, highlightActiveLine, highlightActiveLineGutter, keymap, lineNumbers } from '@codemirror/view';
 import { useEffect, useRef } from 'react';
 import { pmrHighlight, pmrTheme } from '../lib/cmTheme';
@@ -17,13 +17,26 @@ interface CodeEditorProps {
   onCursorLine?: (line: number) => void;
   /** Ctrl/Cmd+S inside the editor. */
   onSave?: () => void;
+  /** Extra extensions; swapped in place (no remount) when their identity changes. */
+  extensions?: Extension;
+  /** Gutters drawn before / after the line numbers (issue dots, authorship marks). */
+  gutterBefore?: Extension;
+  gutterAfter?: Extension;
+  /** Scroll so this line sits about a third of the way down (frame 07). */
+  scrollToLine?: number;
 }
 
 const languageFor = (file: string) => (file.endsWith('.java') ? [java()] : file.endsWith('.yaml') ? [yaml()] : []);
 
 /** CodeMirror 6: real typing, selection, undo and paste. One instance per file; remount to switch files. */
-export function CodeEditor({ file, doc, readOnly, size = { font: 12, line: 20 }, label, onChange, onCursorLine, onSave }: CodeEditorProps) {
+export function CodeEditor({
+  file, doc, readOnly, size = { font: 12, line: 20 }, label, onChange, onCursorLine, onSave, extensions, gutterBefore, gutterAfter, scrollToLine,
+}: CodeEditorProps) {
   const host = useRef<HTMLDivElement>(null);
+  const viewRef = useRef<EditorView | null>(null);
+  const extra = useRef(new Compartment());
+  const before = useRef(new Compartment());
+  const after = useRef(new Compartment());
   const cbs = useRef({ onChange, onCursorLine, onSave });
   cbs.current = { onChange, onCursorLine, onSave };
 
@@ -33,7 +46,10 @@ export function CodeEditor({ file, doc, readOnly, size = { font: 12, line: 20 },
       state: EditorState.create({
         doc,
         extensions: [
+          before.current.of(gutterBefore ?? []),
           lineNumbers(),
+          after.current.of(gutterAfter ?? []),
+          extra.current.of(extensions ?? []),
           highlightActiveLine(),
           highlightActiveLineGutter(),
           history(),
@@ -61,10 +77,28 @@ export function CodeEditor({ file, doc, readOnly, size = { font: 12, line: 20 },
         ],
       }),
     });
-    return () => view.destroy();
+    viewRef.current = view;
+    return () => {
+      view.destroy();
+      viewRef.current = null;
+    };
     // The editor owns its text after mount; `doc` only seeds it.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [file]);
+
+  useEffect(() => {
+    viewRef.current?.dispatch({
+      effects: [extra.current.reconfigure(extensions ?? []), before.current.reconfigure(gutterBefore ?? []), after.current.reconfigure(gutterAfter ?? [])],
+    });
+  }, [extensions, gutterBefore, gutterAfter]);
+
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view || !scrollToLine) return;
+    const line = view.state.doc.line(Math.min(Math.max(1, scrollToLine), view.state.doc.lines));
+    const third = view.dom.clientHeight / 3;
+    view.dispatch({ effects: EditorView.scrollIntoView(line.from, { y: 'start', yMargin: third }) });
+  }, [scrollToLine, file]);
 
   return <div ref={host} className="code-editor" />;
 }

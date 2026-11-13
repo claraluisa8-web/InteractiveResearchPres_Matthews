@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { ORB_SIZE, deriveLines, isNear, lineId, pickSlot, slotPoint, youPoint, type Point } from './layout';
 import { firstOf, useScenario } from './store';
-import type { Collaborator, Line, View } from './types';
+import type { Collaborator, IssueState, Line, View } from './types';
 
 export interface Node {
   id: string;
@@ -17,6 +17,10 @@ export const SUGGESTED_ID = 'suggested-tester';
 
 export interface FlowState {
   buildStarted: boolean;
+  /** Open issues on the first builder↔reviewer line (M4 onward). */
+  openIssues?: number;
+  /** The sections panel is docked on the right (frame 06b moves the team 40px left). */
+  sectionsOpen?: boolean;
   /** Recommendation shown or dismissed but not yet acted on. */
   suggestion: boolean;
 }
@@ -47,6 +51,12 @@ export function computeGeometry(
     if (reviewer) working.add(lineId(builder.id, reviewer.id));
   }
   const lines = deriveLines(collaborators, working);
+  // M4: with the multiples rule, the issue sits on the first builder ↔ first reviewer line.
+  if (builder && reviewer && flow.openIssues) {
+    const issueId = lineId(builder.id, reviewer.id);
+    const l = lines.find((x) => x.id === issueId);
+    if (l) { l.kind = 'issue'; l.count = flow.openIssues; }
+  }
   const youP = youPoint(collaborators);
   const you: Node = { id: 'you', point: youP, size: ORB_SIZE.you, far: false };
   const nodes: Node[] = collaborators.map((c) => {
@@ -65,6 +75,8 @@ export function computeGeometry(
     // would still sit under the panel. Editing only moves as far as needed to keep the orb in view.
     const needed = Math.min(0, PANEL_LEFT - 80 - target.point.x);
     shift = target.c?.status === 'draft' ? { x: Math.min(-200, needed), y: 60 } : { x: needed, y: 0 };
+  } else if (flow.sectionsOpen) {
+    shift = { x: -40, y: 0 };
   }
   // Alone, the + sits right of You (frame 01). With a team, You's label takes that side and lines
   // leave You downward, so the + moves to the upper left where nothing is drawn.
@@ -78,10 +90,14 @@ export function useGeometry(): Geometry {
   const configureId = useScenario((s) => s.configure?.id ?? null);
   const buildStarted = useScenario((s) => s.milestones.buildStarted);
   const recommendation = useScenario((s) => s.recommendation);
+  const issueRaised = useScenario((s) => s.milestones.issueRaised);
+  const issues = useScenario((s) => s.issues);
+  const sectionsOpen = useScenario((s) => !!s.sectionsLine);
   const suggestion = recommendation === 'shown' || recommendation === 'dismissed';
+  const openIssues = issueRaised ? countOpen(issues) : 0;
   return useMemo(
-    () => computeGeometry(collaborators, configureId, { buildStarted, suggestion }),
-    [collaborators, configureId, buildStarted, suggestion],
+    () => computeGeometry(collaborators, configureId, { buildStarted, suggestion, openIssues, sectionsOpen }),
+    [collaborators, configureId, buildStarted, suggestion, openIssues, sectionsOpen],
   );
 }
 
@@ -89,3 +105,6 @@ export function useGeometry(): Geometry {
 export function toScreen(p: Point, g: Geometry, v: View): Point {
   return { x: v.x + (p.x + g.shift.x) * v.k, y: v.y + (p.y + g.shift.y) * v.k };
 }
+
+export const countOpen = (issues: Record<number, IssueState>) =>
+  Object.values(issues).filter((i) => i.status !== 'resolved' && i.status !== 'rejected').length;

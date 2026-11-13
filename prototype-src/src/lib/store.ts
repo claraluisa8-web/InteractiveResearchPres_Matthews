@@ -3,7 +3,8 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { copy, t } from './copy';
 import { codeFile } from './code';
 import { pickSlot } from './layout';
-import type { AgentRole, Collaborator, Milestones, Recommendation, View } from './types';
+import { applyFix, initialIssues, initialSections, issueMet, sectionById } from './sections';
+import type { AgentRole, Collaborator, IssueState, Milestones, Recommendation, SectionState, View } from './types';
 
 export const IDENTITY_VIEW: View = { x: 0, y: 0, k: 1 };
 
@@ -46,8 +47,10 @@ interface ScenarioState {
   milestones: Milestones;
   recommendation: Recommendation;
   files: Record<string, string>;
-  /** Unsaved floating-editor text, kept so closing the editor never loses typing. */
+  /** Unsaved editor text per file, kept so closing an editor never loses typing. */
   fileDrafts: Record<string, string>;
+  sections: Record<string, SectionState>;
+  issues: Record<number, IssueState>;
   /** M1: the coach card is gone for good once anyone is added. */
   firstAdded: boolean;
   view: View;
@@ -68,6 +71,14 @@ interface ScenarioState {
   floatingFile: string | null;
   /** Bumped when the floating file is closed or saved; M3 fires right after. */
   floatingSettled: number;
+  /** 06b: the sections panel, for one line (ids of its two ends). */
+  sectionsLine: [string, string] | null;
+  /** 07: the section-scoped editor. `tab` is the file shown (the spec tab is read-only). */
+  editor: { section: string; tab: string; mode: 'edit' | 'diff' | 'reject' } | null;
+  /** Orbs ringed by hovering something linked to them (rail row, section row). */
+  linkIds: string[] | null;
+  /** Latest line from each agent in the editor's left-column cards. */
+  cardNotes: Record<string, string>;
 
   openAddMenu: (anchor: MenuAnchor, highlight?: AgentRole) => void;
   closeAddMenu: () => void;
@@ -90,10 +101,27 @@ interface ScenarioState {
   setRecommendation: (r: Recommendation, cardOpen?: boolean) => void;
   setRecCardOpen: (v: boolean) => void;
   addDirect: (role: AgentRole) => void;
+  raiseIssue: () => void;
+  openSections: (line?: [string, string]) => void;
+  closeSections: () => void;
+  openSection: (id: string, tab?: string) => void;
+  closeEditor: () => void;
+  setEditorMode: (mode: 'edit' | 'diff' | 'reject') => void;
+  setEditorTab: (tab: string) => void;
+  /** Save a file from the section editor; returns the issue ids now waiting on a recheck. */
+  saveSectionFile: (file: string) => number[];
+  recheck: (ids: number[]) => void;
+  acceptFix: (issue: number) => void;
+  rejectIssue: (issue: number) => void;
+  verifySection: (id: string) => void;
+  setLinkIds: (ids: string[] | null) => void;
+  setCardNote: (role: string, text: string) => void;
   pushReply: (reply: Omit<Reply, 'id'>) => number;
   updateReply: (id: number, patch: Partial<Reply>) => void;
   dismissReply: (id: number) => void;
 }
+
+export const issueSection = (issue: number) => copy.issues.find((i) => i.id === issue)!.section;
 
 export const active = (cs: Collaborator[]) => cs.filter((c) => c.status !== 'draft');
 export const firstOf = (cs: Collaborator[], role: AgentRole) =>
@@ -159,6 +187,8 @@ export const useScenario = create<ScenarioState>()(
       recommendation: 'none',
       files: {},
       fileDrafts: {},
+      sections: initialSections(),
+      issues: initialIssues(),
       firstAdded: false,
       view: IDENTITY_VIEW,
       seq: 1,
@@ -173,6 +203,10 @@ export const useScenario = create<ScenarioState>()(
       recCardOpen: false,
       floatingFile: null,
       floatingSettled: 0,
+      sectionsLine: null,
+      editor: null,
+      linkIds: null,
+      cardNotes: {},
 
       openAddMenu: (anchor, highlight) => set({ addMenu: { anchor, highlight }, popover: null }),
       closeAddMenu: () => set({ addMenu: null }),
@@ -267,6 +301,113 @@ export const useScenario = create<ScenarioState>()(
       },
       setUpdateCardOpen: (v) => set({ updateCardOpen: v }),
 
+      // M4: the builder↔reviewer line turns red. A pending tester suggestion quietly expires.
+      raiseIssue: () =>
+        set((s) => ({
+          milestones: { ...s.milestones, issueRaised: true },
+          recommendation: s.recommendation === 'shown' || s.recommendation === 'dismissed' ? 'expired' : s.recommendation,
+          recCardOpen: false,
+          sections: Object.keys(s.sections).length ? s.sections : initialSections(),
+          issues: Object.keys(s.issues).length ? s.issues : initialIssues(),
+        })),
+
+      openSections: (line) => {
+        const s = get();
+        const b = firstOf(s.collaborators, 'builder');
+        const r = firstOf(s.collaborators, 'reviewer');
+        const fallback: [string, string] | null = b && r ? [b.id, r.id] : null;
+        set({
+          sectionsLine: line ?? fallback,
+          milestones: { ...s.milestones, sectionsOpened: true },
+          popover: null,
+          addMenu: null,
+          floatingFile: null,
+          updateCardOpen: false,
+        });
+      },
+      closeSections: () => set({ sectionsLine: null, linkIds: null }),
+
+      openSection: (id, tab) => {
+        const s = get();
+        if (!s.sectionsLine) get().openSections();
+        set({ editor: { section: id, tab: tab ?? sectionById(id).file, mode: 'edit' }, linkIds: null, popover: null, cardNotes: {} });
+      },
+      closeEditor: () => set({ editor: null }),
+      setEditorMode: (mode) => set((s) => (s.editor ? { editor: { ...s.editor, mode } } : {})),
+      setEditorTab: (tab) => set((s) => (s.editor ? { editor: { ...s.editor, tab } } : {})),
+
+      saveSectionFile: (file) => {
+        const s = get();
+        const draft = s.fileDrafts[file];
+        const { [file]: _, ...rest } = s.fileDrafts;
+        const text = draft ?? s.files[file];
+        // Every section in the saved file that differs from the builder's text is now edited by you.
+        const sections = { ...s.sections };
+        for (const [id, st] of Object.entries(sections)) if (sectionById(id).files.includes(file) && draft !== undefined) sections[id] = { ...st, editedByYou: true };
+        // Issues whose code lives in this file go back to both agents (flow-and-milestones: Save → recheck).
+        const waiting = Object.values(s.issues)
+          .filter((i) => (i.status === 'open' || i.status === 'savedAwaitingAgents') && sectionById(issueSection(i.id)).files.includes(file))
+          .map((i) => i.id);
+        const issues = { ...s.issues };
+        for (const id of waiting) issues[id] = { ...issues[id], status: 'savedAwaitingAgents', note: undefined };
+        set({
+          files: { ...s.files, [file]: text },
+          fileDrafts: rest,
+          sections,
+          issues,
+          milestones: { ...s.milestones, sectionSaved: true },
+        });
+        return waiting;
+      },
+
+      recheck: (ids) => {
+        const s = get();
+        const issues = { ...s.issues };
+        for (const id of ids) {
+          const i = issues[id];
+          if (!i || i.status !== 'savedAwaitingAgents') continue;
+          const file = sectionById(issueSection(id)).file;
+          issues[id] = issueMet(id, s.files[file] ?? '')
+            ? { id, status: 'resolved', how: 'edited' }
+            : { id, status: 'open', note: t((copy.editor.notStillMet as Record<string, { text: string }>)[String(id)]) };
+        }
+        set({ issues });
+      },
+
+      acceptFix: (issue) => {
+        const s = get();
+        const file = sectionById(issueSection(issue)).file;
+        const current = s.fileDrafts[file] ?? s.files[file] ?? '';
+        const { [file]: _, ...rest } = s.fileDrafts;
+        set({
+          files: { ...s.files, [file]: applyFix(issue, current) },
+          fileDrafts: rest,
+          issues: { ...s.issues, [issue]: { id: issue, status: 'resolved', how: 'accepted' } },
+          editor: s.editor ? { ...s.editor, mode: 'edit' } : null,
+        });
+      },
+
+      rejectIssue: (issue) =>
+        set((s) => ({
+          issues: { ...s.issues, [issue]: { id: issue, status: 'rejected', how: 'rejected' } },
+          editor: s.editor ? { ...s.editor, mode: 'edit' } : null,
+        })),
+
+      verifySection: (id) => {
+        const s = get();
+        const sections = { ...s.sections, [id]: { ...s.sections[id], status: 'verified' as const } };
+        // A parent (createPlan) is verified once all its subsections are.
+        const parent = sectionById(id).parent;
+        if (parent) {
+          const kids = sectionById(parent).children ?? [];
+          if (kids.every((k) => sections[k].status === 'verified')) sections[parent] = { ...sections[parent], status: 'verified' };
+        }
+        set({ sections });
+      },
+
+      setLinkIds: (ids) => set({ linkIds: ids }),
+      setCardNote: (role, text) => set((s) => ({ cardNotes: { ...s.cardNotes, [role]: text } })),
+
       openFile: (name) =>
         set((s) => ({
           floatingFile: name,
@@ -331,6 +472,11 @@ export const useScenario = create<ScenarioState>()(
         recommendation: s.recommendation,
         files: s.files,
         fileDrafts: s.fileDrafts,
+        sections: s.sections,
+        // A recheck in flight when the page closed goes back to open; nothing is left hanging.
+        issues: Object.fromEntries(
+          Object.entries(s.issues).map(([k, i]) => [k, i.status === 'savedAwaitingAgents' || i.status === 'fixPreview' ? { ...i, status: 'open' as const } : i]),
+        ),
         firstAdded: s.firstAdded,
         view: s.view,
         seq: s.seq,

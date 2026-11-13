@@ -25,6 +25,8 @@ export interface Line {
   a: string;
   b: string;
   kind: LineKind;
+  /** Open issues on this line (issue kind only). */
+  count?: number;
 }
 
 export interface Milestones {
@@ -49,4 +51,19 @@ export interface View {
 }
 
 /** M3: the reviewer's tester suggestion. 'skipped' when a tester already existed. */
-export type Recommendation = 'none' | 'shown' | 'dismissed' | 'accepted' | 'skipped';
+export type Recommendation = 'none' | 'shown' | 'dismissed' | 'accepted' | 'skipped' | 'expired';
+
+export interface SectionState {
+  id: string;
+  status: 'issues' | 'open' | 'verified';
+  editedByYou: boolean;
+}
+
+export interface IssueState {
+  id: number;
+  status: 'open' | 'fixPreview' | 'savedAwaitingAgents' | 'resolved' | 'rejected';
+  /** How it was resolved; the receipt reads this (phase 4). */
+  how?: 'edited' | 'accepted' | 'rejected';
+  /** The reviewer's last word after a recheck that didn't resolve it. */
+  note?: string;
+}

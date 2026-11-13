@@ -223,7 +223,15 @@
       ],
       "replies": {
         "*": "{reviewer}: The approved spec is the contract, and it doesn’t mention a gateway. If you’re sure, you can Reject this, and the decision is recorded on the receipt with your name."
-      }
+      },
+      "phrases": [
+        "builder is right",
+        "gateway handles",
+        "not needed",
+        "the gateway",
+        "we do not need"
+      ],
+      "newPhrases": true
     },
     {
       "id": "spec",
@@ -240,7 +248,13 @@
       ],
       "replies": {
         "*": "recurring-investments.yaml v1.2.0 is approved and read-only. createPlan requires an Idempotency-Key header and returns 409 DuplicateRequest when a key is reused."
-      }
+      },
+      "phrases": [
+        "in the spec",
+        "the spec say",
+        "what does the spec"
+      ],
+      "newPhrases": true
     },
     {
       "id": "tests",

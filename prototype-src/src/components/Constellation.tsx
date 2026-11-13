@@ -69,6 +69,10 @@ export function Constellation({ scale, onLineHover }: ConstellationProps) {
   const addMenu = useScenario((s) => s.addMenu);
   const configure = useScenario((s) => s.configure);
   const hoverId = useScenario((s) => s.hoverId);
+  const linkIds = useScenario((s) => s.linkIds);
+  const openSections = useScenario((s) => s.openSections);
+  // Orbs ringed from elsewhere: a section row rings its line's two ends; a rail row rings one orb.
+  const linkSet = linkIds ? new Set(linkIds) : hoverId ? new Set([hoverId]) : null;
   const popover = useScenario((s) => s.popover);
   const openAddMenu = useScenario((s) => s.openAddMenu);
   const closeAddMenu = useScenario((s) => s.closeAddMenu);
@@ -97,7 +101,9 @@ export function Constellation({ scale, onLineHover }: ConstellationProps) {
   };
   useEffect(() => () => window.clearTimeout(hoverTimer.current), []);
 
-  const linked = (id: string) => hoverId === id || popover === id;
+  const linked = (id: string) => !!linkSet?.has(id) || popover === id;
+  const isDim = (id: string) => !!linkSet && !linkSet.has(id);
+  const lineDim = (a: string, b: string) => !!linkSet && (linkSet.size > 1 ? !(linkSet.has(a) && linkSet.has(b)) : !linkSet.has(a) && !linkSet.has(b));
 
   return (
     <div
@@ -127,16 +133,19 @@ export function Constellation({ scale, onLineHover }: ConstellationProps) {
               const b = g.byId(line.b);
               if (!a || !b) return null;
               const p = trimmed(a, b);
-              const dim = hoverId && line.a !== hoverId && line.b !== hoverId;
+              const dim = lineDim(line.a, line.b);
               return (
                 <g
                   key={line.id}
                   className={`line-group${lineHover === line.id ? ' is-hover' : ''}${dim ? ' is-dim' : ''}`}
                   onPointerEnter={() => line.kind !== 'pending' && lineHoverStart(line, a, b)}
                   onPointerLeave={lineHoverEnd}
-                  onClick={() => line.kind !== 'pending' && onLineHover({ line, at: { x: p.mx, y: p.my }, pinned: true })}
+                  onClick={() =>
+                    line.kind === 'issue' ? openSections() : line.kind !== 'pending' && onLineHover({ line, at: { x: p.mx, y: p.my }, pinned: true })
+                  }
                 >
                   <line className="line__hit" x1={p.x1} y1={p.y1} x2={p.x2} y2={p.y2} />
+                  {line.kind === 'issue' && <line className="line line--issue-glow" x1={p.x1} y1={p.y1} x2={p.x2} y2={p.y2} />}
                   <line className={`line line--${line.kind}`} x1={p.x1} y1={p.y1} x2={p.x2} y2={p.y2} />
                   {line.kind === 'working' && <FlowDots x1={p.x1} y1={p.y1} x2={p.x2} y2={p.y2} />}
                 </g>
@@ -144,8 +153,36 @@ export function Constellation({ scale, onLineHover }: ConstellationProps) {
             })}
           </svg>
 
+          {/* Issue badges sit on the line's midpoint (frame 06): focusable, open the sections panel. */}
+          {g.lines.filter((l) => l.kind === 'issue').map((line) => {
+            const a = g.byId(line.a);
+            const b = g.byId(line.b);
+            if (!a || !b) return null;
+            const mx = (a.point.x + b.point.x) / 2;
+            const my = (a.point.y + b.point.y) / 2;
+            const label = t(copy.issueLine.badgeLabel, { n: line.count, builder: a.c?.name, reviewer: b.c?.name });
+            return (
+              <button
+                key={`badge-${line.id}`}
+                type="button"
+                className={`issue-badge${lineDim(line.a, line.b) ? ' is-dim' : ''}`}
+                style={{ left: mx - 16, top: my - 16 }}
+                aria-label={label}
+                title={label}
+                data-issue-badge
+                onPointerEnter={() => lineHoverStart(line, a, b)}
+                onPointerLeave={lineHoverEnd}
+                onFocus={() => onLineHover({ line, at: { x: mx, y: my }, pinned: false })}
+                onBlur={() => onLineHover(null)}
+                onClick={() => openSections()}
+              >
+                {line.count}
+              </button>
+            );
+          })}
+
           {/* You */}
-          <div className="node node--you" style={{ left: g.you.point.x, top: g.you.point.y }}>
+          <div className={`node node--you${isDim('you') ? ' is-dim' : ''}`} style={{ left: g.you.point.x, top: g.you.point.y }}>
             <span className="halo halo--inner" aria-hidden="true" />
             <span className="halo halo--outer" aria-hidden="true" />
             <button
@@ -180,7 +217,7 @@ export function Constellation({ scale, onLineHover }: ConstellationProps) {
           </button>
 
           {/* Collaborators */}
-          {g.nodes.map((n) => n.suggested ? <SuggestedNode key={n.id} n={n} /> : <CollaboratorNode key={n.id} n={n} linked={linked(n.id)} dim={!!hoverId && hoverId !== n.id} />)}
+          {g.nodes.map((n) => n.suggested ? <SuggestedNode key={n.id} n={n} /> : <CollaboratorNode key={n.id} n={n} linked={linked(n.id)} dim={isDim(n.id)} />)}
 
           {/* Empty start: spec card and coach card */}
           {alone && !configure && (

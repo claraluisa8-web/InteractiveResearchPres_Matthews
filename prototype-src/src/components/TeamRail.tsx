@@ -1,6 +1,6 @@
 import { copy, t } from '../lib/copy';
 import { subtitleFor } from '../lib/status';
-import { SUGGESTED_ID } from '../lib/geometry';
+import { SUGGESTED_ID, countOpen } from '../lib/geometry';
 import { firstOf, useScenario } from '../lib/store';
 import { Icon } from './Icon';
 import { Orb } from './Orb';
@@ -14,7 +14,12 @@ export function TeamRail({ showFit, onFit }: { showFit: boolean; onFit: () => vo
   const recommendation = useScenario((s) => s.recommendation);
   const setRecCardOpen = useScenario((s) => s.setRecCardOpen);
   const suggestion = recommendation === 'shown' || recommendation === 'dismissed';
+  const issueRaised = useScenario((s) => s.milestones.issueRaised);
+  const issues = useScenario((s) => s.issues);
   const reviewer = firstOf(collaborators, 'reviewer');
+  const builder = firstOf(collaborators, 'builder');
+  // Red "!" flags on both ends of the issue line while it has open issues (frame 06).
+  const flagged = issueRaised && countOpen(issues) > 0 ? new Set([builder?.id, reviewer?.id]) : new Set<string | undefined>();
   const rows = [
     { id: 'you', role: 'you' as const, name: copy.people.you.displayName, sub: copy.people.you.fullName, draft: false, otherType: undefined },
     ...collaborators.map((c) => ({ id: c.id, role: c.role, name: c.name, sub: subtitleFor(c, collaborators), draft: c.status === 'draft', otherType: c.otherType })),
@@ -56,7 +61,9 @@ export function TeamRail({ showFit, onFit }: { showFit: boolean; onFit: () => vo
                 <span className="rail__name">{r.name}</span>
                 <span className="rail__sub">{r.sub}</span>
               </span>
-              {suggestion && r.id === reviewer?.id && <span className="rail__marker rail__marker--suggestion" aria-hidden="true" />}
+              {flagged.has(r.id) ? (
+                <span className="rail__marker rail__marker--issue" aria-hidden="true">{copy.issueLine.teamRailFlag}</span>
+              ) : suggestion && r.id === reviewer?.id && <span className="rail__marker rail__marker--suggestion" aria-hidden="true" />}
             </button>
           </li>
         ))}

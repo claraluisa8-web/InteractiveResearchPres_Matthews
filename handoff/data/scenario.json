@@ -319,7 +319,15 @@
     "hoverAction": "See sections",
     "legend": "Red line = issue between two collaborators",
     "statusPill": "2 issues on 1 line",
-    "teamRailFlag": "!"
+    "teamRailFlag": "!",
+    "statusPillOne": {
+      "text": "1 issue on 1 line",
+      "new": true
+    },
+    "badgeLabel": {
+      "text": "{n} issues between {builder} and {reviewer}. Open sections",
+      "new": true
+    }
   },
   "sectionsPanel": {
     "subtitle": "Sections this line touched  ·  {issueCount} issues",
@@ -331,6 +339,38 @@
     "statusLabels": {
       "verified": "Verified",
       "open": "Not verified"
+    },
+    "close": {
+      "text": "Close sections",
+      "new": true
+    },
+    "quickVerify": {
+      "text": "Verify",
+      "new": true
+    },
+    "issuePill": {
+      "text": "{n} issues",
+      "new": true
+    },
+    "issuePillOne": {
+      "text": "1 issue",
+      "new": true
+    },
+    "rejectedTag": {
+      "text": "Rejected by you",
+      "new": true
+    },
+    "resolvedTag": {
+      "text": "Agents agree",
+      "new": true
+    },
+    "primaryAllVerified": {
+      "text": "Close",
+      "new": true
+    },
+    "filesNote": {
+      "text": "{n} files",
+      "new": true
     }
   },
   "sections": [
@@ -376,6 +416,18 @@
           "anchor": {
             "start": "Plan plan = planService.create(request);",
             "end": "Plan plan = planService.create(request);"
+          },
+          "summary": {
+            "text": "Creates the plan from the request once the key check passes.",
+            "new": true
+          },
+          "specExcerpt": {
+            "file": "recurring-investments.yaml",
+            "lines": [
+              24,
+              29
+            ],
+            "new": true
           }
         },
         {
@@ -408,7 +460,19 @@
       ],
       "reviewed": "reviewer",
       "tested": "tester",
-      "initial": "verified"
+      "initial": "verified",
+      "summary": {
+        "text": "Returns every plan for one account, newest first.",
+        "new": true
+      },
+      "specExcerpt": {
+        "file": "recurring-investments.yaml",
+        "lines": [
+          30,
+          33
+        ],
+        "new": true
+      }
     },
     {
       "id": "updatePlanStatus",
@@ -428,7 +492,19 @@
       ],
       "reviewed": "reviewer",
       "tested": "tester",
-      "initial": "verified"
+      "initial": "verified",
+      "summary": {
+        "text": "Pauses, resumes or cancels a plan, and rejects invalid transitions.",
+        "new": true
+      },
+      "specExcerpt": {
+        "file": "recurring-investments.yaml",
+        "lines": [
+          34,
+          38
+        ],
+        "new": true
+      }
     },
     {
       "id": "amountHandling",
@@ -448,7 +524,11 @@
       ],
       "reviewed": "reviewer",
       "tested": "tester",
-      "initial": "open"
+      "initial": "open",
+      "summary": {
+        "text": "Stores amounts in cents, rounded half-even, with a $1.00 minimum.",
+        "new": true
+      }
     },
     {
       "id": "errorResponses",
@@ -468,7 +548,11 @@
       ],
       "reviewed": "reviewer",
       "tested": "tester",
-      "initial": "open"
+      "initial": "open",
+      "summary": {
+        "text": "Turns validation, amount, not-found and transition errors into the spec’s problem responses.",
+        "new": true
+      }
     },
     {
       "id": "generatedDtos",
@@ -485,7 +569,11 @@
       ],
       "reviewed": "Skimmed",
       "tested": "tester",
-      "initial": "verified"
+      "initial": "verified",
+      "summary": {
+        "text": "Request and response records generated from the spec’s schemas.",
+        "new": true
+      }
     },
     {
       "id": "contractTests",
@@ -502,7 +590,11 @@
       "reviewed": "reviewer",
       "tested": "—",
       "initial": "open",
-      "onlyIfRolePresent": "tester"
+      "onlyIfRolePresent": "tester",
+      "summary": {
+        "text": "One contract test per spec response, including the 409 and the Location header.",
+        "new": true
+      }
     },
     {
       "id": "changelog",
@@ -517,7 +609,11 @@
       ],
       "reviewed": "—",
       "tested": "—",
-      "initial": "open"
+      "initial": "open",
+      "summary": {
+        "text": "The release note for INV-2143. You wrote this one.",
+        "new": true
+      }
     }
   ],
   "issues": [
@@ -584,7 +680,145 @@
     "agentsAgree": "{builder} and {reviewer} agree. You can verify this section.",
     "composerTarget": "To: {builder} + {reviewer}",
     "composerPlaceholder": "Message both agents…",
-    "statusPill": "Issue {n} of {total} on this line"
+    "statusPill": "Issue {n} of {total} on this line",
+    "builderSays": {
+      "text": "{builder} says",
+      "new": true
+    },
+    "reviewerSays": {
+      "text": "{reviewer} says",
+      "new": true
+    },
+    "theSpec": {
+      "text": "The spec",
+      "new": true
+    },
+    "aboutSection": {
+      "text": "About this section",
+      "new": true
+    },
+    "aboutWrote": {
+      "text": "Wrote",
+      "new": true
+    },
+    "aboutReviewed": {
+      "text": "Reviewed",
+      "new": true
+    },
+    "aboutTested": {
+      "text": "Tested",
+      "new": true
+    },
+    "verified": {
+      "text": "Verified",
+      "new": true
+    },
+    "verifyHelpOpen": {
+      "text": "Read it, then verify. Edits are welcome but not required.",
+      "new": true
+    },
+    "verifyHelpVerified": {
+      "text": "You verified this section.",
+      "new": true
+    },
+    "rechecking": {
+      "text": "Rechecking your edit…",
+      "new": true
+    },
+    "rejectConfirm": {
+      "text": "Reject {reviewer}’s finding? It’s recorded on the receipt with your name.",
+      "new": true,
+      "note": "From flow-and-milestones.md."
+    },
+    "rejectConfirmAction": {
+      "text": "Reject",
+      "new": true
+    },
+    "cancel": {
+      "text": "Cancel",
+      "new": true
+    },
+    "diffTitle": {
+      "text": "{reviewer}’s fix",
+      "new": true
+    },
+    "diffMeta": {
+      "text": "Preview  ·  nothing changes until you apply it",
+      "new": true
+    },
+    "diffApply": {
+      "text": "Apply fix",
+      "new": true
+    },
+    "diffAdded": {
+      "text": "Added",
+      "new": true
+    },
+    "diffRemoved": {
+      "text": "Removed",
+      "new": true
+    },
+    "prev": {
+      "text": "Previous",
+      "new": true
+    },
+    "nextIssue": {
+      "text": "Next",
+      "new": true
+    },
+    "close": {
+      "text": "Close (Esc)",
+      "new": true
+    },
+    "readOnly": {
+      "text": "Read-only",
+      "new": true
+    },
+    "savedToast": {
+      "text": "Saved",
+      "new": true
+    },
+    "bothAgents": {
+      "text": "Both agents",
+      "new": true,
+      "note": "Composer target option while the editor is open."
+    },
+    "codeTabEmpty": {
+      "text": "Nothing to open yet. Sections appear once the agents have something to check.",
+      "new": true
+    },
+    "allVerifiedToast": {
+      "text": "Every section is verified.",
+      "new": true
+    },
+    "notStillMet": {
+      "1": {
+        "text": "The key still isn’t checked before the plan is created.",
+        "new": true
+      },
+      "2": {
+        "text": "The 201 still goes out without a Location header.",
+        "new": true
+      }
+    },
+    "afterResolve": {
+      "builder": {
+        "text": "Agreed. The handler checks it now.",
+        "new": true
+      },
+      "reviewer": {
+        "text": "That matches the spec. Ready for you to verify.",
+        "new": true
+      },
+      "builderRejected": {
+        "text": "Understood. Leaving it as it was.",
+        "new": true
+      },
+      "reviewerRejected": {
+        "text": "Noted. Your decision is on the receipt.",
+        "new": true
+      }
+    }
   },
   "allClear": {
     "receiptTitle": "Verification receipt",
@@ -731,7 +965,8 @@
     "build.statusPillReady",
     "chrome (title-bar overflow menu, About dialog, toast, composer aria labels)",
     "constellation (Phase 1: status pill, statuses, popover, line card, spec viewer, next steps)",
-    "build: saveToast, unsaved, metaSuffix, updateCardClose, startEcho; constellation: removeConfirm, nextSteps, nextStepHints (Phase 2)"
+    "build: saveToast, unsaved, metaSuffix, updateCardClose, startEcho; constellation: removeConfirm, nextSteps, nextStepHints (Phase 2)",
+    "Phase 3: issueLine.statusPillOne/badgeLabel, sectionsPanel extras, editor extras (labels, recheck, reject confirm, diff, afterResolve, notStillMet), section summaries and spec excerpts for non-issue sections"
   ],
   "constellation": {
     "$note": "Phase 1 copy that isn't drawn in Figma. All new.",

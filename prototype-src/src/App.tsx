@@ -8,6 +8,8 @@ import { Constellation, type LineHover } from './components/Constellation';
 import { Composer } from './components/Composer';
 import { Dialog } from './components/Dialog';
 import { FloatingEditor } from './components/FloatingEditor';
+import { SectionEditor } from './components/SectionEditor';
+import { SectionsPanel, issueOpen, walkOrder } from './components/SectionsPanel';
 import { LineCard } from './components/LineCard';
 import { Replies } from './components/Replies';
 import { SpecViewer } from './components/SpecViewer';
@@ -16,8 +18,9 @@ import { TeamRail } from './components/TeamRail';
 import { TitleBar } from './components/TitleBar';
 import { Toast } from './components/Toast';
 import { copy, t } from './lib/copy';
-import { useFlow } from './lib/flow';
-import { computeGeometry } from './lib/geometry';
+import { useFlow, useIssueFlow } from './lib/flow';
+import { computeGeometry, countOpen } from './lib/geometry';
+import { ISSUE_SECTION_IDS, sectionById, topSections } from './lib/sections';
 import { startOver } from './lib/reset';
 import { statusPill } from './lib/status';
 import { useScenario } from './lib/store';
@@ -34,6 +37,13 @@ export function App() {
   const [lineHover, setLineHover] = useState<LineHover | null>(null);
   const [fitting, setFitting] = useState(false);
   const toastTimer = useRef<number>();
+  const lineLeaveTimer = useRef<number>();
+  const onLineHover = (h: LineHover | null) => {
+    window.clearTimeout(lineLeaveTimer.current);
+    if (h) return setLineHover((cur) => (cur?.pinned && !h.pinned && cur.line.id !== h.line.id ? cur : h));
+    // Leaving the line: give the pointer a moment to reach the card.
+    lineLeaveTimer.current = window.setTimeout(() => setLineHover((cur) => (cur?.pinned ? cur : null)), 250);
+  };
 
   const collaborators = useScenario((s) => s.collaborators);
   const addMenu = useScenario((s) => s.addMenu);
@@ -50,14 +60,22 @@ export function App() {
   const readyVisible = useScenario((s) => s.readyVisible);
   const setRecCardOpen = useScenario((s) => s.setRecCardOpen);
   const setUpdateCardOpen = useScenario((s) => s.setUpdateCardOpen);
+  const sectionsLine = useScenario((s) => s.sectionsLine);
+  const editor = useScenario((s) => s.editor);
+  const sections = useScenario((s) => s.sections);
+  const issues = useScenario((s) => s.issues);
+  const openSections = useScenario((s) => s.openSections);
+  const openSection = useScenario((s) => s.openSection);
+  const closeEditor = useScenario((s) => s.closeEditor);
+  const openFile = useScenario((s) => s.openFile);
   useFlow();
+  useIssueFlow();
 
   const showToast = useCallback((message: string) => {
     window.clearTimeout(toastTimer.current);
     setToast(message);
     toastTimer.current = window.setTimeout(() => setToast(null), TOAST_MS);
   }, []);
-  const notInPrototype = () => showToast(t(copy.chrome.notInPrototypeToast));
   const closeDialog = useCallback(() => setDialog(null), []);
 
   // Hidden reset: Ctrl/Cmd+Shift+R handled in-app so it clears pmr: state, not just reloads.
@@ -79,11 +97,21 @@ export function App() {
     if (!ids.has(lineHover.line.a) || !ids.has(lineHover.line.b)) setLineHover(null);
   }, [collaborators, lineHover]);
 
+  // The Code tab opens the section editor; Constellation closes it (flow-and-milestones: Code tab).
   const onTab = (tab: 'constellation' | 'code') => {
-    // The Code tab opens the section editor from phase 3 on.
-    if (tab === 'code') return notInPrototype();
-    setActiveTab(tab);
+    if (tab === 'constellation') {
+      if (editor) closeEditor();
+      return;
+    }
+    if (editor) return;
+    if (milestones.issueRaised) {
+      const next = walkOrder(collaborators, issues).find((u) => sections[u.id]?.status !== 'verified');
+      return openSection(next?.id ?? 'idempotencyKey');
+    }
+    if (milestones.buildStarted) return openFile('PlanController.java');
+    showToast(t(copy.editor.codeTabEmpty));
   };
+  useEffect(() => setActiveTab(editor ? 'code' : 'constellation'), [editor]);
 
   // "Show whole team": the only camera move, and only on request; eases over 200 ms.
   const fitTeam = () => {
@@ -95,7 +123,17 @@ export function App() {
 
   const sc = copy.chrome.startOverConfirm;
   const suggestion = recommendation === 'shown' || recommendation === 'dismissed';
-  const pill = statusPill(collaborators, milestones, recommendation);
+  const tops = topSections(collaborators);
+  const editorIssue = editor && sectionById(editor.section).issue && issueOpen(issues[sectionById(editor.section).issue!])
+    ? { n: ISSUE_SECTION_IDS.indexOf(editor.section) + 1, total: ISSUE_SECTION_IDS.length }
+    : undefined;
+  const pill = statusPill(collaborators, milestones, recommendation, {
+    open: countOpen(issues),
+    verified: tops.filter((d) => sections[d.id]?.status === 'verified').length,
+    total: tops.length,
+    editorIssue,
+  });
+  const issueLineVisible = milestones.issueRaised && countOpen(issues) > 0;
   // Clicking the pill goes to the thing it describes.
   const onPill = (() => {
     switch (pill.target) {
@@ -103,6 +141,7 @@ export function App() {
       case 'ready': return () => document.querySelector<HTMLElement>('[data-start-build]')?.focus();
       case 'build': return () => setUpdateCardOpen(true);
       case 'suggestion': return () => setRecCardOpen(true);
+      case 'sections': return () => (editor ? undefined : openSections());
       default: return undefined;
     }
   })();
@@ -114,12 +153,20 @@ export function App() {
         style={{ width: STAGE_W, height: STAGE_H, transform: `translate(-50%, -50%) scale(${scale})` }}
       >
         <Canvas />
-        <Constellation scale={scale} onLineHover={(h) => setLineHover((cur) => (cur?.pinned && !h ? cur : h))} />
+        <Constellation scale={scale} onLineHover={onLineHover} />
         <TeamRail showFit={!isIdentity(view)} onFit={fitTeam} />
         <BuildCard />
         {suggestion && recCardOpen && <RecommendationCard />}
+        {sectionsLine && <SectionsPanel />}
         {floatingFile && <FloatingEditor onToast={showToast} />}
-        {lineHover && <LineCard hover={lineHover} onClose={() => setLineHover(null)} />}
+        {lineHover && (
+          <LineCard
+            hover={lineHover}
+            onClose={() => setLineHover(null)}
+            onStay={() => window.clearTimeout(lineLeaveTimer.current)}
+            onLeave={() => onLineHover(null)}
+          />
+        )}
         {popover && <AgentPopover />}
         {addMenu && <AddMenu />}
         {configure && <ConfigurePanel key={`${configure.id}-${configure.mode}`} />}
@@ -132,8 +179,14 @@ export function App() {
         <Replies raised={pill.target === 'ready' && readyVisible} />
         <Toast message={toast} />
         <Composer />
-        <Legend items={suggestion ? [{ kind: 'ring', text: copy.recommendation.legend }] : []} />
+        <Legend
+          items={[
+            ...(suggestion ? [{ kind: 'ring' as const, text: copy.recommendation.legend }] : []),
+            ...(issueLineVisible ? [{ kind: 'issue' as const, text: copy.issueLine.legend }] : []),
+          ]}
+        />
         <StatusPill text={pill.text} tone={pill.tone} onClick={onPill} />
+        {editor && <SectionEditor onToast={showToast} />}
         {specOpen && <SpecViewer />}
         {dialog === 'startOver' && (
           <Dialog

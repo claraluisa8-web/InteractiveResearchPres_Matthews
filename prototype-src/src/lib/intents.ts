@@ -50,7 +50,13 @@ function hasTerm(text: string, words: string[], term: string) {
   return words.some((w) => w === term || (term.length >= 5 && w.length >= 4 && distance(w, term) <= 1));
 }
 
-export function contextFor(cs: Collaborator[], milestones: { buildStarted: boolean }): Context {
+export function contextFor(
+  cs: Collaborator[],
+  milestones: { buildStarted: boolean; issueRaised?: boolean; allSectionsVerified?: boolean },
+  editorOpen = false,
+): Context {
+  if (editorOpen) return 'editor';
+  if (milestones.issueRaised && !milestones.allSectionsVerified) return 'issue';
   if (!firstOf(cs, 'builder')) return 'empty';
   return milestones.buildStarted ? 'build' : 'ready';
 }
@@ -97,6 +103,9 @@ function findMentioned(text: string, words: string[], cs: Collaborator[]): Colla
 
 export interface FlowInfo {
   recommendation?: Recommendation;
+  verified?: number;
+  total?: number;
+  issues?: number;
 }
 
 /** The next step can be more specific than the context (a reviewer already checking, a pending suggestion). */
@@ -113,9 +122,9 @@ export function vars(cs: Collaborator[], ctx: Context, flow: FlowInfo = {}) {
     reviewer: name('reviewer') ?? copy.roles.reviewer.defaultName,
     tester: name('tester') ?? copy.roles.tester.defaultName,
     teammate: name('teammate') ?? copy.people.teammate.fullName,
-    verified: 0,
-    total: firstOf(cs, 'tester') ? 8 : 7,
-    issues: 0,
+    verified: flow.verified ?? 0,
+    total: flow.total ?? (firstOf(cs, 'tester') ? 8 : 7),
+    issues: flow.issues ?? 0,
   };
   v.teammateFirst = String(v.teammate).split(' ')[0];
   const key = stepKey(cs, ctx, flow);
