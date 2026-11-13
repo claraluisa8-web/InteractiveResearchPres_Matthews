@@ -6,11 +6,11 @@ import { Orb } from './Orb';
 const FADE_MS = 12000;
 
 /** Message bubbles above the composer: max 3, newest last, fade after 12 s unless hovered. */
-export function Replies() {
+export function Replies({ raised }: { raised: boolean }) {
   const replies = useScenario((s) => s.replies);
   const [hovered, setHovered] = useState(false);
   return (
-    <div className="replies" aria-live="polite" onPointerEnter={() => setHovered(true)} onPointerLeave={() => setHovered(false)}>
+    <div className={`replies${raised ? ' is-raised' : ''}`} aria-live="polite" onPointerEnter={() => setHovered(true)} onPointerLeave={() => setHovered(false)}>
       {replies.map((r) => <Bubble key={r.id} reply={r} paused={hovered} />)}
     </div>
   );

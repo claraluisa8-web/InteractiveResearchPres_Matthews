@@ -7,5 +7,6 @@ export default defineConfig({
   base: './',
   plugins: [react()],
   server: { port: 5173, fs: { allow: ['..'] } },
-  build: { outDir: 'dist', assetsInlineLimit: 0 },
+  // One bundle on purpose: it has to run offline at the symposium. CodeMirror takes it to ~600 kB.
+  build: { outDir: 'dist', assetsInlineLimit: 0, chunkSizeWarningLimit: 1000 },
 });

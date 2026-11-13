@@ -1,15 +1,43 @@
 import { useEffect, useRef, useState } from 'react';
 import { copy, t } from '../lib/copy';
 import { FLOOR_Y, type Point } from '../lib/layout';
-import { useGeometry, type Node } from '../lib/geometry';
+import { SUGGESTED_ID, useGeometry, type Node } from '../lib/geometry';
 import { subtitleFor } from '../lib/status';
-import { useScenario } from '../lib/store';
+import { firstOf, useScenario } from '../lib/store';
 import type { Line } from '../lib/types';
 import { usePanZoom } from '../lib/useView';
 import { Icon } from './Icon';
 import { Orb } from './Orb';
 
 const LINE_GAP = 9; // Clara's rule: lines stop 8–10px short of orbs.
+const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/** Two or three small dots travelling along a working line; static when motion is reduced. */
+function FlowDots({ x1, y1, x2, y2 }: { x1: number; y1: number; x2: number; y2: number }) {
+  const len = Math.hypot(x2 - x1, y2 - y1);
+  const count = len > 220 ? 3 : 2;
+  const dur = Math.max(1.6, len / 90);
+  const path = `M ${x1} ${y1} L ${x2} ${y2}`;
+  if (reducedMotion()) {
+    return (
+      <>
+        {Array.from({ length: count }, (_, i) => {
+          const f = (i + 1) / (count + 1);
+          return <circle key={i} className="flow-dot" r={3.5} cx={x1 + (x2 - x1) * f} cy={y1 + (y2 - y1) * f} />;
+        })}
+      </>
+    );
+  }
+  return (
+    <>
+      {Array.from({ length: count }, (_, i) => (
+        <circle key={i} className="flow-dot" r={3.5}>
+          <animateMotion dur={`${dur}s`} repeatCount="indefinite" path={path} begin={`${(-dur * i) / count}s`} />
+        </circle>
+      ))}
+    </>
+  );
+}
 
 function trimmed(a: Node, b: Node) {
   const dx = b.point.x - a.point.x;
@@ -110,6 +138,7 @@ export function Constellation({ scale, onLineHover }: ConstellationProps) {
                 >
                   <line className="line__hit" x1={p.x1} y1={p.y1} x2={p.x2} y2={p.y2} />
                   <line className={`line line--${line.kind}`} x1={p.x1} y1={p.y1} x2={p.x2} y2={p.y2} />
+                  {line.kind === 'working' && <FlowDots x1={p.x1} y1={p.y1} x2={p.x2} y2={p.y2} />}
                 </g>
               );
             })}
@@ -151,7 +180,7 @@ export function Constellation({ scale, onLineHover }: ConstellationProps) {
           </button>
 
           {/* Collaborators */}
-          {g.nodes.map((n) => <CollaboratorNode key={n.id} n={n} linked={linked(n.id)} dim={!!hoverId && hoverId !== n.id} />)}
+          {g.nodes.map((n) => n.suggested ? <SuggestedNode key={n.id} n={n} /> : <CollaboratorNode key={n.id} n={n} linked={linked(n.id)} dim={!!hoverId && hoverId !== n.id} />)}
 
           {/* Empty start: spec card and coach card */}
           {alone && !configure && (
@@ -179,19 +208,52 @@ function labelStyle(size: number, right: boolean) {
   return right ? { left: size / 2 + 22, top: -17 } : { top: size / 2 + 18 };
 }
 
+function SuggestedNode({ n }: { n: Node }) {
+  const collaborators = useScenario((s) => s.collaborators);
+  const setRecCardOpen = useScenario((s) => s.setRecCardOpen);
+  const reviewer = firstOf(collaborators, 'reviewer');
+  const name = copy.roles.tester.defaultName;
+  const sub = t(copy.recommendation.suggestedSubtitle, { reviewer: reviewer?.name });
+  return (
+    <div className="node node--tester is-far is-suggested" style={{ left: n.point.x, top: n.point.y }}>
+      <button type="button" className="orb-button" data-orb={SUGGESTED_ID} aria-label={`${name}, ${sub}`} onClick={() => setRecCardOpen(true)}>
+        <Orb role="tester" size={n.size} outline />
+      </button>
+      <div className="node__label node__label--right" style={{ left: n.size / 2 + 14, top: -17 }}>
+        <span className="node__name">{name}</span>
+        <span className="node__sub">{sub}</span>
+      </div>
+    </div>
+  );
+}
+
 function CollaboratorNode({ n, linked, dim }: { n: Node; linked: boolean; dim: boolean }) {
   const collaborators = useScenario((s) => s.collaborators);
   const popover = useScenario((s) => s.popover);
   const openPopover = useScenario((s) => s.openPopover);
+  const recommendation = useScenario((s) => s.recommendation);
+  const floatingFile = useScenario((s) => s.floatingFile);
+  const setRecCardOpen = useScenario((s) => s.setRecCardOpen);
   const c = n.c!;
   const draft = c.status === 'draft';
   const sub = subtitleFor(c, collaborators);
+  // Lavender non-urgent ring on the reviewer while its suggestion is open; clicking it reopens the card.
+  const suggesting = (recommendation === 'shown' || recommendation === 'dismissed') && firstOf(collaborators, 'reviewer')?.id === c.id;
+  // The builder wears a ring while its file is open in the floating editor (frame 04).
+  const sourceOpen = !!floatingFile && firstOf(collaborators, 'builder')?.id === c.id;
   return (
     <div
       className={`node node--${c.role}${n.far ? ' is-far' : ''}${draft ? ' is-draft' : ''}${dim ? ' is-dim' : ''}`}
       style={{ left: n.point.x, top: n.point.y }}
     >
       {draft && <span className="ghost-ring" aria-hidden="true" />}
+      {sourceOpen && <span className="source-ring" aria-hidden="true" />}
+      {suggesting && (
+        <>
+          <span className="attention-ring" aria-hidden="true" />
+          <span className="attention-dot" aria-hidden="true" />
+        </>
+      )}
       {draft ? (
         <span className="orb-ghost">
           <Orb role={c.role} size={n.size} name={c.name} otherType={c.otherType} />
@@ -204,7 +266,7 @@ function CollaboratorNode({ n, linked, dim }: { n: Node; linked: boolean; dim: b
           aria-label={`${c.name}, ${sub}`}
           aria-haspopup="dialog"
           aria-expanded={popover === c.id}
-          onClick={() => openPopover(popover === c.id ? null : c.id)}
+          onClick={() => (suggesting ? setRecCardOpen(true) : openPopover(popover === c.id ? null : c.id))}
         >
           <Orb role={c.role} size={n.size} name={c.name} otherType={c.otherType} />
         </button>

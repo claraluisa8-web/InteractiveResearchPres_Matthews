@@ -47,3 +47,6 @@ export interface View {
   y: number;
   k: number;
 }
+
+/** M3: the reviewer's tester suggestion. 'skipped' when a tester already existed. */
+export type Recommendation = 'none' | 'shown' | 'dismissed' | 'accepted' | 'skipped';

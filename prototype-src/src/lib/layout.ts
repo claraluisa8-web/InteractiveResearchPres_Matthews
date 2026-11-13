@@ -58,17 +58,22 @@ export function youPoint(collaborators: Collaborator[]): Point {
   return collaborators.length > 0 ? YOU_TEAM : YOU_ALONE;
 }
 
-/** Undirected lines from each collaborator's connectsTo. Drafts get a dashed pending line. */
-export function deriveLines(collaborators: Collaborator[]): Line[] {
+export function lineId(a: string, b: string) {
+  const [x, y] = [a, b].sort((p, q) => (p === 'you' ? -1 : q === 'you' ? 1 : p.localeCompare(q)));
+  return `${x}~${y}`;
+}
+
+/** Undirected lines from each collaborator's connectsTo. Drafts get a dashed pending line; `working` ids flow. */
+export function deriveLines(collaborators: Collaborator[], working: Set<string> = new Set()): Line[] {
   const ids = new Set(['you', ...collaborators.map((c) => c.id)]);
   const lines = new Map<string, Line>();
   for (const c of collaborators) {
     for (const other of c.connectsTo) {
       if (!ids.has(other) || other === c.id) continue;
-      const [a, b] = [c.id, other].sort((x, y) => (x === 'you' ? -1 : y === 'you' ? 1 : x.localeCompare(y)));
-      const id = `${a}~${b}`;
+      const id = lineId(c.id, other);
+      const [a, b] = id.split('~');
       const otherC = collaborators.find((o) => o.id === other);
-      const kind = c.status === 'draft' || otherC?.status === 'draft' ? 'pending' : 'connected';
+      const kind = c.status === 'draft' || otherC?.status === 'draft' ? 'pending' : working.has(id) ? 'working' : 'connected';
       lines.set(id, { id, a, b, kind });
     }
   }

@@ -11,6 +11,10 @@ import '@vscode/codicons/dist/codicon.css';
 import '../../shared/tokens.css';
 import './app.css';
 import { App } from './App';
+import { useScenario } from './lib/store';
+
+// Dev only: lets test scripts read and drive the scenario store.
+if (import.meta.env.DEV) Object.assign(window, { __pmr: useScenario });
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

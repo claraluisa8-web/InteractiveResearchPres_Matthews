@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { ORB_SIZE, deriveLines, isNear, slotPoint, youPoint, type Point } from './layout';
-import { useScenario } from './store';
+import { ORB_SIZE, deriveLines, isNear, lineId, pickSlot, slotPoint, youPoint, type Point } from './layout';
+import { firstOf, useScenario } from './store';
 import type { Collaborator, Line, View } from './types';
 
 export interface Node {
@@ -9,6 +9,16 @@ export interface Node {
   size: number;
   far: boolean;
   c?: Collaborator;
+  /** The reviewer's suggested tester (frame 05): a dashed ghost, not a collaborator. */
+  suggested?: boolean;
+}
+
+export const SUGGESTED_ID = 'suggested-tester';
+
+export interface FlowState {
+  buildStarted: boolean;
+  /** Recommendation shown or dismissed but not yet acted on. */
+  suggestion: boolean;
 }
 
 export interface Geometry {
@@ -23,14 +33,31 @@ export interface Geometry {
 
 const PANEL_LEFT = 880;
 
-export function computeGeometry(collaborators: Collaborator[], configureId: string | null): Geometry {
-  const lines = deriveLines(collaborators);
+export function computeGeometry(
+  collaborators: Collaborator[],
+  configureId: string | null,
+  flow: FlowState = { buildStarted: false, suggestion: false },
+): Geometry {
+  // Work flows You → builder and builder → reviewer once the build starts (frame 04).
+  const working = new Set<string>();
+  const builder = firstOf(collaborators, 'builder');
+  const reviewer = firstOf(collaborators, 'reviewer');
+  if (flow.buildStarted && builder) {
+    working.add(lineId('you', builder.id));
+    if (reviewer) working.add(lineId(builder.id, reviewer.id));
+  }
+  const lines = deriveLines(collaborators, working);
   const youP = youPoint(collaborators);
   const you: Node = { id: 'you', point: youP, size: ORB_SIZE.you, far: false };
   const nodes: Node[] = collaborators.map((c) => {
     const far = c.status !== 'draft' && !isNear(c, lines);
     return { id: c.id, point: slotPoint(c.slot), size: far ? ORB_SIZE.far : ORB_SIZE.near, far, c };
   });
+  if (flow.suggestion && reviewer) {
+    const slot = pickSlot('tester', collaborators.map((c) => c.slot));
+    nodes.push({ id: SUGGESTED_ID, point: slotPoint(slot), size: ORB_SIZE.far, far: true, suggested: true });
+    lines.push({ id: lineId(reviewer.id, SUGGESTED_ID), a: reviewer.id, b: SUGGESTED_ID, kind: 'suggested' });
+  }
   let shift = { x: 0, y: 0 };
   const target = configureId ? nodes.find((n) => n.id === configureId) : undefined;
   if (target) {
@@ -49,7 +76,13 @@ export function computeGeometry(collaborators: Collaborator[], configureId: stri
 export function useGeometry(): Geometry {
   const collaborators = useScenario((s) => s.collaborators);
   const configureId = useScenario((s) => s.configure?.id ?? null);
-  return useMemo(() => computeGeometry(collaborators, configureId), [collaborators, configureId]);
+  const buildStarted = useScenario((s) => s.milestones.buildStarted);
+  const recommendation = useScenario((s) => s.recommendation);
+  const suggestion = recommendation === 'shown' || recommendation === 'dismissed';
+  return useMemo(
+    () => computeGeometry(collaborators, configureId, { buildStarted, suggestion }),
+    [collaborators, configureId, buildStarted, suggestion],
+  );
 }
 
 /** Layout point → stage pixels, through the panel shift and the user's pan/zoom. */

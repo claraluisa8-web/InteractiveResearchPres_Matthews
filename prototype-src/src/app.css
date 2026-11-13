@@ -181,13 +181,17 @@ button { cursor: pointer; }
   top: 824px;
   width: 640px;
   height: 58px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px 0 8px;
   border-radius: var(--pmr-r-composer);
   z-index: 10;
 }
 
 .composer__pill {
-  position: absolute;
-  top: 8px;
+  position: relative;
+  flex: none;
   height: 41px;
   display: flex;
   align-items: center;
@@ -196,25 +200,29 @@ button { cursor: pointer; }
   background: var(--pmr-btn-2);
   font-size: 13px;
   font-weight: 500;
+  white-space: nowrap;
   transition: background var(--pmr-t-hover) var(--pmr-ease);
 }
 .composer__pill:hover { background: rgba(255, 255, 255, 0.12); }
 
-.composer__add { left: 8px; width: 110px; gap: 5.5px; padding: 1px 0 0 14.5px; }
+.composer__add { width: 110px; gap: 5.5px; padding: 1px 0 0 14.5px; }
 .composer__add .codicon { margin-top: 1px; } /* plus centered on the glyph, a touch low */
 
-.composer__target { left: 126px; width: 101px; cursor: pointer; }
+/* The visible label sizes the pill; the real <select> covers it, transparent, so it stays a native control. */
+.composer__target { min-width: 101px; max-width: 200px; padding: 1px 32px 0 15px; cursor: pointer; }
 .composer__target:focus-within { outline: 2px solid var(--pmr-lavender); outline-offset: 2px; }
+.composer__target-text { overflow: hidden; text-overflow: ellipsis; }
 .composer__target select {
-  appearance: none;
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  padding: 1px 32px 0 15px;
+  appearance: none;
   border: 0;
   border-radius: inherit;
   background: transparent;
+  color: transparent;
   font-size: 13px;
-  font-weight: 500;
   cursor: pointer;
 }
 .composer__target select:focus-visible { outline: none; }
@@ -222,12 +230,10 @@ button { cursor: pointer; }
 .composer__target .codicon { position: absolute; right: 11px; top: 13px; pointer-events: none; }
 
 .composer__input {
-  position: absolute;
-  left: 241px;
-  top: 8px;
-  width: 335px;
+  flex: 1;
+  min-width: 0;
   height: 41px;
-  padding: 1px 0 0;
+  padding: 1px 0 0 6px;
   border: 0;
   background: transparent;
   font-size: 14px;
@@ -237,9 +243,7 @@ button { cursor: pointer; }
 .composer:has(.composer__input:focus-visible) { box-shadow: var(--pmr-shadow), 0 0 0 2px var(--pmr-lavender); }
 
 .composer__send {
-  position: absolute;
-  left: 592px;
-  top: 10px;
+  flex: none;
   width: 36px;
   height: 36px;
   display: grid;
@@ -844,3 +848,87 @@ button.chip:hover { border-color: rgba(255, 255, 255, 0.32); }
 .composer__add.is-open { background: rgba(255, 255, 255, 0.12); }
 
 .toast-region { top: auto; bottom: 84px; }
+
+/* ======================================================================
+   Phase 2: build and recommendation
+   ====================================================================== */
+
+.prompt-chip-row { position: absolute; left: 400px; bottom: 86px; display: flex; gap: 8px; z-index: 11; animation: fade-in var(--pmr-t-panel) var(--pmr-ease); }
+.chip--prompt { height: 30px; gap: 6px; padding: 0 14px 1px 11px; border-radius: 15px; font-size: 12px; background: var(--pmr-glass); backdrop-filter: blur(var(--pmr-blur)); cursor: pointer; }
+.chip--prompt .codicon { color: var(--pmr-chip-text); }
+.replies.is-raised { bottom: 126px; }
+
+/* Ready card → update card (frame 04: 971,72, 432 wide). */
+.build-card, .rec-card {
+  position: absolute;
+  padding: 14px 18px 20px 14px;
+  border-radius: var(--pmr-r-card);
+  z-index: 14;
+  animation: fade-in var(--pmr-t-panel) var(--pmr-ease);
+}
+.build-card { left: 971px; top: 72px; width: 432px; }
+.rec-card { left: 1018px; top: 420px; width: 398px; padding-left: 16px; }
+.build-card__header { display: flex; align-items: center; gap: 10px; }
+.build-card__header > div { flex: 1; min-width: 0; }
+.build-card__name { margin: 0; font-size: 13px; font-weight: 600; line-height: 17px; }
+.build-card__meta { margin: 1px 0 0; font-size: 11px; line-height: 15px; color: var(--pmr-text-2); white-space: pre; }
+.build-card__close { align-self: flex-start; margin: -4px -8px 0 0; }
+.build-card__body { margin: 10px 0 0 2px; font-size: 13px; line-height: 20px; }
+.build-card__start { margin: 14px 0 0 2px; }
+.build-card__chips { margin: 16px 0 0 2px; gap: 6px; }
+.chip--file { font: 500 11px/15px var(--pmr-font); cursor: pointer; white-space: pre; }
+.chip--file.is-active { background: var(--pmr-chip-tint); border-color: rgba(138, 130, 253, 0.55); color: var(--pmr-chip-text); }
+.chip--static { white-space: pre; }
+.rec-card__chips { margin: 20px 0 0; gap: 6px; }
+.rec-card__actions { display: flex; gap: 8px; margin-top: 16px; }
+.rec-card__actions .pmr-button { height: 38px; padding: 0 22px 1px; }
+
+/* Floating editor (frame 04: 40,72, 460×470). */
+.floating-editor { position: absolute; display: flex; flex-direction: column; border-radius: var(--pmr-r-card); z-index: 16; animation: fade-in var(--pmr-t-panel) var(--pmr-ease); }
+.floating-editor__header { display: flex; align-items: flex-start; gap: 8px; height: 60px; padding: 16px 12px 0 16px; border-bottom: 1px solid var(--pmr-divider); }
+.floating-editor__header > .codicon { margin-top: 2px; color: var(--pmr-text-2); }
+.floating-editor__titles { flex: 1; min-width: 0; }
+.floating-editor__file { margin: 0; font: 500 13px/17px var(--pmr-mono); }
+.floating-editor__meta { margin: 3px 0 0; font-size: 11px; line-height: 15px; color: var(--pmr-text-2); white-space: pre; }
+.floating-editor__code { flex: 1; min-height: 0; }
+.floating-editor__footer { display: flex; align-items: center; gap: 8px; height: 66px; padding: 0 16px 2px; border-top: 1px solid var(--pmr-divider); }
+.floating-editor__typing { flex: 1; font-size: 12px; line-height: 16px; color: var(--pmr-text-2); }
+.floating-editor__save { width: 64px; padding: 0 0 1px; }
+.code-editor { height: 100%; }
+.unsaved { display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 11px; color: var(--pmr-text-2); white-space: nowrap; }
+.unsaved__dot { width: 6px; height: 6px; border-radius: 50%; background: var(--pmr-lavender); }
+
+.stage-overlay { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 13; overflow: visible; }
+
+/* Working lines: blue with small flowing dots. */
+.line--working { stroke: var(--pmr-working-line); }
+.line-group.is-hover .line--working { stroke: var(--pmr-working); }
+.flow-dot { fill: var(--pmr-working); pointer-events: none; }
+
+/* Rings around orbs */
+.source-ring, .attention-ring {
+  position: absolute;
+  left: -32px;
+  top: -32px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.source-ring { border: 1.5px solid rgba(255, 255, 255, 0.2); }
+.attention-ring { border: 2px solid var(--pmr-lavender); }
+.attention-dot { position: absolute; left: 18px; top: -23px; width: 10px; height: 10px; border-radius: 50%; background: var(--pmr-lavender); border: 2px solid var(--pmr-canvas); pointer-events: none; }
+.node.is-suggested .orb-button { opacity: 1; }
+
+.rail__row { position: relative; }
+.rail__marker { margin-left: auto; flex: none; }
+.rail__marker--suggestion { width: 10px; height: 10px; border-radius: 50%; background: var(--pmr-lavender); margin-right: 5px; }
+
+/* Legend (bottom-left, frame 05) */
+.legend { position: absolute; left: 24px; bottom: 40px; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 12px; line-height: 16px; z-index: 10; animation: fade-in var(--pmr-t-panel) var(--pmr-ease); }
+.legend li { display: flex; align-items: center; gap: 12px; }
+.legend__sample { flex: none; }
+.legend__sample--ring { width: 14px; height: 14px; margin: 0 25px 0 13px; border-radius: 50%; border: 2px solid var(--pmr-lavender); }
+
+.popover__confirm { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--pmr-divider); }
+.popover__meta--wrap { white-space: normal; margin-top: 4px; }

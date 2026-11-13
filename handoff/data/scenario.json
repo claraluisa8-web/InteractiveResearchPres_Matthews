@@ -220,13 +220,25 @@
         "PlanController.java",
         "CreatePlanRequest.java  +3",
         "PlanService.java"
-      ]
+      ],
+      "metaSuffix": {
+        "text": "just now",
+        "new": true
+      }
     },
     "floatingFile": {
       "file": "PlanService.java",
       "meta": "Opened from {builder}  ·  agent-written",
       "typingNote": "You’re typing on line {line}",
-      "save": "Save"
+      "save": "Save",
+      "saveToast": {
+        "text": "Saved  ·  {builder} will pick this up",
+        "new": true
+      },
+      "unsaved": {
+        "text": "Unsaved changes",
+        "new": true
+      }
     },
     "statusPill": "Building  ·  no issues",
     "composerTarget": "To: {builder}",
@@ -236,7 +248,12 @@
       "meta": "IBM Bob  ·  Default  ·  ready",
       "body": "Ready to build from recurring-investments.yaml.",
       "primary": "Start from the spec",
-      "new": true
+      "new": true,
+      "metaSuffix": {
+        "text": "ready",
+        "new": true,
+        "note": "Meta is the builder's model and configuration plus this word, e.g. 'IBM Bob · Default · ready'."
+      }
     },
     "promptChip": {
       "text": "Build the API from the spec",
@@ -251,7 +268,21 @@
     "statusPillReady": {
       "text": "{builder} ready to build",
       "new": true
-    }
+    },
+    "updateCardClose": {
+      "text": "Hide update",
+      "new": true
+    },
+    "startEcho": {
+      "text": "Starting with {operation}. ",
+      "new": true,
+      "note": "Prefix on startReply when the user named an operation."
+    },
+    "operations": [
+      "createPlan",
+      "listPlans",
+      "updatePlanStatus"
+    ]
   },
   "recommendation": {
     "from": "reviewer",
@@ -270,7 +301,11 @@
     "suggestedSubtitle": "Suggested by {reviewer}",
     "legend": "Lavender ring = worth a look, not urgent",
     "statusPill": "1 suggestion",
-    "skipIfTesterExists": "If the user already added a tester, skip this beat and go straight to the issue milestone."
+    "skipIfTesterExists": "If the user already added a tester, skip this beat and go straight to the issue milestone.",
+    "legendLabel": {
+      "text": "Legend",
+      "new": true
+    }
   },
   "issueLine": {
     "between": [
@@ -695,7 +730,8 @@
     "build.startReply",
     "build.statusPillReady",
     "chrome (title-bar overflow menu, About dialog, toast, composer aria labels)",
-    "constellation (Phase 1: status pill, statuses, popover, line card, spec viewer, next steps)"
+    "constellation (Phase 1: status pill, statuses, popover, line card, spec viewer, next steps)",
+    "build: saveToast, unsaved, metaSuffix, updateCardClose, startEcho; constellation: removeConfirm, nextSteps, nextStepHints (Phase 2)"
   ],
   "constellation": {
     "$note": "Phase 1 copy that isn't drawn in Figma. All new.",
@@ -839,6 +875,14 @@
       "pending": {
         "text": "Not added yet",
         "new": true
+      },
+      "working": {
+        "text": "Working  ·  code flowing from the spec",
+        "new": true
+      },
+      "suggested": {
+        "text": "Suggested by {reviewer}  ·  not added yet",
+        "new": true
       }
     },
     "specViewer": {
@@ -886,6 +930,47 @@
       },
       "done": {
         "text": "nothing, you’re done",
+        "new": true
+      },
+      "buildReviewing": {
+        "text": "let {reviewer} check {builder}’s work",
+        "new": true
+      },
+      "recommendation": {
+        "text": "decide on {reviewer}’s suggestion to add a tester",
+        "new": true
+      }
+    },
+    "statusSuggestionClick": {
+      "text": "Show the suggestion",
+      "new": true
+    },
+    "removeConfirm": {
+      "title": {
+        "text": "Remove {name}?",
+        "new": true
+      },
+      "body": {
+        "text": "The open work on {name}’s lines goes with it.",
+        "new": true
+      },
+      "confirm": {
+        "text": "Remove",
+        "new": true
+      },
+      "cancel": {
+        "text": "Cancel",
+        "new": true
+      }
+    },
+    "nextStepHints": {
+      "$note": "Overrides for intents.json fallback.nextStepHints when the state is more specific than the context.",
+      "buildReviewing": {
+        "text": "{reviewer} is checking {builder}’s work against the spec.",
+        "new": true
+      },
+      "recommendation": {
+        "text": "Take a look at {reviewer}’s suggestion to add a tester.",
         "new": true
       }
     }

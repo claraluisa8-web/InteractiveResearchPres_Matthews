@@ -18,6 +18,23 @@
   },
   "intents": [
     {
+      "id": "greeting",
+      "new": true,
+      "contexts": [
+        "*"
+      ],
+      "keywords": [
+        "hi",
+        "hello",
+        "hey",
+        "morning",
+        "afternoon"
+      ],
+      "replies": {
+        "*": "Hi. {nextStepHint}"
+      }
+    },
+    {
       "id": "help",
       "contexts": [
         "*"
@@ -38,8 +55,22 @@
         "editor": "Click into the code to edit it, then Save. When both agents agree, Verify section unlocks.",
         "review": "{teammate} is reviewing the pull request. Reply to her comment, or wait for her approval to merge.",
         "done": "Everything is merged. Start over from the menu if you want to run it again.",
-        "ready": "{builder} is ready. Tell it what to build, or click Start from the spec. The approved spec already defines the API."
-      }
+        "ready": "{builder} is ready. Tell it what to build, or click Start from the spec. The approved spec already defines the API.",
+        "buildReviewing": "{builder} is working from recurring-investments.yaml and {reviewer} is checking it against the spec. Open {builder} to see its code.",
+        "recommendation": "{reviewer} spotted a gap in test coverage. Add a tester from the suggestion, or choose Not now."
+      },
+      "phrases": [
+        "what do i do",
+        "what next",
+        "what now",
+        "what should i do",
+        "where do i start"
+      ],
+      "newPhrases": true,
+      "newReplies": [
+        "buildReviewing",
+        "recommendation"
+      ]
     },
     {
       "id": "build",
@@ -215,8 +246,10 @@
       "id": "tests",
       "contexts": [
         "build",
-        "issue",
         "editor",
+        "empty",
+        "issue",
+        "ready",
         "review"
       ],
       "keywords": [
@@ -249,8 +282,21 @@
         "next"
       ],
       "replies": {
-        "*": "{verified} of {total} sections verified, {issues} open issues. Next: {nextStep}."
-      }
+        "*": "{verified} of {total} sections verified, {issues} open issues. Next: {nextStep}.",
+        "empty": "Nothing built yet. Next: {nextStep}.",
+        "ready": "{builder} is ready and waiting for your go. Next: {nextStep}.",
+        "build": "{builder} is building from the spec, with no issues so far. Next: {nextStep}."
+      },
+      "newReplies": [
+        "empty",
+        "ready",
+        "build"
+      ],
+      "phrases": [
+        "how far",
+        "how much"
+      ],
+      "newPhrases": true
     },
     {
       "id": "merge",
@@ -286,8 +332,12 @@
       ],
       "effect": "Open the configure panel for the agent mentioned, focus the NAME field.",
       "replies": {
-        "*": "Sure, change the name here. Everything else will use the new name."
-      }
+        "*": "Sure, change the name here. Everything else will use the new name.",
+        "noTarget": "There’s no {role} in your constellation yet. Add one with the + and name it anything you like."
+      },
+      "newReplies": [
+        "noTarget"
+      ]
     },
     {
       "id": "thanks",

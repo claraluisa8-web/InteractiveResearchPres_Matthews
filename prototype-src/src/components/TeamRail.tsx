@@ -1,6 +1,7 @@
 import { copy, t } from '../lib/copy';
 import { subtitleFor } from '../lib/status';
-import { useScenario } from '../lib/store';
+import { SUGGESTED_ID } from '../lib/geometry';
+import { firstOf, useScenario } from '../lib/store';
 import { Icon } from './Icon';
 import { Orb } from './Orb';
 
@@ -10,9 +11,17 @@ export function TeamRail({ showFit, onFit }: { showFit: boolean; onFit: () => vo
   const popover = useScenario((s) => s.popover);
   const openPopover = useScenario((s) => s.openPopover);
   const setHoverId = useScenario((s) => s.setHoverId);
+  const recommendation = useScenario((s) => s.recommendation);
+  const setRecCardOpen = useScenario((s) => s.setRecCardOpen);
+  const suggestion = recommendation === 'shown' || recommendation === 'dismissed';
+  const reviewer = firstOf(collaborators, 'reviewer');
   const rows = [
     { id: 'you', role: 'you' as const, name: copy.people.you.displayName, sub: copy.people.you.fullName, draft: false, otherType: undefined },
     ...collaborators.map((c) => ({ id: c.id, role: c.role, name: c.name, sub: subtitleFor(c, collaborators), draft: c.status === 'draft', otherType: c.otherType })),
+    // Frame 05 lists the suggested tester with a dashed icon.
+    ...(suggestion && reviewer
+      ? [{ id: SUGGESTED_ID, role: 'tester' as const, name: copy.roles.tester.defaultName, sub: t(copy.recommendation.suggestedSubtitle, { reviewer: reviewer.name }), draft: true, otherType: undefined }]
+      : []),
   ];
 
   if (rows.length < 3) {
@@ -31,12 +40,14 @@ export function TeamRail({ showFit, onFit }: { showFit: boolean; onFit: () => vo
             <button
               type="button"
               className={`rail__row${popover === r.id ? ' is-open' : ''}`}
-              disabled={r.draft}
+              disabled={r.draft && r.id !== SUGGESTED_ID}
               onPointerEnter={() => setHoverId(r.id)}
               onPointerLeave={() => setHoverId(null)}
               onFocus={() => setHoverId(r.id)}
               onBlur={() => setHoverId(null)}
-              onClick={() => openPopover(popover === r.id ? null : r.id)}
+              onClick={() =>
+                r.id === SUGGESTED_ID || (suggestion && r.id === reviewer?.id) ? setRecCardOpen(true) : openPopover(popover === r.id ? null : r.id)
+              }
             >
               <span className={r.draft ? 'rail__ghost' : undefined}>
                 <Orb role={r.role} size={24} name={r.name} otherType={r.otherType} outline={r.draft} />
@@ -45,6 +56,7 @@ export function TeamRail({ showFit, onFit }: { showFit: boolean; onFit: () => vo
                 <span className="rail__name">{r.name}</span>
                 <span className="rail__sub">{r.sub}</span>
               </span>
+              {suggestion && r.id === reviewer?.id && <span className="rail__marker rail__marker--suggestion" aria-hidden="true" />}
             </button>
           </li>
         ))}

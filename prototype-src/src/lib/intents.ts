@@ -1,7 +1,7 @@
 import intentsData from '../../../handoff/data/intents.json';
 import { copy, t } from './copy';
 import { active, defaultName, firstOf } from './store';
-import type { AgentRole, Collaborator } from './types';
+import type { AgentRole, Collaborator, Recommendation } from './types';
 
 // Scripted replies (docs/agent-replies.md): score intents allowed in the current context,
 // the highest wins, nothing scores → a fallback that ends with the next-step hint.
@@ -95,7 +95,18 @@ function findMentioned(text: string, words: string[], cs: Collaborator[]): Colla
   return role ? firstOf(cs, role) : undefined;
 }
 
-export function vars(cs: Collaborator[], ctx: Context) {
+export interface FlowInfo {
+  recommendation?: Recommendation;
+}
+
+/** The next step can be more specific than the context (a reviewer already checking, a pending suggestion). */
+function stepKey(cs: Collaborator[], ctx: Context, flow: FlowInfo): string {
+  if (ctx !== 'build') return ctx;
+  if (flow.recommendation === 'shown' || flow.recommendation === 'dismissed') return 'recommendation';
+  return firstOf(cs, 'reviewer') ? 'buildReviewing' : 'build';
+}
+
+export function vars(cs: Collaborator[], ctx: Context, flow: FlowInfo = {}) {
   const name = (role: AgentRole) => firstOf(cs, role)?.name;
   const v: Record<string, string | number | undefined> = {
     builder: name('builder') ?? copy.roles.builder.defaultName,
@@ -107,17 +118,20 @@ export function vars(cs: Collaborator[], ctx: Context) {
     issues: 0,
   };
   v.teammateFirst = String(v.teammate).split(' ')[0];
+  const key = stepKey(cs, ctx, flow);
   const steps = copy.constellation.nextSteps as Record<string, { text: string }>;
-  v.nextStep = t(steps[ctx], v);
+  v.nextStep = t(steps[key] ?? steps[ctx], v);
   const hints = intentsData.fallback.nextStepHints as Record<string, string>;
-  v.nextStepHint = t(hints[ctx], v);
+  const hintOverrides = copy.constellation.nextStepHints as Record<string, { text: string } | string>;
+  const override = hintOverrides[key];
+  v.nextStepHint = override && typeof override !== 'string' ? t(override, v) : t(hints[ctx], v);
   return v;
 }
 
-export function match(input: string, cs: Collaborator[], ctx: Context): Match {
+export function match(input: string, cs: Collaborator[], ctx: Context, flow: FlowInfo = {}): Match {
   const text = normalize(input);
   const words = text.split(' ');
-  const v = vars(cs, ctx);
+  const v = vars(cs, ctx, flow);
   let best: { intent: Intent; score: number } | null = null;
 
   for (const intent of intents) {
@@ -143,7 +157,9 @@ export function match(input: string, cs: Collaborator[], ctx: Context): Match {
   }
 
   const { intent } = best;
-  const raw = intent.replies[ctx] ?? intent.replies['*'] ?? Object.values(intent.replies)[0];
+  const noTester = intent.id === 'tests' && !firstOf(cs, 'tester') && intent.replies.noTester;
+  const key = stepKey(cs, ctx, flow);
+  const raw = noTester || (intent.replies[key] ?? intent.replies[ctx] ?? intent.replies['*'] ?? Object.values(intent.replies)[0]);
   const result: Match = { intent: intent.id, score: best.score, reply: '', speakerRole: 'bob' };
 
   if (intent.id === 'addAgent') {
@@ -162,6 +178,12 @@ export function match(input: string, cs: Collaborator[], ctx: Context): Match {
   if (intent.id === 'rename') {
     const target = findMentioned(text, words, cs);
     result.targetId = target?.id;
+    if (!target) {
+      // "rename the builder" before there is one: say so instead of opening nothing.
+      const role = detected.role ? copy.roles[detected.role].menuTitle.toLowerCase() : 'collaborator';
+      result.reply = t(intent.replies.noTarget, { ...v, role });
+      return result;
+    }
     // "rename the builder to Codey": keep the user's own casing for the new name.
     const m = input.match(/\b(?:to|as)\s+["“']?([^"”']+?)["”']?\s*[.!]?$/i);
     result.newName = m?.[1]?.trim();
