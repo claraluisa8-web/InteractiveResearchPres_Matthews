@@ -1,0 +1,323 @@
+/* Layout is in 1440×900 stage pixels (Figma frame space). Colors, type and radii come from shared/tokens.css. */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: var(--pmr-canvas);
+}
+
+body {
+  font-family: var(--pmr-font);
+  color: var(--pmr-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+
+:focus-visible { outline: 2px solid var(--pmr-lavender); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0ms !important; animation-duration: 0ms !important; }
+}
+
+/* ---------- Stage: fixed 1440×900, scaled uniformly, letterboxed on the canvas color ---------- */
+
+.viewport { position: fixed; inset: 0; overflow: hidden; }
+
+.stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: center center;
+  overflow: hidden;
+  background: var(--pmr-canvas-gradient);
+}
+
+/* ---------- Canvas (decorative) ---------- */
+
+.canvas { position: absolute; inset: 0; pointer-events: none; }
+
+.canvas__glow {
+  position: absolute;
+  left: calc(50% - 850px);
+  top: 700px;
+  width: 1700px;
+  height: 560px;
+  border-radius: 50%;
+  background: var(--pmr-floor-glow);
+  filter: blur(140px);
+}
+
+.canvas__grid { position: absolute; inset: 0; }
+.canvas__grid rect,
+.canvas__grid line { fill: none; stroke: var(--pmr-grid); stroke-width: 1; }
+.canvas__grid line.is-center { stroke: var(--pmr-grid-center); }
+
+.canvas__vignette { position: absolute; inset: 0; background: var(--pmr-vignette); }
+
+.world { position: absolute; inset: 36px 0 0 0; }
+
+/* ---------- Title bar ---------- */
+
+.titlebar {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 36px;
+  background: var(--pmr-title-bar);
+  z-index: 20;
+}
+
+/* Bottom rule everywhere except under the active tab (Figma draws it in two pieces). */
+.titlebar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--pmr-divider);
+}
+
+.titlebar__lights { position: absolute; left: 14px; top: 12px; display: flex; gap: 6px; }
+.titlebar__lights span { width: 12px; height: 12px; border-radius: 50%; background: var(--pmr-btn-2-stroke); }
+
+.titlebar__tabs { position: absolute; left: 76px; top: 0; display: flex; height: 36px; }
+
+.titlebar__tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 1px 0 0;
+  border: 0;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--pmr-text-2);
+  transition: color var(--pmr-t-hover) var(--pmr-ease);
+}
+.titlebar__tab--constellation { width: 139px; padding-left: 17px; }
+.titlebar__tab--code { width: 89px; padding-left: 18.75px; }
+.titlebar__tab:hover { color: var(--pmr-text); }
+.titlebar__tab:focus-visible { outline-offset: -2px; }
+
+.titlebar__tab.is-active {
+  height: 37px;
+  color: var(--pmr-text);
+  background: var(--pmr-active-tab);
+  z-index: 1; /* covers the bottom rule */
+}
+.titlebar__tab.is-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: var(--pmr-lavender);
+}
+
+.titlebar__sep { position: absolute; left: 304px; top: 8px; width: 1px; height: 20px; background: var(--pmr-divider); }
+
+.titlebar__title {
+  position: absolute;
+  left: 688px;
+  top: 10px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+  white-space: pre;
+  color: var(--pmr-text);
+  cursor: default;
+}
+
+.titlebar__more {
+  position: absolute;
+  right: 8px;
+  top: 4px;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: var(--pmr-r-input);
+  background: transparent;
+  color: var(--pmr-text-2);
+  transition: background var(--pmr-t-hover) var(--pmr-ease), color var(--pmr-t-hover) var(--pmr-ease);
+}
+.titlebar__more:hover,
+.titlebar__more[aria-expanded='true'] { background: var(--pmr-row-hover); color: var(--pmr-text); }
+
+.titlebar__menu { position: absolute; right: 8px; top: 40px; }
+
+/* ---------- Menu ---------- */
+
+.menu { min-width: 200px; padding: 6px 6px 8px; border-radius: var(--pmr-r-panel); }
+
+.menu__row {
+  display: block;
+  width: 100%;
+  padding: 8px 10px 9px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  text-align: left;
+  font-size: 13px;
+  line-height: 17px;
+}
+.menu__row:hover,
+.menu__row:focus-visible { background: var(--pmr-row-hover); }
+.menu__row:focus-visible { outline-offset: -2px; }
+
+/* ---------- Composer ---------- */
+
+.composer {
+  position: absolute;
+  left: 400px;
+  top: 824px;
+  width: 640px;
+  height: 58px;
+  border-radius: var(--pmr-r-composer);
+  z-index: 10;
+}
+
+.composer__pill {
+  position: absolute;
+  top: 8px;
+  height: 41px;
+  display: flex;
+  align-items: center;
+  border: 0;
+  border-radius: 20.5px;
+  background: var(--pmr-btn-2);
+  font-size: 13px;
+  font-weight: 500;
+  transition: background var(--pmr-t-hover) var(--pmr-ease);
+}
+.composer__pill:hover { background: rgba(255, 255, 255, 0.12); }
+
+.composer__add { left: 8px; width: 110px; gap: 5.5px; padding: 1px 0 0 14.5px; }
+.composer__add .codicon { margin-top: 1px; } /* plus centered on the glyph, a touch low */
+
+.composer__target { left: 126px; width: 101px; cursor: pointer; }
+.composer__target:focus-within { outline: 2px solid var(--pmr-lavender); outline-offset: 2px; }
+.composer__target select {
+  appearance: none;
+  width: 100%;
+  height: 100%;
+  padding: 1px 32px 0 15px;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.composer__target select:focus-visible { outline: none; }
+.composer__target select option { background: var(--pmr-active-tab); color: var(--pmr-text); }
+.composer__target .codicon { position: absolute; right: 11px; top: 13px; pointer-events: none; }
+
+.composer__input {
+  position: absolute;
+  left: 241px;
+  top: 8px;
+  width: 335px;
+  height: 41px;
+  padding: 1px 0 0;
+  border: 0;
+  background: transparent;
+  font-size: 14px;
+  outline: none;
+}
+.composer__input::placeholder { color: var(--pmr-text-2); opacity: 1; }
+.composer:has(.composer__input:focus-visible) { box-shadow: var(--pmr-shadow), 0 0 0 2px var(--pmr-lavender); }
+
+.composer__send {
+  position: absolute;
+  left: 592px;
+  top: 10px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--pmr-lavender);
+  color: var(--pmr-text-on-accent);
+  transition: filter var(--pmr-t-hover) var(--pmr-ease);
+}
+.composer__send:hover { filter: brightness(1.06); }
+.composer__send:active { filter: brightness(0.94); }
+
+/* ---------- Status pill ---------- */
+
+.status-pill {
+  position: absolute;
+  right: 28px; /* right edge at x 1412 */
+  top: 832px;
+  height: 41px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 1px 17px 0 19px;
+  border-radius: var(--pmr-r-pill);
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 10;
+}
+.status-pill__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--pmr-cleared); }
+.status-pill--lavender .status-pill__dot { background: var(--pmr-lavender); }
+.status-pill--issue { background: var(--pmr-issue-pill); border-color: var(--pmr-issue-pill-stroke); }
+.status-pill--issue .status-pill__dot { background: var(--pmr-issue); }
+
+/* ---------- Toast ---------- */
+
+.toast-region {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 768px;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 30;
+}
+
+.toast {
+  padding: 9px 16px 11px;
+  border-radius: var(--pmr-r-pill);
+  font-size: 13px;
+  line-height: 17px;
+  animation: fade-in var(--pmr-t-panel) var(--pmr-ease);
+}
+
+@keyframes fade-in { from { opacity: 0; } }
+
+/* ---------- Dialog ---------- */
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--pmr-scrim);
+  z-index: 40;
+  animation: fade-in var(--pmr-t-panel) var(--pmr-ease);
+}
+
+.dialog { width: 400px; padding: 20px 22px 24px 20px; }
+.dialog__title { margin: 0 0 8px; font-size: 18px; font-weight: 600; line-height: 24px; }
+.dialog__body { font-size: 13px; line-height: 20px; color: var(--pmr-text-2); }
+.dialog__actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+/* Button states from docs/screens.md §Hover & focus. */
+.pmr-button { cursor: pointer; transition: filter var(--pmr-t-hover) var(--pmr-ease), background var(--pmr-t-hover) var(--pmr-ease); }
+.pmr-button:hover { filter: brightness(1.06); }
+.pmr-button:active { filter: brightness(0.94); }
+.pmr-button--secondary:hover { filter: none; background: rgba(255, 255, 255, 0.1); }
+.pmr-button--secondary:active { filter: none; background: rgba(255, 255, 255, 0.04); }
