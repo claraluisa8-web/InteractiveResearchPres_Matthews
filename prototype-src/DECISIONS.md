@@ -160,3 +160,10 @@ Each entry records what changed from the design or the handoff, why, and which f
 - **No Next section on the last one.** The section editor hides Next section when every other section is verified; focus stays on Verify, and verifying it opens the all-clear pop-up as before.
 - **Progress bar in the editor.** "Your progress" sits at the top of the editor's left column: a mint bar that moves with each verified section or subsection, labelled with the same count as the status pill and sections panel ("6 of 7 sections verified"), plus open issues still to resolve. On the last section it reads "Last one. Verify it to finish."
 - **Start a new session moved to the team rail.** It's no longer in the recap or the Session history menu: after the merge a primary "Start a new session" button appears in the left team rail, above Session history (the rail shows after the merge even for a small team). With a long team, the rail's member list scrolls a little sooner.
+
+## Feedback round 7
+
+- **"View {reviewer}'s fix".** The editor's resolve button was "Accept {reviewer}'s fix", which presumed the answer before the fix was seen. It now opens the preview, and is the only resolve button in the left column.
+- **Reject lives with the preview.** The preview's footer has Apply fix, Reject fix and Cancel. Reject fix swaps that footer for the confirmation ("Reject {reviewer}'s finding? It's recorded on the receipt with your name." with Reject / Cancel); Cancel goes back to the preview.
+- **Thread card keeps its header.** The card is a column: header and actions stay put, only the conversation scrolls (smoothly, to the newest message). When the teammate's line sits high and there's less than 260px above it, the card opens below the line.
+- **The answer is seen.** The card no longer closes when the last reviewer approves or when the PR merges, so "{teammate} is reading your reply…" is followed by their answer in place. It closes only on ×, Esc or a click elsewhere.

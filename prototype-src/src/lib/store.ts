@@ -661,16 +661,8 @@ export const useScenario = create<ScenarioState>()(
           collaborators,
           thread: [...s.thread, { from: 'teammate', text: q.answer, with: id }],
           reviewStage: aggregateStage(collaborators),
-          // Resolved: the comment card closes with the last approval; its history lives in the recap.
-          ...(all
-            ? {
-                milestones: { ...s.milestones, teammateApproved: true },
-                commentOpen: false,
-                // The conversation is resolved, so the composer goes back to who it addressed before.
-                composerTarget: s.prevComposerTarget ?? s.composerTarget,
-                prevComposerTarget: null,
-              }
-            : {}),
+          // Feedback round 7: the card stays open so their answer is seen; the user closes it.
+          ...(all ? { milestones: { ...s.milestones, teammateApproved: true } } : {}),
         });
       },
 
@@ -679,7 +671,6 @@ export const useScenario = create<ScenarioState>()(
         set((s) => ({
           milestones: { ...s.milestones, merged: true },
           rightPanel: 'recap',
-          commentOpen: false,
         })),
 
       // "Show line" opens the createPlan 409 branch read-only (frame 10 to 07).

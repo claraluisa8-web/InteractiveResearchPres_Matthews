@@ -822,7 +822,11 @@
     "next": "Next section",
     "verifyHelpLocked": "Save your edit, then verify once both agents agree.",
     "resolveWithout": "OR RESOLVE WITHOUT EDITING",
-    "accept": "Accept {reviewer}’s fix",
+    "accept": {
+      "text": "View {reviewer}’s fix",
+      "new": true,
+      "note": "Round 7: was “Accept {reviewer}’s fix”, which presumed the answer before the fix was seen."
+    },
     "reject": "Reject",
     "afterSaveToast": "Sent to {builder} and {reviewer} to recheck",
     "agentsAgree": "{builder} and {reviewer} agree. You can verify this section.",
@@ -1001,6 +1005,10 @@
     },
     "progressLast": {
       "text": "Last one. Verify it to finish.",
+      "new": true
+    },
+    "diffReject": {
+      "text": "Reject fix",
       "new": true
     }
   },

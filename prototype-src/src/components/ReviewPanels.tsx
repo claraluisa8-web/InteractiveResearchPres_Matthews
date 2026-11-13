@@ -335,10 +335,9 @@ export function CommentCard() {
   useEscape(closeComment);
   // Feedback round 3: new messages scroll into view on their own.
   useEffect(() => {
+    // Only the conversation scrolls; the header with the reviewer's name stays put (round 7).
     const el = threadRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-    const card = cardRef.current;
-    if (card) card.scrollTop = card.scrollHeight;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   }, [lastCount, stage, hasComment]);
   // A click anywhere outside the card closes it, except in the composer it's feeding.
   useEffect(() => {
@@ -364,7 +363,11 @@ export function CommentCard() {
   const stageWidth = useScenario.getState().stageWidth;
   const left = Math.min(Math.max(mid.x - 210, 262), stageWidth - 366);
   // Bottom-anchored 45px above the line (frame 10) so a growing thread rises instead of covering You.
+  // Round 7: when the line sits high and there's little room above, the card opens below it instead.
+  const roomAbove = mid.y - 45 - 48;
+  const below = roomAbove < 260;
   const bottomEdge = Math.max(mid.y - 45, 200);
+  const topEdge = mid.y + 45;
 
   // Feedback round 2: replying happens in the composer below ("To: {name}", with an attach button),
   // not in a field squeezed into this card.
@@ -376,12 +379,14 @@ export function CommentCard() {
   return (
     <>
       <svg className="stage-overlay" width="100%" height="900" aria-hidden="true">
-        <line className="line line--attach" x1={mid.x} y1={bottomEdge} x2={mid.x} y2={mid.y - 14} />
+        {below
+          ? <line className="line line--attach" x1={mid.x} y1={mid.y + 14} x2={mid.x} y2={topEdge} />
+          : <line className="line line--attach" x1={mid.x} y1={bottomEdge} x2={mid.x} y2={mid.y - 14} />}
       </svg>
       <section
         ref={cardRef}
         className="pmr-glass comment-card"
-        style={{ left, bottom: 900 - bottomEdge, maxHeight: bottomEdge - 48 }}
+        style={below ? { left, top: topEdge, maxHeight: 900 - 110 - topEdge } : { left, bottom: 900 - bottomEdge, maxHeight: bottomEdge - 48 }}
         aria-labelledby="comment-author"
       >
         <header className="comment-card__header">

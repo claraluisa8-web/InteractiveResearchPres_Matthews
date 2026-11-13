@@ -222,7 +222,8 @@ export function App() {
         {rightPanel === 'pr' && <PRPanel />}
         {rightPanel === 'recap' && <RecapPanel />}
         {milestones.prCreated && !milestones.merged && !rightPanel && <PRStatusCard />}
-        {commentOpen && !milestones.merged && <CommentCard />}
+        {/* Round 7: an open conversation stays through approval and merge until the user closes it. */}
+        {commentOpen && <CommentCard />}
         {allClearOpen && milestones.allSectionsVerified && !milestones.prOpened && <AllClearPopup />}
         {floatingFile && <FloatingEditor onToast={showToast} />}
         {lineHover && (

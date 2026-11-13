@@ -1583,3 +1583,12 @@ textarea.input::placeholder { color: var(--pmr-text-2); opacity: 1; }
 
 /* Feedback round 6: Start a new session in the team rail after the merge. */
 .rail__new-session { display: flex; align-items: center; justify-content: center; gap: 6px; flex: none; margin: 10px 0 0; }
+
+/* Feedback round 7: Reject fix confirms in the preview's footer, beside where it was clicked. */
+.diff-preview__actions.reject-confirm { margin: 0; align-items: center; border-width: 1px 0 0; border-radius: 0; padding: 12px 20px 16px; }
+.diff-preview__actions .reject-confirm__text { flex: 1; }
+
+/* Feedback round 7: the thread card keeps its header in place; only the conversation scrolls. */
+.comment-card { display: flex; flex-direction: column; overflow: hidden; }
+.comment-card__header, .comment-card__actions { flex: none; }
+.comment-card__thread { flex: 1 1 auto; min-height: 0; }

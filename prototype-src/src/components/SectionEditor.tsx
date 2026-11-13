@@ -296,35 +296,16 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
             </div>
             <p className="section-editor__help" aria-live="polite">{help}</p>
 
-            {def.issue && open && editor.mode !== 'reject' && (
+            {/* Feedback round 7: one way in — see the fix first. Apply, Reject and Cancel live with the preview. */}
+            {def.issue && open && editor.mode === 'edit' && (
               <>
                 <p className="pmr-label section-editor__resolve-label">{ed.resolveWithout}</p>
                 <div className="section-editor__row section-editor__row--tight">
                   <button type="button" className="pmr-button pmr-button--secondary" data-accept onClick={() => setEditorMode('diff')}>
                     {t(ed.accept, names)}
                   </button>
-                  <button type="button" className="pmr-button pmr-button--secondary" onClick={() => setEditorMode('reject')}>{ed.reject}</button>
                 </div>
               </>
-            )}
-            {def.issue && open && editor.mode === 'reject' && (
-              <div className="reject-confirm" role="alertdialog" aria-labelledby="reject-text">
-                <p id="reject-text" className="reject-confirm__text">{t(ed.rejectConfirm, names)}</p>
-                <div className="section-editor__row section-editor__row--tight">
-                  <button
-                    type="button"
-                    className="pmr-button pmr-button--secondary"
-                    onClick={() => {
-                      rejectIssue(def.issue!);
-                      setCardNote('builder', t(ed.afterResolve.builderRejected));
-                      setCardNote('reviewer', t(ed.afterResolve.reviewerRejected));
-                    }}
-                  >
-                    {t(ed.rejectConfirmAction)}
-                  </button>
-                  <button type="button" className="pmr-button pmr-button--secondary" data-reject-cancel onClick={() => setEditorMode('edit')}>{t(ed.cancel)}</button>
-                </div>
-              </div>
             )}
           </div>
         </div>
@@ -350,7 +331,7 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
             )}
           </div>
           <div className="code-panel__body">
-            {editor.mode === 'diff' && issueData ? (
+            {(editor.mode === 'diff' || editor.mode === 'reject') && issueData ? (
               <DiffPreview
                 before={current}
                 after={applyFix(issueData.id, current)}
@@ -364,6 +345,15 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
                   setCardNote('reviewer', t(ed.afterResolve.reviewer));
                 }}
                 onCancel={() => setEditorMode('edit')}
+                confirmingReject={editor.mode === 'reject'}
+                rejectText={t(ed.rejectConfirm, names)}
+                onReject={() => setEditorMode('reject')}
+                onConfirmReject={() => {
+                  rejectIssue(def.issue!);
+                  setCardNote('builder', t(ed.afterResolve.builderRejected));
+                  setCardNote('reviewer', t(ed.afterResolve.reviewerRejected));
+                }}
+                onCancelReject={() => setEditorMode('diff')}
               />
             ) : (
               <CodeEditor
@@ -443,7 +433,20 @@ function AboutCard({ sectionId, cs }: { sectionId: string; cs: Collaborator[] })
 }
 
 /** Inline preview of the reviewer's fix: added rows mint, removed rows red, three lines of context. */
-function DiffPreview({ before, after, title, onApply, onCancel }: { before: string; after: string; title: string; onApply: () => void; onCancel: () => void }) {
+interface DiffPreviewProps {
+  before: string;
+  after: string;
+  title: string;
+  onApply: () => void;
+  onCancel: () => void;
+  confirmingReject: boolean;
+  rejectText: string;
+  onReject: () => void;
+  onConfirmReject: () => void;
+  onCancelReject: () => void;
+}
+
+function DiffPreview({ before, after, title, onApply, onCancel, confirmingReject, rejectText, onReject, onConfirmReject, onCancelReject }: DiffPreviewProps) {
   const rows = diffLines(before, after);
   const keep = new Set<number>();
   rows.forEach((r, i) => {
@@ -473,10 +476,19 @@ function DiffPreview({ before, after, title, onApply, onCancel }: { before: stri
           );
         })}
       </ol>
-      <div className="diff-preview__actions">
-        <button type="button" className="pmr-button" data-diff-apply onClick={onApply}>{t(ed.diffApply)}</button>
-        <button type="button" className="pmr-button pmr-button--secondary" onClick={onCancel}>{t(ed.cancel)}</button>
-      </div>
+      {confirmingReject ? (
+        <div className="diff-preview__actions reject-confirm" role="alertdialog" aria-labelledby="reject-text">
+          <p id="reject-text" className="reject-confirm__text">{rejectText}</p>
+          <button type="button" className="pmr-button pmr-button--secondary" onClick={onConfirmReject}>{t(ed.rejectConfirmAction)}</button>
+          <button type="button" className="pmr-button pmr-button--secondary" data-reject-cancel onClick={onCancelReject}>{t(ed.cancel)}</button>
+        </div>
+      ) : (
+        <div className="diff-preview__actions">
+          <button type="button" className="pmr-button" data-diff-apply onClick={onApply}>{t(ed.diffApply)}</button>
+          <button type="button" className="pmr-button pmr-button--secondary" data-diff-reject onClick={onReject}>{t(ed.diffReject)}</button>
+          <button type="button" className="pmr-button pmr-button--secondary" onClick={onCancel}>{t(ed.cancel)}</button>
+        </div>
+      )}
     </div>
   );
 }
