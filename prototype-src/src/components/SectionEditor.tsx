@@ -80,7 +80,17 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
   // Esc closes the topmost layer: the diff or reject confirm first, then the editor.
   useEscape(() => (editor.mode !== 'edit' ? setEditorMode('edit') : close()));
   useEffect(() => {
-    ref.current?.querySelector<HTMLElement>('.cm-content, .diff-preview button')?.focus();
+    // Keyboard path (feedback round 2): an open issue starts in the code, where the work is. Any other
+    // section starts on Verify section (or Next section once verified), so Enter moves things along.
+    const s = useScenario.getState();
+    const d = sectionById(s.editor?.section ?? def.id);
+    const i = d.issue ? s.issues[d.issue] : undefined;
+    const needsCode = !!i && i.status !== 'resolved' && i.status !== 'rejected';
+    const verifiedNow = s.sections[d.id]?.status === 'verified';
+    const target = needsCode ? '.cm-content' : verifiedNow ? '[data-next]' : '[data-verify]';
+    // A beat later: switching files remounts CodeMirror, and its content isn't focusable until then.
+    const id = window.setTimeout(() => ref.current?.querySelector<HTMLElement>(target)?.focus(), 30);
+    return () => window.clearTimeout(id);
   }, [def.id]);
   useEffect(() => {
     if (editor.mode === 'reject') ref.current?.querySelector<HTMLElement>('[data-reject-cancel]')?.focus();
@@ -219,7 +229,19 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
             </>
           )}
 
-          <div className="section-editor__actions">
+          <div
+            className="section-editor__actions"
+            onKeyDown={(e) => {
+              // ← → (and ↑ ↓) step between Verify, Next section, Accept fix and Reject.
+              if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+              const items = [...e.currentTarget.querySelectorAll<HTMLElement>('button')];
+              const i = items.indexOf(document.activeElement as HTMLElement);
+              if (i < 0) return;
+              e.preventDefault();
+              const step = e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 1;
+              items[(i + step + items.length) % items.length].focus();
+            }}
+          >
             <p className="pmr-label">{ed.thisSection}</p>
             <div className="section-editor__row">
               <button
@@ -227,7 +249,12 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
                 className={`pmr-button${canVerify ? '' : ' pmr-button--locked'}${verified ? ' is-verified' : ''}`}
                 aria-disabled={!canVerify}
                 data-verify
-                onClick={() => canVerify && verifySection(def.id)}
+                onClick={() => {
+                  if (!canVerify) return;
+                  verifySection(def.id);
+                  // Keyboard: Enter verifies, then Enter again goes to the next section.
+                  requestAnimationFrame(() => ref.current?.querySelector<HTMLElement>('[data-next]')?.focus());
+                }}
               >
                 {verified ? <Icon name="check" size={14} /> : !canVerify && <Icon name="lock" size={14} />}
                 {verified ? t(ed.verified) : ed.verify}

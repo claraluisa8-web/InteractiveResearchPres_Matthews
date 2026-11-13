@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useRef, useState } from 'react';
+import { FormEvent, useEffect, useRef } from 'react';
 import { copy, t } from '../lib/copy';
 import { useEscape } from '../lib/escape';
 import { toScreen, useGeometry } from '../lib/geometry';
@@ -7,6 +7,7 @@ import { topSections } from '../lib/sections';
 import { log } from '../lib/log';
 import { usePopupFocus } from '../lib/usePopupFocus';
 import { initials } from '../lib/status';
+import type { ThreadMessage } from '../lib/types';
 import { useScenario } from '../lib/store';
 import { Icon } from './Icon';
 
@@ -229,28 +230,32 @@ export function PRStatusCard() {
 export function CommentCard() {
   const collaborators = useScenario((s) => s.collaborators);
   const reviewerId = useScenario((s) => s.pr.reviewer);
-  const thread = useScenario((s) => s.thread);
+  const commentWith = useScenario((s) => s.commentWith);
+  const allThread = useScenario((s) => s.thread);
   const approved = useScenario((s) => s.milestones.teammateApproved);
   const view = useScenario((s) => s.view);
   const setCommentOpen = useScenario((s) => s.setCommentOpen);
-  const replyToTeammate = useScenario((s) => s.replyToTeammate);
+  const setComposerTarget = useScenario((s) => s.setComposerTarget);
   const showLine = useScenario((s) => s.showLine);
   const g = useGeometry();
-  const [replying, setReplying] = useState(false);
-  const [text, setText] = useState('');
-  const inputRef = useRef<HTMLTextAreaElement>(null);
   const cardRef = useRef<HTMLElement>(null);
   const stage = useScenario((s) => s.reviewStage);
-  const mate = collaborators.find((c) => c.id === reviewerId);
-  useEscape(() => (replying ? setReplying(false) : setCommentOpen(false)));
-  // The comment is the one thing to act on: Reply takes focus so Enter opens the reply field.
+  const mateId = commentWith ?? reviewerId;
+  const mate = collaborators.find((c) => c.id === mateId);
+  const isReviewer = !!mate && mate.id === reviewerId;
+  // Their PR comment is on the line once the review has reached it.
+  const hasComment = isReviewer && (stage === 'commented' || stage === 'reading' || stage === 'approved');
+  const commentAt = useScenario((s) => s.commentAt);
+  // Messages before the PR comment stay above it; the reply and answer come after.
+  const indexed = allThread.map((m, i) => ({ m, i })).filter(({ m }) => !m.with || m.with === mateId);
+  const before = hasComment ? indexed.filter(({ i }) => i < commentAt) : indexed;
+  const after = hasComment ? indexed.filter(({ i }) => i >= commentAt) : [];
+  const replied = stage === 'reading' || stage === 'approved';
+  useEscape(() => setCommentOpen(false));
+  // Reply is the one thing to act on: it takes focus so Enter goes straight to writing.
   usePopupFocus(cardRef, '[data-reply]', { trap: true });
-  useEffect(() => {
-    if (replying) inputRef.current?.focus();
-  }, [replying]);
   if (!mate) return null;
   const first = mate.name.split(' ')[0];
-  const sent = thread.some((m) => m.from === 'you');
 
   // Anchored above the midpoint of the You and teammate line, clear of the team rail.
   const you = toScreen(g.you.point, g, view);
@@ -262,14 +267,25 @@ export function CommentCard() {
   // Bottom-anchored 45px above the line (frame 10) so a growing thread rises instead of covering You.
   const bottomEdge = Math.max(mid.y - 45, 200);
 
-  const send = (e: FormEvent) => {
-    e.preventDefault();
-    const v = text.trim();
-    if (!v) return;
-    log('input', { field: 'commentReply', text: v });
-    replyToTeammate(v);
-    setText('');
-    setReplying(false);
+  const renderMessage = (m: ThreadMessage, i: number) => (
+    <div key={i} className={`comment-card__reply comment-card__reply--${m.from}`}>
+      <span className="comment-card__who">{m.from === 'you' ? t(tr.you) : mate.name}</span>
+      {m.text}
+      {m.attachments && (
+        <span className="comment-card__attachments">
+          {m.attachments.map((f) => (
+            <span key={f} className="chip chip--static"><Icon name="file" size={12} />{f}</span>
+          ))}
+        </span>
+      )}
+    </div>
+  );
+
+  // Feedback round 2: replying happens in the composer below ("To: {name}", with an attach button),
+  // not in a field squeezed into this card.
+  const reply = () => {
+    setComposerTarget(mate.id);
+    requestAnimationFrame(() => document.querySelector<HTMLElement>('.composer__input')?.focus());
   };
 
   return (
@@ -285,49 +301,34 @@ export function CommentCard() {
       >
         <header className="comment-card__header">
           <span className="avatar avatar--small">{initials(mate.name)}</span>
-          <span id="comment-author" className="comment-card__author">{mate.name}</span>
-          <span className="comment-card__meta">{tr.comment.meta}</span>
+          <span id="comment-author" className="comment-card__author">{hasComment ? mate.name : t(tr.messageLine)}</span>
+          <span className="comment-card__meta" />
           <button type="button" className="icon-button comment-card__close" aria-label={t(tr.closeComment)} data-tip={t(tr.closeComment)} onClick={() => setCommentOpen(false)}>
             <Icon name="close" size={14} />
           </button>
         </header>
-        <p className="comment-card__body">{tr.comment.body}</p>
-        {thread.map((m, i) => (
-          <p key={i} className={`comment-card__reply comment-card__reply--${m.from}`}>
-            <span className="comment-card__who">{m.from === 'you' ? t(tr.you) : mate.name}</span>
-            {m.text}
-          </p>
-        ))}
-        {stage === 'reading' && (
-          <p className="comment-card__reply comment-card__reading" aria-live="polite">{t(tr.readingReply, { teammateFirst: first })}</p>
-        )}
-        {replying ? (
-          <form className="comment-card__form" onSubmit={send}>
-            <textarea
-              ref={inputRef}
-              className="input textarea"
-              rows={2}
-              value={text}
-              placeholder={t(tr.replyPlaceholder, { teammateFirst: first })}
-              aria-label={t(tr.replyPlaceholder, { teammateFirst: first })}
-              onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) send(e);
-              }}
-            />
-            <div className="comment-card__actions">
-              <button type="submit" className="pmr-button" disabled={!text.trim()}>{t(tr.send)}</button>
-              <button type="button" className="pmr-button pmr-button--secondary" onClick={() => setReplying(false)}>{copy.configurePanel.secondary}</button>
-            </div>
-          </form>
-        ) : (
-          <div className="comment-card__actions">
-            {!sent && !approved && (
-              <button type="button" className="pmr-button pmr-button--secondary" data-reply onClick={() => setReplying(true)}>{tr.comment.actions[0]}</button>
-            )}
-            <button type="button" className="pmr-button pmr-button--secondary" onClick={showLine}>{tr.comment.actions[1]}</button>
-          </div>
-        )}
+        <div className="comment-card__thread">
+          {before.map(({ m, i }) => renderMessage(m, i))}
+          {hasComment && (
+            <p className="comment-card__body comment-card__pr-comment">
+              <span className="comment-card__who">{mate.name}  ·  {tr.comment.meta}</span>
+              {tr.comment.body}
+            </p>
+          )}
+          {after.map(({ m, i }) => renderMessage(m, i))}
+          {stage === 'reading' && isReviewer && (
+            <p className="comment-card__reply comment-card__reading" aria-live="polite">{t(tr.readingReply, { teammateFirst: first })}</p>
+          )}
+        </div>
+        <div className="comment-card__actions">
+          {!(isReviewer && (replied || approved) && hasComment) && (
+            <button type="button" className="pmr-button" data-reply onClick={reply}>
+              <Icon name="reply" size={14} />
+              {hasComment ? tr.comment.actions[0] : t(copy.constellation.popover.message, { first })}
+            </button>
+          )}
+          {hasComment && <button type="button" className="pmr-button pmr-button--secondary" onClick={showLine}>{tr.comment.actions[1]}</button>}
+        </div>
       </section>
     </>
   );

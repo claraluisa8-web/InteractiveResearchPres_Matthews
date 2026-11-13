@@ -4,6 +4,9 @@ import { useEscape } from '../lib/escape';
 import { active, defaultName, useScenario } from '../lib/store';
 import type { Collaborator } from '../lib/types';
 import { log } from '../lib/log';
+import { initials } from '../lib/status';
+
+const DIRECTORY = copy.people.directory.people;
 import { useOutside } from '../lib/useOutside';
 import { Icon } from './Icon';
 import { Orb } from './Orb';
@@ -32,6 +35,9 @@ export function ConfigurePanel() {
     email: c.email ?? '',
   });
   const [errors, setErrors] = useState<{ name?: string; email?: string }>({});
+  // Teammate NAME suggests people from the org directory (feedback round 2); picking one fills the email.
+  const [suggestOpen, setSuggestOpen] = useState(false);
+  const [activeSuggestion, setActiveSuggestion] = useState(0);
   const [connectOpen, setConnectOpen] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
   const connectRef = useRef<HTMLDivElement>(null);
@@ -41,7 +47,7 @@ export function ConfigurePanel() {
     nameRef.current?.select();
   }, [configure.id]);
 
-  useEscape(() => (connectOpen ? setConnectOpen(false) : cancelAndReturn()));
+  useEscape(() => (suggestOpen ? setSuggestOpen(false) : connectOpen ? setConnectOpen(false) : cancelAndReturn()));
   useOutside(connectRef, () => setConnectOpen(false), connectOpen);
 
   const patch = (p: Partial<typeof form>) => {
@@ -59,19 +65,26 @@ export function ConfigurePanel() {
   const submit = (e: FormEvent) => {
     e.preventDefault();
     // A human teammate needs a real name and a work email (for the invite); agents don't.
+    let submitted = form;
     if (c.role === 'teammate') {
+      // A full name that matches someone in the directory brings their email with it.
+      const known = DIRECTORY.find((p) => p.name.toLowerCase() === form.name.trim().toLowerCase());
+      if (known && !form.email.trim()) {
+        submitted = { ...form, email: known.email };
+        setForm(submitted);
+      }
       const next: { name?: string; email?: string } = {};
-      if (!form.name.trim()) next.name = t(copy.constellation.teammateNameRequired);
-      if (!form.email.trim()) next.email = t(copy.constellation.teammateEmailRequired);
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) next.email = t(copy.constellation.teammateEmailInvalid);
+      if (!submitted.name.trim()) next.name = t(copy.constellation.teammateNameRequired);
+      if (!submitted.email.trim()) next.email = t(copy.constellation.teammateEmailRequired);
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(submitted.email.trim())) next.email = t(copy.constellation.teammateEmailInvalid);
       setErrors(next);
       if (next.name || next.email) {
         document.getElementById(next.name ? 'configure-name' : 'configure-email')?.focus();
         return;
       }
     }
-    log('input', { field: 'name', text: form.name, role: c.role });
-    commit(form);
+    log('input', { field: 'name', text: submitted.name, role: c.role });
+    commit(submitted);
     // Keyboard path: focus lands on the orb that just joined (or was edited).
     requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-orb="${c.id}"]`)?.focus());
   };
@@ -89,6 +102,21 @@ export function ConfigurePanel() {
     patch({ allowedToEdit: on ? [...form.allowedToEdit, opt] : form.allowedToEdit.filter((x) => x !== opt) });
 
   const isTeammate = c.role === 'teammate';
+
+  // People whose first or last name starts with what's typed (every letter has someone).
+  const query = form.name.trim().toLowerCase();
+  const suggestions = isTeammate && query
+    ? DIRECTORY.filter((p) => p.name.toLowerCase().split(/\s+/).some((part) => part.startsWith(query)) || p.name.toLowerCase().startsWith(query))
+        .slice(0, 6)
+    : [];
+  const showSuggestions = suggestOpen && suggestions.length > 0;
+  const pick = (person: { name: string; email: string }) => {
+    patch({ name: person.name });
+    setForm((prev) => ({ ...prev, name: person.name, email: person.email }));
+    setErrors({});
+    setSuggestOpen(false);
+    requestAnimationFrame(() => document.querySelector<HTMLElement>('.configure__primary')?.focus());
+  };
 
   return (
     <form className="pmr-glass configure" onSubmit={submit} aria-labelledby="configure-title" noValidate>
@@ -118,12 +146,54 @@ export function ConfigurePanel() {
             onChange={(e) => {
               patch({ name: e.target.value });
               if (errors.name) setErrors((x) => ({ ...x, name: undefined }));
+              setSuggestOpen(true);
+              setActiveSuggestion(0);
             }}
+            onKeyDown={(e) => {
+              if (!showSuggestions) return;
+              if (e.key === 'ArrowDown') { e.preventDefault(); setActiveSuggestion((i) => (i + 1) % suggestions.length); }
+              if (e.key === 'ArrowUp') { e.preventDefault(); setActiveSuggestion((i) => (i - 1 + suggestions.length) % suggestions.length); }
+              if (e.key === 'Enter') { e.preventDefault(); pick(suggestions[activeSuggestion]); }
+            }}
+            onBlur={() => window.setTimeout(() => setSuggestOpen(false), 120)}
             placeholder={isTeammate ? t(copy.constellation.teammateNamePlaceholder) : defaultName(c.role, form.otherType)}
             aria-invalid={!!errors.name}
             aria-describedby={errors.name ? 'configure-name-error' : undefined}
             autoComplete="off"
+            {...(isTeammate
+              ? {
+                  role: 'combobox',
+                  'aria-autocomplete': 'list' as const,
+                  'aria-expanded': showSuggestions,
+                  'aria-controls': 'teammate-suggestions',
+                  'aria-activedescendant': showSuggestions ? `teammate-option-${activeSuggestion}` : undefined,
+                }
+              : {})}
           />
+          {showSuggestions && (
+            <ul id="teammate-suggestions" className="pmr-glass suggestions" role="listbox" aria-label={t(copy.constellation.teammateSuggestions)}>
+              {suggestions.map((p, i) => (
+                <li
+                  key={p.email}
+                  id={`teammate-option-${i}`}
+                  role="option"
+                  aria-selected={i === activeSuggestion}
+                  className={`suggestions__item${i === activeSuggestion ? ' is-active' : ''}`}
+                  onPointerDown={(e) => {
+                    e.preventDefault(); // keep focus in the field until the pick is made
+                    pick(p);
+                  }}
+                  onPointerEnter={() => setActiveSuggestion(i)}
+                >
+                  <span className="avatar avatar--small" aria-hidden="true">{initials(p.name)}</span>
+                  <span className="suggestions__text">
+                    <span className="suggestions__name">{p.name}</span>
+                    <span className="suggestions__email">{p.email}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
           {errors.name && <span id="configure-name-error" className="field__error">{errors.name}</span>}
         </label>
 

@@ -76,6 +76,7 @@ export function App() {
   const commentOpen = useScenario((s) => s.commentOpen);
   const reviewStage = useScenario((s) => s.reviewStage);
   const allClearOpen = useScenario((s) => s.allClearOpen);
+  const threadCount = useScenario((s) => s.thread.length);
   const setRightPanel = useScenario((s) => s.setRightPanel);
   const setCommentOpen = useScenario((s) => s.setCommentOpen);
   const collaboratorsAll = collaborators;
@@ -199,7 +200,7 @@ export function App() {
         {rightPanel === 'pr' && <PRPanel />}
         {rightPanel === 'recap' && <RecapPanel />}
         {milestones.prCreated && !milestones.merged && !rightPanel && <PRStatusCard />}
-        {milestones.prCreated && !milestones.merged && commentOpen && reviewStage !== 'reviewing' && <CommentCard />}
+        {commentOpen && !milestones.merged && (threadCount > 0 || (milestones.prCreated && reviewStage !== 'reviewing')) && <CommentCard />}
         {allClearOpen && milestones.allSectionsVerified && !milestones.prOpened && <AllClearPopup />}
         {floatingFile && <FloatingEditor onToast={showToast} />}
         {lineHover && (
@@ -222,7 +223,7 @@ export function App() {
         />
         <Replies raised={pill.target === 'ready' && readyVisible} />
         <Toast message={toast} />
-        <Composer />
+        <Composer onToast={showToast} />
         <Legend
           items={[
             ...(suggestion ? [{ kind: 'ring' as const, text: copy.recommendation.legend }] : []),

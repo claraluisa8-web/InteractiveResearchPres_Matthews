@@ -101,6 +101,22 @@ export function AgentPopover() {
           <button type="button" className="pmr-button pmr-button--secondary" onClick={() => setSpecOpen(true)}>{t(p.openSpec)}</button>
         ) : (
           <>
+            {c.role === 'teammate' && c.status === 'active' && (
+              <button
+                type="button"
+                className="pmr-button"
+                onClick={() => {
+                  // Feedback round 2: talk to a teammate on your line with them, through the composer.
+                  const s = useScenario.getState();
+                  s.setComposerTarget(c.id);
+                  if (s.thread.some((m) => m.with === c.id)) s.openThread(c.id);
+                  openPopover(null);
+                  requestAnimationFrame(() => document.querySelector<HTMLElement>('.composer__input')?.focus());
+                }}
+              >
+                {t(p.message, { first: c.name.split(' ')[0] })}
+              </button>
+            )}
             <button type="button" className="pmr-button pmr-button--secondary" onClick={() => editCollaborator(c.id)}>{t(p.edit)}</button>
             {c.role === 'builder' && buildStarted && (
               <button type="button" className="pmr-button pmr-button--secondary" onClick={() => openFile(copy.build.floatingFile.file)}>

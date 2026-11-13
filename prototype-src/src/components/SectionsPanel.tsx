@@ -166,7 +166,20 @@ export function SectionsPanel() {
   };
 
   return (
-    <aside ref={ref} className="pmr-glass sections-panel" aria-labelledby="sections-title">
+    <aside
+      ref={ref}
+      className="pmr-glass sections-panel"
+      aria-labelledby="sections-title"
+      onKeyDown={(e) => {
+        // ↑ ↓ move between section rows (Home and End jump to the ends); Enter opens the row.
+        if (!['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) return;
+        const rows = [...e.currentTarget.querySelectorAll<HTMLElement>('.section-row, .subsection-row, .sections-panel__primary')];
+        const i = rows.indexOf(document.activeElement as HTMLElement);
+        e.preventDefault();
+        const next = e.key === 'Home' ? 0 : e.key === 'End' ? rows.length - 1 : i < 0 ? 0 : (i + (e.key === 'ArrowDown' ? 1 : -1) + rows.length) % rows.length;
+        rows[next]?.focus();
+      }}
+    >
       <header className="sections-panel__header">
         <h2 id="sections-title" className="sections-panel__title">
           <span>{nameOf(line[0])}</span>

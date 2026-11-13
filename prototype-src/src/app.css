@@ -1155,7 +1155,10 @@ button.chip:hover { border-color: rgba(255, 255, 255, 0.32); }
 .spec-excerpt__lines li { display: flex; padding: 0 16px; }
 .spec-excerpt__lines li.is-highlight { background: var(--pmr-row-hover); }
 .spec-excerpt__n { width: 29px; flex: none; font-size: 11px; color: var(--pmr-code-line-number); }
-.spec-excerpt__lines code { font: inherit; white-space: pre; }
+/* Long spec lines wrap inside the card (feedback round 2), indented under their own text. */
+.spec-excerpt__lines code { flex: 1; min-width: 0; font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; padding-left: 1ch; text-indent: -1ch; }
+.spec-excerpt { min-width: 0; overflow: hidden; }
+.spec-excerpt__file { overflow-wrap: anywhere; white-space: normal; }
 
 .section-editor__actions { margin-top: auto; padding-top: 10px; }
 .section-editor__row { display: flex; gap: 12px; margin-top: 8px; }
@@ -1450,3 +1453,38 @@ textarea.input::placeholder { color: var(--pmr-text-2); opacity: 1; }
 .all-clear__check .codicon { margin-top: 1px; }
 .all-clear .dialog__body { color: var(--pmr-text); }
 .comment-card__reading { color: var(--pmr-text-2); font-style: italic; }
+
+/* Teammate name suggestions (feedback round 2) */
+.field:has(#configure-name) { position: relative; }
+.suggestions {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 64px;
+  z-index: 3;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  border-radius: var(--pmr-r-input);
+  background: linear-gradient(var(--pmr-glass-tint), var(--pmr-glass-tint)), var(--pmr-popup);
+}
+.suggestions__item { display: flex; align-items: center; gap: 10px; padding: 6px 8px 7px; border-radius: 4px; cursor: pointer; }
+.suggestions__item.is-active { background: var(--pmr-row-hover); box-shadow: inset 2px 0 var(--pmr-lavender); }
+.suggestions__text { display: flex; flex-direction: column; min-width: 0; }
+.suggestions__name { font-size: 13px; font-weight: 600; line-height: 17px; }
+.suggestions__email { font: 400 11px/15px var(--pmr-mono); color: var(--pmr-text-2); }
+
+/* Writing to a teammate: Add node becomes an attach button (feedback round 2) */
+.composer__attach-wrap { position: relative; flex: none; }
+.composer__attach { width: 41px; justify-content: center; padding: 0; }
+.composer__attach.is-open { background: rgba(255, 255, 255, 0.12); }
+.attach-menu { position: absolute; left: 0; bottom: 50px; min-width: 240px; z-index: 30; }
+.attachment-row { gap: 6px; }
+.chip--attachment .codicon-close { color: var(--pmr-text-2); }
+.comment-card__attachments { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.comment-card__attachments .chip { gap: 5px; font-family: var(--pmr-mono); }
+
+.comment-card__thread { max-height: 260px; overflow-y: auto; }
+.comment-card [data-reply] { display: inline-flex; align-items: center; gap: 6px; }
+.comment-card__pr-comment { margin-top: 10px; }
+.comment-card__pr-comment .comment-card__who { font-weight: 600; white-space: pre; }

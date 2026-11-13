@@ -54,6 +54,8 @@ interface ScenarioState {
   pr: { title: string; description: string; reviewer: string | null; attachReceipt: boolean };
   thread: ThreadMessage[];
   reviewStage: ReviewStage;
+  /** Where in the thread the teammate's PR comment arrived, so earlier messages stay above it. */
+  commentAt: number;
   /** M1: the coach card is gone for good once anyone is added. */
   firstAdded: boolean;
   view: View;
@@ -82,6 +84,12 @@ interface ScenarioState {
   linkIds: string[] | null;
   /** Latest line from each agent in the editor's left-column cards. */
   cardNotes: Record<string, string>;
+  /** Who the composer is addressed to: 'team', 'both', or a collaborator id (feedback round 2: teammates too). */
+  composerTarget: string;
+  /** Files attached to the next message to a teammate. */
+  attachments: string[];
+  /** Which teammate's line the comment card shows. */
+  commentWith: string | null;
   /** M7's pop-up: All lines clear, with Open pull request front and centre. */
   allClearOpen: boolean;
   /** Stage width in design pixels (1440 or wider; the height is always 900). */
@@ -129,6 +137,10 @@ interface ScenarioState {
   setRightPanel: (p: RightPanel) => void;
   setStageWidth: (w: number) => void;
   setAllClearOpen: (v: boolean) => void;
+  setComposerTarget: (target: string) => void;
+  setAttachments: (files: string[]) => void;
+  openThread: (teammateId: string) => void;
+  messageTeammate: (teammateId: string, text: string) => void;
   setReviewStage: (stage: ReviewStage) => void;
   openPR: () => void;
   closePR: () => void;
@@ -217,6 +229,7 @@ export const useScenario = create<ScenarioState>()(
       pr: { title: copy.pullRequest.titleValue, description: copy.pullRequest.descriptionValue, reviewer: null, attachReceipt: true },
       thread: [],
       reviewStage: 'none',
+      commentAt: 0,
       firstAdded: false,
       view: IDENTITY_VIEW,
       seq: 1,
@@ -239,6 +252,9 @@ export const useScenario = create<ScenarioState>()(
       commentOpen: false,
       stageWidth: 1440,
       allClearOpen: false,
+      composerTarget: 'team',
+      attachments: [],
+      commentWith: null,
 
       openAddMenu: (anchor, highlight) => set({ addMenu: { anchor, highlight }, popover: null }),
       closeAddMenu: () => set({ addMenu: null }),
@@ -453,7 +469,24 @@ export const useScenario = create<ScenarioState>()(
 
       setStageWidth: (w) => set({ stageWidth: w }),
       setAllClearOpen: (v) => set({ allClearOpen: v }),
-      setReviewStage: (stage) => set({ reviewStage: stage, commentOpen: stage === 'commented' ? true : get().commentOpen }),
+      setComposerTarget: (target) => set({ composerTarget: target }),
+      setAttachments: (files) => set({ attachments: files }),
+      openThread: (teammateId) => set({ commentWith: teammateId, commentOpen: true, popover: null }),
+      // Messages to a teammate outside the review get a short scripted answer (useReviewFlow).
+      messageTeammate: (teammateId, text) =>
+        set((s) => ({
+          thread: [...s.thread, { from: 'you', text, with: teammateId, attachments: s.attachments.length ? s.attachments : undefined }],
+          attachments: [],
+          commentWith: teammateId,
+          commentOpen: true,
+        })),
+      setReviewStage: (stage) =>
+        set((s) => ({
+          reviewStage: stage,
+          commentOpen: stage === 'commented' ? true : s.commentOpen,
+          commentWith: stage === 'commented' ? s.pr.reviewer : s.commentWith,
+          commentAt: stage === 'commented' && s.reviewStage !== 'commented' ? s.thread.length : s.commentAt,
+        })),
       setRightPanel: (p) => set({ rightPanel: p, sectionsLine: null, popover: null, updateCardOpen: false }),
 
       // M8: the PR panel. Without a teammate, Dana Kim appears as a dashed "adding" ghost (frame 09).
@@ -512,14 +545,21 @@ export const useScenario = create<ScenarioState>()(
           rightPanel: null,
           // The comment arrives after the teammate has looked at the PR (useReviewFlow).
           commentOpen: false,
+          commentWith: id,
           reviewStage: 'reviewing',
-          thread: [],
           firstAdded: true,
           milestones: { ...s.milestones, prCreated: true },
         });
       },
       setCommentOpen: (v) => set({ commentOpen: v }),
-      replyToTeammate: (text) => set((s) => ({ thread: [...s.thread, { from: 'you', text }], reviewStage: 'reading' })),
+      replyToTeammate: (text) =>
+        set((s) => ({
+          thread: [...s.thread, { from: 'you', text, with: s.pr.reviewer ?? undefined, attachments: s.attachments.length ? s.attachments : undefined }],
+          attachments: [],
+          reviewStage: 'reading',
+          commentWith: s.pr.reviewer,
+          commentOpen: true,
+        })),
 
       // M10: approved after a reply (any text) or 20 s of quiet.
       approve: (auto) => {
@@ -528,7 +568,7 @@ export const useScenario = create<ScenarioState>()(
         const tr = copy.teammateReview;
         set({
           collaborators: s.collaborators.map((c) => (c.id === s.pr.reviewer ? { ...c, review: 'approved' } : c)),
-          thread: [...s.thread, { from: 'teammate', text: t(auto ? tr.autoApprove : tr.answer) }],
+          thread: [...s.thread, { from: 'teammate', text: t(auto ? tr.autoApprove : tr.answer), with: s.pr.reviewer ?? undefined }],
           reviewStage: 'approved',
           milestones: { ...s.milestones, teammateApproved: true },
         });
@@ -616,6 +656,7 @@ export const useScenario = create<ScenarioState>()(
         thread: s.thread,
         // A review stage waiting on a timer resumes as if the timer had just finished.
         reviewStage: s.reviewStage === 'reviewing' ? 'commented' : s.reviewStage === 'reading' ? 'commented' : s.reviewStage,
+        commentAt: s.commentAt,
         // A recheck in flight when the page closed goes back to open; nothing is left hanging.
         issues: Object.fromEntries(
           Object.entries(s.issues).map(([k, i]) => [k, i.status === 'savedAwaitingAgents' || i.status === 'fixPreview' ? { ...i, status: 'open' as const } : i]),

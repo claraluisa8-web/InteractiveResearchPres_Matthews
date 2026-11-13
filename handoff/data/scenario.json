@@ -38,6 +38,116 @@
         "new": true,
         "note": "Only used for the 'adding' ghost when the user opens a PR without a teammate."
       }
+    },
+    "directory": {
+      "$note": "New (feedback round 2): teammates the NAME field suggests as you type, one for every letter. Dana Kim is just one of them; any person picked fills the teammate role.",
+      "new": true,
+      "people": [
+        {
+          "name": "Aisha Rahman",
+          "email": "aisha.rahman@brokerage.example"
+        },
+        {
+          "name": "Ben Okafor",
+          "email": "ben.okafor@brokerage.example"
+        },
+        {
+          "name": "Carmen Ruiz",
+          "email": "carmen.ruiz@brokerage.example"
+        },
+        {
+          "name": "Dana Kim",
+          "email": "dana.kim@brokerage.example"
+        },
+        {
+          "name": "Elif Yilmaz",
+          "email": "elif.yilmaz@brokerage.example"
+        },
+        {
+          "name": "Felipe Santos",
+          "email": "felipe.santos@brokerage.example"
+        },
+        {
+          "name": "Grace Liu",
+          "email": "grace.liu@brokerage.example"
+        },
+        {
+          "name": "Hiro Tanaka",
+          "email": "hiro.tanaka@brokerage.example"
+        },
+        {
+          "name": "Isabel Ortiz",
+          "email": "isabel.ortiz@brokerage.example"
+        },
+        {
+          "name": "Jamal Brooks",
+          "email": "jamal.brooks@brokerage.example"
+        },
+        {
+          "name": "Kavya Iyer",
+          "email": "kavya.iyer@brokerage.example"
+        },
+        {
+          "name": "Lucas Meyer",
+          "email": "lucas.meyer@brokerage.example"
+        },
+        {
+          "name": "Maya Cohen",
+          "email": "maya.cohen@brokerage.example"
+        },
+        {
+          "name": "Noah Fischer",
+          "email": "noah.fischer@brokerage.example"
+        },
+        {
+          "name": "Olivia Grant",
+          "email": "olivia.grant@brokerage.example"
+        },
+        {
+          "name": "Priya Nair",
+          "email": "priya.nair@brokerage.example"
+        },
+        {
+          "name": "Quinn Murphy",
+          "email": "quinn.murphy@brokerage.example"
+        },
+        {
+          "name": "Rosa Delgado",
+          "email": "rosa.delgado@brokerage.example"
+        },
+        {
+          "name": "Sam Lee",
+          "email": "sam.lee@brokerage.example"
+        },
+        {
+          "name": "Tomás Rivera",
+          "email": "tomas.rivera@brokerage.example"
+        },
+        {
+          "name": "Uma Patel",
+          "email": "uma.patel@brokerage.example"
+        },
+        {
+          "name": "Victor Chen",
+          "email": "victor.chen@brokerage.example"
+        },
+        {
+          "name": "Wren Hughes",
+          "email": "wren.hughes@brokerage.example"
+        },
+        {
+          "name": "Xavier Dubois",
+          "email": "xavier.dubois@brokerage.example"
+        },
+        {
+          "name": "Yuki Sato",
+          "email": "yuki.sato@brokerage.example"
+        },
+        {
+          "name": "Zara Ahmed",
+          "email": "zara.ahmed@brokerage.example"
+        }
+      ]
     }
   },
   "tabs": {
@@ -1055,6 +1165,38 @@
       "text": "Reply to {teammateFirst}’s comment. Merging unlocks once {teammateFirst} approves.",
       "new": true,
       "note": "Replaces mergeLocked once the comment has arrived."
+    },
+    "messageLine": {
+      "text": "Messages on this line",
+      "new": true
+    },
+    "preReviewAnswer": {
+      "text": "Thanks! I’ll take a proper look once the pull request is up.",
+      "new": true
+    },
+    "afterApprovalAnswer": {
+      "text": "Sounds good. Ship it.",
+      "new": true
+    },
+    "messagePlaceholder": {
+      "text": "Message {teammateFirst}…",
+      "new": true
+    },
+    "attach": {
+      "text": "Attach a file",
+      "new": true
+    },
+    "attachReceipt": {
+      "text": "Verification receipt",
+      "new": true
+    },
+    "attachComputer": {
+      "text": "From your computer…",
+      "new": true
+    },
+    "removeAttachment": {
+      "text": "Remove {file}",
+      "new": true
     }
   },
   "recap": {
@@ -1281,6 +1423,10 @@
       "email": {
         "text": "Email",
         "new": true
+      },
+      "message": {
+        "text": "Message {first}",
+        "new": true
       }
     },
     "lineCard": {
@@ -1440,6 +1586,10 @@
     },
     "teammateEmailInvalid": {
       "text": "That doesn’t look like an email address.",
+      "new": true
+    },
+    "teammateSuggestions": {
+      "text": "People in your org",
       "new": true
     }
   }

@@ -143,6 +143,20 @@ export function useIssueFlow() {
  */
 export function useReviewFlow() {
   const stage = useScenario((s) => s.reviewStage);
+  const thread = useScenario((s) => s.thread);
+
+  // A message outside the review (before the PR, or after approval) gets a short answer.
+  useEffect(() => {
+    const last = thread[thread.length - 1];
+    if (!last || last.from !== 'you') return;
+    const s = useScenario.getState();
+    if (s.reviewStage === 'commented' || s.reviewStage === 'reading') return;
+    const answer = s.reviewStage === 'approved' ? copy.teammateReview.afterApprovalAnswer : copy.teammateReview.preReviewAnswer;
+    const id = window.setTimeout(() => {
+      useScenario.setState((x) => ({ thread: [...x.thread, { from: 'teammate', text: t(answer), with: last.with }] }));
+    }, 1600);
+    return () => window.clearTimeout(id);
+  }, [thread]);
   const setReviewStage = useScenario((s) => s.setReviewStage);
   const approve = useScenario((s) => s.approve);
 

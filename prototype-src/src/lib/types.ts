@@ -53,7 +53,13 @@ export interface Milestones {
   prCreated: boolean;
 }
 
-export interface ThreadMessage { from: 'you' | 'teammate'; text: string }
+export interface ThreadMessage {
+  from: 'you' | 'teammate';
+  text: string;
+  /** The teammate this message is with (threads live on each You and teammate line). */
+  with?: string;
+  attachments?: string[];
+}
 
 export type RightPanel = 'receipt' | 'pr' | 'recap' | null;
 

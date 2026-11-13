@@ -75,8 +75,9 @@ export function Constellation({ scale, onLineHover }: ConstellationProps) {
   const allClear = useScenario((s) => s.milestones.allSectionsVerified);
   const merged = useScenario((s) => s.milestones.merged);
   const reviewerId = useScenario((s) => s.pr.reviewer);
-  const setCommentOpen = useScenario((s) => s.setCommentOpen);
   const reviewStage = useScenario((s) => s.reviewStage);
+  const thread = useScenario((s) => s.thread);
+  const openThread = useScenario((s) => s.openThread);
   const caught = merged ? caughtPerLine(collaborators, reviewerId) : [];
   const openSections = useScenario((s) => s.openSections);
   // Orbs ringed from elsewhere: a section row rings its line's two ends; a rail row rings one orb.
@@ -212,9 +213,13 @@ export function Constellation({ scale, onLineHover }: ConstellationProps) {
           })}
 
           {/* Frame 10: a comment node on the dashed line to the reviewing teammate. */}
-          {g.lines.filter((l) => l.kind === 'pending' && l.a === 'you').map((line) => {
+          {g.lines.filter((l) => l.a === 'you').map((line) => {
             const b = g.byId(line.b);
-            if (!b?.c || b.c.review !== 'pending' || reviewStage === 'reviewing') return null;
+            if (!b?.c || b.c.role !== 'teammate') return null;
+            // A comment node marks the conversation on this line: the PR comment, or messages sent to them.
+            const hasReviewComment = b.c.review === 'pending' && reviewStage !== 'reviewing';
+            const hasMessages = thread.some((m) => m.with === b.c!.id);
+            if (!hasReviewComment && !hasMessages) return null;
             const mx = (g.you.point.x + b.point.x) / 2;
             const my = (g.you.point.y + b.point.y) / 2;
             const label = t(copy.teammateReview.commentNode, { teammateFirst: b.c.name.split(' ')[0] });
@@ -227,7 +232,7 @@ export function Constellation({ scale, onLineHover }: ConstellationProps) {
                 aria-label={label}
                 data-tip={label}
                 data-comment-node
-                onClick={() => setCommentOpen(true)}
+                onClick={() => openThread(b.c!.id)}
               >
                 <Icon name="comment" size={14} />
               </button>

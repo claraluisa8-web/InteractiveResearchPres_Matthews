@@ -58,7 +58,13 @@ export function computeGeometry(
     if (reviewer) working.add(lineId(builder.id, reviewer.id));
   }
   const lines = deriveLines(collaborators, working);
-  if (flow.allClear) for (const l of lines) if (l.kind === 'connected' || l.kind === 'working') l.kind = 'cleared';
+  // Feedback round 2: a teammate's line isn't verified until they approve the pull request.
+  const unapprovedMate = (id: string) => collaborators.some((c) => c.id === id && c.role === 'teammate' && c.review !== 'approved');
+  if (flow.allClear) {
+    for (const l of lines) {
+      if ((l.kind === 'connected' || l.kind === 'working') && !unapprovedMate(l.a) && !unapprovedMate(l.b)) l.kind = 'cleared';
+    }
+  }
   // M4: with the multiples rule, the issue sits on the first builder and first reviewer line.
   if (builder && reviewer && flow.openIssues) {
     const issueId = lineId(builder.id, reviewer.id);
