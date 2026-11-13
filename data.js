@@ -5,6 +5,8 @@
 // Add "map" to attach an SVG that opens over the chart (marked with ✱). Any element in the
 // SVG whose id is listed under "hotspots" becomes clickable and shows its note. Figma and
 // Illustrator use layer names as ids when exporting SVG.
+// Add "prototype" ({ src, title }) to make the topic the pearl orb that opens a live prototype
+// in an overlay (see prototypeviewer.js).
 // Add "response: true" for a response to a problem (the dashed boxes in the mind map);
 // it's drawn with a dashed circle and italic label.
 
@@ -230,6 +232,12 @@ const data = {
           ]
         }
       ]
+    },
+    {
+      name: "Solution: The Pre-Merge Review",
+      short: "Solution",
+      note: "Open the working prototype.",
+      prototype: { src: "prototype/index.html", title: "The Pre-Merge Review" }
     }
   ]
 };

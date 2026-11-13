@@ -1,7 +1,7 @@
 // Collapsible research tree, adapted from D3's Observable "collapsible tree" example
 // to run as a plain web page. Data comes from data.js.
 
-function createTree(data, {onSelect, onOpenMap, onChange = () => {}, insetRight = () => 0}) {
+function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onChange = () => {}, insetRight = () => 0}) {
   // The chart fills its container; width and height are measured from it (see measure()).
   // insetRight is space on the right covered by the notes card, which focus() frames around.
   let width = 0;
@@ -14,6 +14,10 @@ function createTree(data, {onSelect, onOpenMap, onChange = () => {}, insetRight 
   // Long labels wrap onto several lines of at most this many characters.
   const maxLineChars = 34;
   const lineHeight = 16;
+
+  // Radius of the pearl orb, and how far its label sits from the centre.
+  const pearlRadius = 17;
+  const pearlLabelGap = pearlRadius + 9;
 
   // Rows are separated by multiples of dx pixels, columns by dy pixels. (dx is a height and
   // dy a width, because the tree is laid out sideways with the root on the left.)
@@ -34,6 +38,26 @@ function createTree(data, {onSelect, onOpenMap, onChange = () => {}, insetRight 
   // a layer for the nodes.
   const svg = d3.create("svg")
       .attr("class", "tree");
+
+  // The pearl orb for a topic with a prototype (handoff/docs/embed-and-deploy.md): the "You"
+  // orb from the prototype, drawn in SVG so it scales with the tree.
+  const defs = svg.append("defs");
+  const pearl = defs.append("linearGradient")
+      .attr("id", "pearl-gradient")
+      .attr("x1", "0").attr("y1", "0").attr("x2", "1").attr("y2", "1");
+  pearl.append("stop").attr("offset", "0%").attr("stop-color", "#F6F2FF");
+  pearl.append("stop").attr("offset", "50%").attr("stop-color", "#DDD4FF");
+  pearl.append("stop").attr("offset", "100%").attr("stop-color", "#C3D6FF");
+  defs.append("clipPath").attr("id", "pearl-clip")
+    .append("circle").attr("r", pearlRadius);
+  defs.append("filter").attr("id", "pearl-blur")
+      .attr("x", "-50%").attr("y", "-50%").attr("width", "200%").attr("height", "200%")
+    .append("feGaussianBlur").attr("stdDeviation", 2.2);
+  defs.append("filter").attr("id", "pearl-glow")
+      .attr("x", "-100%").attr("y", "-100%").attr("width", "300%").attr("height", "300%")
+    .append("feDropShadow")
+      .attr("dx", 0).attr("dy", 0).attr("stdDeviation", 6)
+      .attr("flood-color", "rgb(185, 168, 255)").attr("flood-opacity", 0.45);
 
   const gZoom = svg.append("g");
   const gLink = gZoom.append("g").attr("class", "links");
@@ -71,11 +95,54 @@ function createTree(data, {onSelect, onOpenMap, onChange = () => {}, insetRight 
           // Shift-click opens everything beneath the node; a plain click toggles it.
           if (event.shiftKey) openAll(d, event);
           else toggle(d, event);
+          if (d.data.prototype) onOpenPrototype(d);
         })
         .each(function(d) { d.element = this; });
 
-    nodeEnter.append("circle")
+    nodeEnter.filter(d => !d.data.prototype).append("circle")
         .attr("r", 5);
+
+    // The prototype's entry: a pearl orb with two blurred swirls, a soft glow and a reflection.
+    // It's the one node reachable by keyboard: Enter or Space opens the prototype.
+    const orb = nodeEnter.filter(d => d.data.prototype)
+        .classed("prototype", true)
+        .attr("tabindex", 0)
+        .attr("role", "button")
+        .attr("aria-label", "Open the Pre-Merge Review prototype")
+        .on("keydown", (event, d) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          select(d, event);
+          onOpenPrototype(d);
+        });
+    orb.append("ellipse")
+        .attr("class", "pearl-reflection")
+        .attr("cy", pearlRadius + 7)
+        .attr("rx", pearlRadius * 0.8)
+        .attr("ry", 3);
+    orb.append("circle")
+        .attr("class", "pearl-ring")
+        .attr("r", pearlRadius + 6);
+    const body = orb.append("g")
+        .attr("class", "pearl")
+        .attr("filter", "url(#pearl-glow)");
+    body.append("circle")
+        .attr("class", "pearl-body")
+        .attr("r", pearlRadius);
+    const swirls = body.append("g")
+        .attr("clip-path", "url(#pearl-clip)")
+        .attr("filter", "url(#pearl-blur)");
+    swirls.append("ellipse")
+        .attr("cx", -2).attr("cy", 1).attr("rx", 13).attr("ry", 5)
+        .attr("transform", "rotate(-18)")
+        .attr("fill", "#C77DFF").attr("opacity", 0.85);
+    swirls.append("ellipse")
+        .attr("cx", 5).attr("cy", 6).attr("rx", 10).attr("ry", 4)
+        .attr("transform", "rotate(-12)")
+        .attr("fill", "#4C7DFF").attr("opacity", 0.95);
+    body.append("circle")
+        .attr("class", "pearl-edge")
+        .attr("r", pearlRadius - 0.5);
 
     // One line per tspan, vertically centred on the node.
     const text = nodeEnter.append("text")
@@ -84,7 +151,7 @@ function createTree(data, {onSelect, onOpenMap, onChange = () => {}, insetRight 
     text.selectAll("tspan")
       .data(d => d.lines.map((line, i) => ({line, i, d})))
       .join("tspan")
-        .attr("x", ({d}) => d._children ? -10 : 10)
+        .attr("x", ({d}) => d._children ? -10 : d.data.prototype ? pearlLabelGap : 10)
         .attr("y", ({i, d}) => (i - (d.lines.length - 1) / 2) * lineHeight)
         .attr("dy", "0.31em")
         .text(({line}) => line);
@@ -102,6 +169,18 @@ function createTree(data, {onSelect, onOpenMap, onChange = () => {}, insetRight 
         })
       .append("title")
         .text("View map");
+
+    // The prototype topic gets an "Open prototype" badge after its label, like a map's.
+    text.filter(d => d.data.prototype)
+      .select("tspan:last-child")
+      .append("tspan")
+        .attr("class", "map-badge prototype-badge")
+        .text("  Open prototype")
+        .on("click", (event, d) => {
+          event.stopPropagation();
+          goTo(d, event);
+          onOpenPrototype(d);
+        });
 
     // Transition nodes to their new position.
     node.merge(nodeEnter)
@@ -336,6 +415,11 @@ const mapViewer = createMapViewer({
   onClose: () => showDetails(selected)
 });
 
+// Opening the prototype closes any open map; closing it returns focus to the orb.
+const prototypeViewer = createPrototypeViewer({
+  onClose: d => d.element?.focus()
+});
+
 const stage = document.getElementById("chart");
 
 const chart = createTree(data, {
@@ -345,7 +429,14 @@ const chart = createTree(data, {
     showDetails(d);
     sidebar?.setCurrent(d);
   },
-  onOpenMap: d => mapViewer.open(d),
+  onOpenMap: d => {
+    prototypeViewer.close();
+    mapViewer.open(d);
+  },
+  onOpenPrototype: d => {
+    mapViewer.close();
+    prototypeViewer.open(d);
+  },
   onChange: () => sidebar?.refresh(),
   // Width the notes card covers on the right, set in style.css as --panel-space.
   insetRight: () => parseFloat(getComputedStyle(stage).getPropertyValue("--panel-space")) || 0

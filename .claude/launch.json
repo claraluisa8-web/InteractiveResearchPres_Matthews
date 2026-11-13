@@ -22,6 +22,18 @@
         "--strictPort"
       ],
       "port": 5173
+    },
+    {
+      "name": "site-built",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8001",
+        "--directory",
+        "_site"
+      ],
+      "port": 8001
     }
   ]
 }

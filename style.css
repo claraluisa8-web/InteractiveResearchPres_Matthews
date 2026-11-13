@@ -353,3 +353,67 @@ mark { color: inherit; background: color-mix(in srgb, var(--accent) 22%, transpa
   #details { top: auto; bottom: 12px; left: 12px; right: 12px; width: auto; max-height: 40%; }
   #reset { top: 12px; bottom: auto; }
 }
+
+/* Prototype entry: the pearl orb node, its badge and sidebar dot (handoff/docs/embed-and-deploy.md). */
+.tree .prototype .pearl-body { fill: url(#pearl-gradient); stroke: none; }
+.tree .prototype .pearl-edge { fill: none; stroke: rgb(255 255 255 / 0.22); stroke-width: 1; }
+.tree .prototype .pearl-ring { fill: none; stroke: transparent; stroke-width: 2; }
+.tree .prototype .pearl-reflection { fill: rgb(185 168 255 / 0.35); filter: blur(2px); }
+.tree .prototype .pearl { transition: filter 0.15s ease; }
+.tree .prototype:hover .pearl, .tree .prototype:focus-visible .pearl { filter: url(#pearl-glow) brightness(1.08) drop-shadow(0 0 4px rgb(185 168 255 / 0.55)); }
+.tree .prototype:focus { outline: none; }
+.tree .prototype:focus-visible .pearl-ring { stroke: #8A82FD; }
+.tree .prototype-badge { cursor: pointer; }
+.pearl-dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  margin-right: 10px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #F6F2FF, #DDD4FF 50%, #C3D6FF);
+  box-shadow: 0 0 0 1px rgb(124 92 255 / 0.35), 0 0 4px rgb(185 168 255 / 0.6);
+}
+
+/* The prototype viewer covers the whole chart; the prototype keeps its 1440×900 ratio,
+   letterboxed on its own canvas color. */
+#prototype-viewer {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  background: #050A12;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+#prototype-viewer.open { opacity: 1; }
+#prototype-viewer[hidden] { display: none; }
+.prototype-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px 10px 16px;
+  color: #F2F5FA;
+  background: #03060C;
+  border-bottom: 1px solid rgb(255 255 255 / 0.08);
+}
+.prototype-header h2 { flex: 1; margin: 0; font-size: 0.95rem; font-weight: 600; }
+.prototype-header .pearl-dot { margin-right: 0; }
+#prototype-new-tab { color: #B3ADFF; font-size: 0.85rem; text-underline-offset: 3px; }
+#prototype-new-tab:hover { color: #F2F5FA; }
+#prototype-close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: #B8CAE2;
+  background: transparent;
+  border: 1px solid rgb(255 255 255 / 0.16);
+  border-radius: 8px;
+  cursor: pointer;
+}
+#prototype-close:hover { color: #F2F5FA; border-color: rgb(255 255 255 / 0.32); }
+#prototype-close:focus-visible, #prototype-new-tab:focus-visible { outline: 2px solid #8A82FD; outline-offset: 2px; }
+#prototype-frame { flex: 1; min-height: 0; display: grid; place-items: center; }
+#prototype-frame iframe { display: block; border: 0; background: #050A12; }

@@ -47,6 +47,14 @@ function createSidebar(chart) {
     button.addEventListener("click", event => chart.goTo(d, event));
     li.append(button);
 
+    // The prototype topic gets a small pearl dot instead of the map mark.
+    if (d.data.prototype) {
+      const dot = document.createElement("span");
+      dot.className = "pearl-dot";
+      dot.title = "Opens the prototype";
+      li.append(dot);
+    }
+
     if (d.data.map) {
       const mark = document.createElement("span");
       mark.className = "map-mark";

@@ -87,3 +87,13 @@ Each entry records what changed from the design or the handoff, why, and which f
 - **Read-only files** (the spec tab) stay focusable; typing in them shows "Approved specs are read-only for every agent."
 - **Line hover cards** now name their state ("Cleared", "Waiting on {teammate}'s review") and, once sections exist, how many sections the line carries.
 - **Glyph sweep:** no glyph icons are rendered anywhere. The ↔ in copy always renders as the Codicon. The "•" bullets in the PR description are your copy, as text inside an editable field, so they stay.
+
+## Phase 6
+
+- **Placement:** the default from the README, a new top-level "Solution: The Pre-Merge Review" after "Mapping", with `short: "Solution"` for the outline.
+- **The pearl orb** is drawn in SVG inside the tree (gradient, two blurred swirls clipped to the circle, glow filter, reflection), at radius 17, so it zooms with the tree. Its label starts clear of the orb instead of the usual 10px. It's the one tree node in the tab order (role button, Enter or Space opens). Clicking it selects the topic as usual and also opens the overlay.
+- **"Open prototype"** is a text badge after the label, using the map badge's style. The text replaces the ✱ glyph, which the no-glyph rule doesn't allow for new marks.
+- **The overlay** covers the whole chart, including the notes card. The doc says "full-chart", and the prototype needs the room. The close × is drawn in SVG, not a × character. Closing unloads the iframe, so the next open starts fresh. Opening it closes any open map, and opening a map closes it.
+- **Inside the iframe, Esc closes the topmost layer first.** With nothing left, the prototype posts `pmr:close` to the parent, and the tree map accepts it only from its own iframe.
+- **The tree map's colors aren't touched**, beyond the overlay and pearl styles, until the Phase 7 restyle.
+- **Local check:** `.claude/launch.json` has a `site-built` entry that serves `_site/`, assembled the way CI does it. It's gitignored.

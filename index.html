@@ -52,6 +52,18 @@
       <div id="map-canvas"></div>
     </div>
 
+    <div id="prototype-viewer" role="dialog" aria-labelledby="prototype-title" hidden>
+      <div class="prototype-header">
+        <span class="pearl-dot" aria-hidden="true"></span>
+        <h2 id="prototype-title"></h2>
+        <a id="prototype-new-tab" target="_blank" rel="noopener">Open in new tab</a>
+        <button id="prototype-close" type="button" aria-label="Close prototype (Esc)">
+          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div id="prototype-frame"></div>
+    </div>
+
     <aside id="details">
       <p id="detail-path"></p>
       <h2 id="detail-title"></h2>
@@ -67,6 +79,7 @@
   <script src="data.js"></script>
   <script src="sidebar.js"></script>
   <script src="mapviewer.js"></script>
+  <script src="prototypeviewer.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
