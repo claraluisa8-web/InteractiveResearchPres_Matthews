@@ -17,10 +17,23 @@ const st = copy.saveTeam;
  * this session and the saved constellations; "Save constellation" keeps the team for other work.
  */
 export function RailFooter({ onToast }: { onToast: (message: string) => void }) {
+  const merged = useScenario((s) => s.milestones.merged);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
   const saveRef = useRef<HTMLButtonElement>(null);
   return (
+    <>
+    {/* Feedback round 6: once the PR has merged, a fresh start lives in the sidebar, not in a panel. */}
+    {merged && (
+      <button
+        type="button"
+        className="pmr-button rail__new-session"
+        data-new-session
+        onClick={() => { log('click', { target: 'newSession' }); startNewSession(t(sh.sessionTitle)); }}
+      >
+        <Icon name="refresh" size={14} />{t(sh.newSession)}
+      </button>
+    )}
     <div className="rail__footer">
       <div className="rail__history-wrap">
         <button
@@ -55,6 +68,7 @@ export function RailFooter({ onToast }: { onToast: (message: string) => void }) 
         />
       )}
     </div>
+    </>
   );
 }
 
@@ -94,11 +108,6 @@ function HistoryMenu({ onClose }: { onClose: () => void }) {
         </button>
       )}
       {!allClear && <p className="history-menu__empty">{t(sh.nothingYet)}</p>}
-      {merged && (
-        <button type="button" role="menuitem" className="menu__row history-menu__row" data-new-session-menu onClick={() => { log('click', { target: 'newSession:history' }); startNewSession(t(sh.sessionTitle)); }}>
-          <Icon name="refresh" size={14} />{t(sh.newSession)}
-        </button>
-      )}
       {teams.length > 0 && (
         <>
           <p className="pmr-label history-menu__label history-menu__label--saved">{t(sh.savedTeams)}</p>

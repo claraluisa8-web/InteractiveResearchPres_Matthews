@@ -7,7 +7,6 @@ import { caughtPerLine, footnote, receiptRows, receiptText } from '../lib/receip
 import { topSections } from '../lib/sections';
 import { log } from '../lib/log';
 import { usePopupFocus } from '../lib/usePopupFocus';
-import { startNewSession } from '../lib/savedTeams';
 import { initials, mateTone } from '../lib/status';
 import type { Collaborator, ThreadMessage } from '../lib/types';
 import { questionFor, reviewersOf, useScenario } from '../lib/store';
@@ -489,13 +488,8 @@ export function RecapPanel() {
       )}
       <div className="right-panel__actions recap__actions">
         <button type="button" className="pmr-button pmr-button--secondary" onClick={() => setRightPanel('receipt')}>{rc.actions[0]}</button>
-        <button type="button" className="pmr-button pmr-button--secondary" data-done onClick={done}>{rc.actions[1]}</button>
-        {/* Feedback round 5: once it's merged, a fresh start is one click away. */}
-        <button type="button" className="pmr-button recap__new-session" data-new-session onClick={() => { log('click', { target: 'newSession' }); startNewSession(t(copy.sessionHistory.sessionTitle)); }}>
-          <Icon name="refresh" size={14} />{t(rc.newSession)}
-        </button>
+        <button type="button" className="pmr-button" data-done onClick={done}>{rc.actions[1]}</button>
       </div>
-      <p className="recap__new-help">{t(rc.newSessionHelp)}</p>
     </aside>
   );
 }

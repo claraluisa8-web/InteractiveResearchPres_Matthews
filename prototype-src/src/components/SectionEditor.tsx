@@ -5,7 +5,7 @@ import { useEscape } from '../lib/escape';
 import { scheduleRecheck } from '../lib/flow';
 import { log } from '../lib/log';
 import {
-  ISSUE_SECTION_IDS, applyFix, changedLines, diffLines, issueById, originalFile, safeRange, sectionById, specLines, type SectionRole,
+  ISSUE_SECTION_IDS, applyFix, changedLines, diffLines, issueById, originalFile, safeRange, sectionById, specLines, topSections, type SectionRole,
 } from '../lib/sections';
 import { firstOf, useScenario } from '../lib/store';
 import type { Collaborator } from '../lib/types';
@@ -89,7 +89,8 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
     const verifiedNow = s.sections[d.id]?.status === 'verified';
     const target = needsCode ? '.cm-content' : verifiedNow ? '[data-next]' : '[data-verify]';
     // A beat later: switching files remounts CodeMirror, and its content isn't focusable until then.
-    const id = window.setTimeout(() => ref.current?.querySelector<HTMLElement>(target)?.focus(), 30);
+    // Without a Next section (the last one), focus stays on Verify.
+    const id = window.setTimeout(() => (ref.current?.querySelector<HTMLElement>(target) ?? ref.current?.querySelector<HTMLElement>('[data-verify]'))?.focus(), 30);
     return () => window.clearTimeout(id);
   }, [def.id]);
   useEffect(() => {
@@ -124,6 +125,18 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
     const next = arrowList[(i + delta + arrowList.length) % arrowList.length] ?? arrowList[0];
     if (next) openSection(next);
   };
+  // Feedback round 6: no Next section when nothing else is left to verify, and a progress bar.
+  const remaining = order.filter((u) => u.id !== def.id && sections[u.id]?.status !== 'verified');
+  const hasNext = remaining.length > 0;
+  const doneCount = order.filter((u) => sections[u.id]?.status === 'verified').length;
+  const openIssues = ISSUE_SECTION_IDS.filter((id) => issueOpen(issues[sectionById(id).issue!])).length;
+  // The words count sections like the status pill and sections panel; the bar also moves per subsection.
+  const tops = topSections(collaborators);
+  const topDone = tops.filter((x) => sections[x.id]?.status === 'verified').length;
+  const progressText = !hasNext && !verified
+    ? t(ed.progressLast)
+    : openIssues === 0 ? t(ed.progressText, { verified: topDone, total: tops.length })
+      : t(openIssues === 1 ? ed.progressIssuesOne : ed.progressIssues, { verified: topDone, total: tops.length, issues: openIssues });
   const nextSection = () => {
     const next = order.find((u) => u.id !== def.id && sections[u.id]?.status !== 'verified');
     if (next) openSection(next.id);
@@ -222,6 +235,15 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
         </header>
 
         <div className="section-editor__left">
+          <div className="section-editor__progress">
+            <p className="section-editor__progress-text">
+              <span className="pmr-label">{t(ed.progressLabel)}</span>
+              <span aria-live="polite">{progressText}</span>
+            </p>
+            <div className="progress-track" role="progressbar" aria-valuemin={0} aria-valuemax={order.length} aria-valuenow={doneCount} aria-label={t(ed.progressText, { verified: topDone, total: tops.length })}>
+              <div className="progress-fill" style={{ width: `${(doneCount / Math.max(order.length, 1)) * 100}%` }} />
+            </div>
+          </div>
           {issueData ? (
             <>
               <AgentCard role="builder" label={t(ed.builderSays, names)} text={issueData.builderSays} note={cardNotes.builder} />
@@ -270,7 +292,7 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
                 {verified ? <Icon name="check" size={14} /> : !canVerify && <Icon name="lock" size={14} />}
                 {verified ? t(ed.verified) : ed.verify}
               </button>
-              <button type="button" className="pmr-button pmr-button--secondary" data-next onClick={nextSection}>{ed.next}</button>
+              {hasNext && <button type="button" className="pmr-button pmr-button--secondary" data-next onClick={nextSection}>{ed.next}</button>}
             </div>
             <p className="section-editor__help" aria-live="polite">{help}</p>
 

@@ -37,7 +37,9 @@ export function TeamRail({ showFit, onFit, onToast }: { showFit: boolean; onFit:
       : []),
   ];
 
-  if (rows.length < 3) {
+  const merged = useScenario((s) => s.milestones.merged);
+  // After the merge the rail always shows, since it holds Start a new session.
+  if (rows.length < 3 && !merged) {
     return showFit ? <FitButton onFit={onFit} standalone /> : null;
   }
 

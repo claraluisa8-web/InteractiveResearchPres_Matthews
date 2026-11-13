@@ -18,7 +18,7 @@ export function expectedStep(s: State): Expected {
   const builder = firstOf(s.collaborators, 'builder');
   const reviewer = firstOf(s.collaborators, 'reviewer');
 
-  if (m.merged) return { key: 'done', selector: s.rightPanel === 'recap' ? '[data-new-session]' : null };
+  if (m.merged) return { key: 'done', selector: s.rightPanel === 'recap' ? '[data-done]' : '[data-new-session]' };
   if (m.prCreated && m.teammateApproved) return { key: 'approved', selector: null };
   if (m.prCreated) {
     if (!reviewersOf(s.collaborators).length) return { key: 'review:noReviewer', selector: '[data-add-reviewer]' };

@@ -982,6 +982,26 @@
     "fixAppliedHelp": {
       "text": "{reviewer}’s fix is in the code (highlighted). Review it, then verify.",
       "new": true
+    },
+    "progressLabel": {
+      "text": "Your progress",
+      "new": true
+    },
+    "progressText": {
+      "text": "{verified} of {total} sections verified",
+      "new": true
+    },
+    "progressIssues": {
+      "text": "{verified} of {total} sections verified  ·  {issues} to resolve",
+      "new": true
+    },
+    "progressIssuesOne": {
+      "text": "{verified} of {total} sections verified  ·  1 to resolve",
+      "new": true
+    },
+    "progressLast": {
+      "text": "Last one. Verify it to finish.",
+      "new": true
     }
   },
   "allClear": {

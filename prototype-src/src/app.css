@@ -1575,5 +1575,11 @@ textarea.input::placeholder { color: var(--pmr-text-2); opacity: 1; }
 
 /* Feedback round 5: Start a new session sits with the recap's actions. */
 .recap__actions { flex-wrap: wrap; }
-.recap__actions .recap__new-session { display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: 1 0 100%; }
-.recap__new-help { margin: 8px 0 0; font-size: 11px; line-height: 15px; color: var(--pmr-text-2); }
+
+/* Feedback round 6: progress through verification, at the top of the editor's left column. */
+.section-editor__progress { margin: 0 0 14px; }
+.section-editor__progress-text { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0; font-size: 12px; line-height: 16px; }
+.section-editor__progress .progress-track { margin-top: 6px; }
+
+/* Feedback round 6: Start a new session in the team rail after the merge. */
+.rail__new-session { display: flex; align-items: center; justify-content: center; gap: 6px; flex: none; margin: 10px 0 0; }
