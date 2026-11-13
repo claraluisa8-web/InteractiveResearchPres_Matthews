@@ -108,7 +108,7 @@ export function AgentPopover() {
                 onClick={() => {
                   // Feedback round 2: talk to a teammate on your line with them, through the composer.
                   const s = useScenario.getState();
-                  s.setComposerTarget(c.id);
+                  s.addressTeammate(c.id);
                   if (s.thread.some((m) => m.with === c.id)) s.openThread(c.id);
                   openPopover(null);
                   requestAnimationFrame(() => document.querySelector<HTMLElement>('.composer__input')?.focus());

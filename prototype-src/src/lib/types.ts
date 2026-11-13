@@ -88,4 +88,6 @@ export interface IssueState {
   how?: 'edited' | 'accepted' | 'rejected';
   /** The reviewer's last word after a recheck that didn't resolve it. */
   note?: string;
+  /** Lines the accepted fix added, highlighted until the section is verified. */
+  fixLines?: { line: number; text: string }[];
 }

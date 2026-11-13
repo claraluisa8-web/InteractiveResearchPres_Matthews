@@ -970,6 +970,18 @@
     "savedLabel": {
       "text": "Saved",
       "new": true
+    },
+    "fixAppliedToast": {
+      "text": "Applied {reviewer}’s fix. Look it over, then verify the section.",
+      "new": true
+    },
+    "fixAppliedNote": {
+      "text": "{reviewer}’s fix  ·  applied",
+      "new": true
+    },
+    "fixAppliedHelp": {
+      "text": "{reviewer}’s fix is in the code (highlighted). Review it, then verify.",
+      "new": true
     }
   },
   "allClear": {
@@ -1067,6 +1079,36 @@
     "reviewerSelect": {
       "text": "Reviewer",
       "new": true
+    },
+    "reviewerPlaceholder": {
+      "text": "Choose a reviewer…",
+      "new": true
+    },
+    "noTeammates": {
+      "text": "No teammates in your constellation yet.",
+      "new": true
+    },
+    "addTeammate": {
+      "text": "Add a teammate",
+      "new": true
+    },
+    "noReviewer": {
+      "title": {
+        "text": "No reviewer yet",
+        "new": true
+      },
+      "body": {
+        "text": "Please add a human reviewer or teammate to your constellation before you send your pull request.",
+        "new": true
+      },
+      "proceed": {
+        "text": "Proceed anyway",
+        "new": true
+      },
+      "cancel": {
+        "text": "Cancel",
+        "new": true
+      }
     }
   },
   "teammateReview": {
@@ -1197,6 +1239,18 @@
     "removeAttachment": {
       "text": "Remove {file}",
       "new": true
+    },
+    "noReviewerCheck": {
+      "text": "No reviewer assigned",
+      "new": true
+    },
+    "noReviewerHelp": {
+      "text": "Add a teammate to review. Merging unlocks when they approve.",
+      "new": true
+    },
+    "addReviewer": {
+      "text": "Add a reviewer",
+      "new": true
     }
   },
   "recap": {
@@ -1285,7 +1339,8 @@
     "Phase 3: issueLine.statusPillOne/badgeLabel, sectionsPanel extras, editor extras (labels, recheck, reject confirm, diff, afterResolve, notStillMet), section summaries and spec excerpts for non-issue sections",
     "Phase 4: allClear footnotes/copy/close, pullRequest close, teammateReview reply/answer/autoApprove/approved, recap close, constellation nextSteps/hints for allClear/review/done, lineCard cleared/review",
     "Phase 5: chrome.recording, recordingLabel, exported, startOverConfirm keep/clear log, specLocked; lineCard section counts",
-    "Feedback round 1: Saved label, teammate name/email fields and errors, all-clear pop-up, Dana reviewing/reading states"
+    "Feedback round 1: Saved label, teammate name/email fields and errors, all-clear pop-up, Dana reviewing/reading states",
+    "Feedback round 3: fix-applied toast/note/help, PR reviewer picker and no-reviewer warning, no-reviewer PR status"
   ],
   "constellation": {
     "$note": "Phase 1 copy that isn't drawn in Figma. All new.",

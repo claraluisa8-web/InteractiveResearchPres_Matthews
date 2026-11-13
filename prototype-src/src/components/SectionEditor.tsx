@@ -160,13 +160,23 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
           }
         }
       }
+      // An accepted fix stays highlighted until the section is verified (feedback round 3).
+      if (issueData && issue?.how === 'accepted' && !verified && issue.fixLines) {
+        let noted = false;
+        for (const { line: n, text } of issue.fixLines) {
+          // Only while the line is still the fix's own text (an edit afterwards drops the highlight).
+          if (lines[n - 1] !== text) continue;
+          map.set(n, { ...map.get(n), fix: true, ...(noted ? {} : { note: t(ed.fixAppliedNote, names), noteKind: 'fix' as const }) });
+          noted = true;
+        }
+      }
       const firstUnsaved = [...unsaved].sort((a, b) => a - b)[0];
       if (firstUnsaved) map.set(firstUnsaved, { ...map.get(firstUnsaved), note: t(ed.yourLineNote), noteKind: 'you' });
       return map;
     };
     return sectionExtensions(annotate);
     // Recompute when the section, its issue state, the saved text or the names change.
-  }, [isSpec, def.id, open, saved, original, names.builder, names.reviewer]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isSpec, def.id, open, saved, original, names.builder, names.reviewer, verified, issue?.how]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const scrollLine = isSpec
     ? (issueData?.specExcerpt.lines[0] ?? def.specLines?.[0] ?? 1)
@@ -187,6 +197,7 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
       : issue?.status === 'savedAwaitingAgents' ? t(ed.rechecking)
         : open ? ed.verifyHelpLocked
           : issue?.status === 'rejected' ? t(ed.afterResolve.reviewerRejected)
+            : issue?.how === 'accepted' ? t(ed.fixAppliedHelp, names)
             : t(ed.agentsAgree, names);
 
   return (
@@ -324,6 +335,9 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
                 title={t(ed.diffTitle, names)}
                 onApply={() => {
                   acceptFix(issueData.id);
+                  onToast(t(ed.fixAppliedToast, names));
+                  // Land on Verify, not past it: the person still checks the fix (feedback round 3).
+                  setTimeout(() => ref.current?.querySelector<HTMLElement>('[data-verify]')?.focus({ preventScroll: true }), 30);
                   setCardNote('builder', t(ed.afterResolve.builder));
                   setCardNote('reviewer', t(ed.afterResolve.reviewer));
                 }}

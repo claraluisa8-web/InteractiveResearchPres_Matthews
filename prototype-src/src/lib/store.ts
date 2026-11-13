@@ -3,7 +3,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { copy, t } from './copy';
 import { codeFile } from './code';
 import { pickSlot } from './layout';
-import { applyFix, changedLines, initialIssues, initialSections, issueMet, originalFile, safeRange, sectionById } from './sections';
+import { applyFix, changedLines, diffLines, initialIssues, initialSections, issueMet, originalFile, safeRange, sectionById } from './sections';
 import { isGhost, type AgentRole, type Collaborator, type IssueState, type Milestones, type Recommendation, type ReviewStage, type RightPanel, type SectionState, type ThreadMessage, type View } from './types';
 
 export const IDENTITY_VIEW: View = { x: 0, y: 0, k: 1 };
@@ -101,6 +101,10 @@ interface ScenarioState {
   openAddMenu: (anchor: MenuAnchor, highlight?: AgentRole) => void;
   closeAddMenu: () => void;
   startDraft: (role: AgentRole, otherType?: string) => void;
+  /** Add a teammate from the PR panel or PR status card; they become the reviewer once saved. */
+  addReviewer: () => void;
+  /** Where a teammate draft came from, so saving it can make them the reviewer. */
+  draftFor: 'pr' | 'review' | null;
   editCollaborator: (id: string, opts?: { focusName?: boolean; prefillName?: string }) => void;
   updateDraft: (patch: Partial<Collaborator>) => void;
   commitConfigure: (form: Partial<Collaborator>) => void;
@@ -138,6 +142,11 @@ interface ScenarioState {
   setStageWidth: (w: number) => void;
   setAllClearOpen: (v: boolean) => void;
   setComposerTarget: (target: string) => void;
+  /** Point the composer at a teammate, remembering what it pointed at before. */
+  addressTeammate: (teammateId: string) => void;
+  /** Close the thread card and put the composer back the way it was (feedback round 3). */
+  closeComment: () => void;
+  prevComposerTarget: string | null;
   setAttachments: (files: string[]) => void;
   openThread: (teammateId: string) => void;
   messageTeammate: (teammateId: string, text: string) => void;
@@ -253,6 +262,8 @@ export const useScenario = create<ScenarioState>()(
       stageWidth: 1440,
       allClearOpen: false,
       composerTarget: 'team',
+      draftFor: null,
+      prevComposerTarget: null,
       attachments: [],
       commentWith: null,
 
@@ -285,6 +296,12 @@ export const useScenario = create<ScenarioState>()(
         });
       },
 
+      addReviewer: () => {
+        const from = get().rightPanel === 'pr' ? 'pr' : 'review';
+        get().startDraft('teammate');
+        set({ draftFor: from, rightPanel: from === 'pr' ? null : get().rightPanel });
+      },
+
       editCollaborator: (id, opts = {}) =>
         set((s) => ({
           collaborators: s.collaborators.filter((c) => c.status !== 'draft'),
@@ -315,10 +332,31 @@ export const useScenario = create<ScenarioState>()(
           ),
         );
         set({ collaborators: next, configure: null, firstAdded: true, milestones: roleMilestones(next, milestones) });
+        // Feedback round 3: a teammate is the reviewer only when the person picks or adds them for it.
+        const s = get();
+        const isNewMate = target.role === 'teammate' && target.status === 'draft';
+        if (isNewMate && s.draftFor === 'pr') {
+          set({ pr: { ...s.pr, reviewer: target.id }, rightPanel: 'pr', draftFor: null });
+        } else if (isNewMate && s.milestones.prCreated && !s.pr.reviewer) {
+          // Added after "Proceed anyway": they join the PR and the review starts.
+          set({
+            pr: { ...s.pr, reviewer: target.id },
+            collaborators: s.collaborators.map((c) => (c.id === target.id ? { ...c, review: 'pending' } : c)),
+            reviewStage: 'reviewing',
+            commentWith: target.id,
+            commentOpen: false,
+            draftFor: null,
+          });
+        } else set({ draftFor: null });
       },
 
       cancelConfigure: () =>
-        set((s) => ({ collaborators: s.collaborators.filter((c) => c.status !== 'draft'), configure: null })),
+        set((s) => ({
+          collaborators: s.collaborators.filter((c) => c.status !== 'draft'),
+          configure: null,
+          rightPanel: s.draftFor === 'pr' ? 'pr' : s.rightPanel,
+          draftFor: null,
+        })),
 
       removeCollaborator: (id) =>
         set((s) => ({
@@ -438,10 +476,12 @@ export const useScenario = create<ScenarioState>()(
         const file = sectionById(issueSection(issue)).file;
         const current = s.fileDrafts[file] ?? s.files[file] ?? '';
         const { [file]: _, ...rest } = s.fileDrafts;
+        const patched = applyFix(issue, current);
+        const fixLines = diffLines(current, patched).filter((r) => r.kind === 'add' && r.text.trim()).map((r) => ({ line: r.newLine!, text: r.text }));
         set({
-          files: { ...s.files, [file]: applyFix(issue, current) },
+          files: { ...s.files, [file]: patched },
           fileDrafts: rest,
-          issues: { ...s.issues, [issue]: { id: issue, status: 'resolved', how: 'accepted' } },
+          issues: { ...s.issues, [issue]: { id: issue, status: 'resolved', how: 'accepted', fixLines } },
           editor: s.editor ? { ...s.editor, mode: 'edit' } : null,
         });
       },
@@ -470,6 +510,18 @@ export const useScenario = create<ScenarioState>()(
       setStageWidth: (w) => set({ stageWidth: w }),
       setAllClearOpen: (v) => set({ allClearOpen: v }),
       setComposerTarget: (target) => set({ composerTarget: target }),
+      addressTeammate: (teammateId) =>
+        set((s) => ({
+          prevComposerTarget: s.prevComposerTarget ?? (s.composerTarget === teammateId ? null : s.composerTarget),
+          composerTarget: teammateId,
+        })),
+      closeComment: () =>
+        set((s) => ({
+          commentOpen: false,
+          composerTarget: s.prevComposerTarget ?? s.composerTarget,
+          prevComposerTarget: null,
+          attachments: s.prevComposerTarget ? [] : s.attachments,
+        })),
       setAttachments: (files) => set({ attachments: files }),
       openThread: (teammateId) => set({ commentWith: teammateId, commentOpen: true, popover: null }),
       // Messages to a teammate outside the review get a short scripted answer (useReviewFlow).
@@ -489,35 +541,11 @@ export const useScenario = create<ScenarioState>()(
         })),
       setRightPanel: (p) => set({ rightPanel: p, sectionsLine: null, popover: null, updateCardOpen: false }),
 
-      // M8: the PR panel. Without a teammate, Dana Kim appears as a dashed "adding" ghost (frame 09).
+      // M8: the PR panel. No teammate is added or picked for the person (feedback round 3).
       openPR: () => {
         const s = get();
-        let collaborators = s.collaborators;
-        let reviewer = s.pr.reviewer && collaborators.some((c) => c.id === s.pr.reviewer) ? s.pr.reviewer : null;
-        const mates = collaborators.filter((c) => c.role === 'teammate');
-        if (!reviewer && mates.length) reviewer = mates[0].id;
-        let seq = s.seq;
-        if (!reviewer) {
-          const ghost: Collaborator = {
-            id: `teammate-${seq}`,
-            role: 'teammate',
-            name: copy.people.teammate.fullName,
-            email: t(copy.people.teammate.email),
-            configuration: '',
-            allowedToEdit: [],
-            crossTeamRequests: false,
-            connectsTo: ['you'],
-            status: 'suggested',
-            addedAt: Date.now(),
-            slot: pickSlot('teammate', collaborators.map((c) => c.slot)),
-          };
-          collaborators = [...collaborators, ghost];
-          reviewer = ghost.id;
-          seq += 1;
-        }
+        const reviewer = s.pr.reviewer && s.collaborators.some((c) => c.id === s.pr.reviewer && c.status === 'active') ? s.pr.reviewer : null;
         set({
-          collaborators,
-          seq,
           pr: { ...s.pr, reviewer },
           rightPanel: 'pr',
           sectionsLine: null,
@@ -538,6 +566,11 @@ export const useScenario = create<ScenarioState>()(
       createPR: () => {
         const s = get();
         const id = s.pr.reviewer;
+        if (!id) {
+          // "Proceed anyway": the PR exists with no reviewer; merging stays locked until one approves.
+          set({ rightPanel: null, commentOpen: false, reviewStage: 'none', milestones: { ...s.milestones, prCreated: true } });
+          return;
+        }
         set({
           collaborators: s.collaborators.map((c) =>
             c.id === id ? { ...c, status: 'active', review: 'pending', connectsTo: c.connectsTo.includes('you') ? c.connectsTo : [...c.connectsTo, 'you'] } : c,

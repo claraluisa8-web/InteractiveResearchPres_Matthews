@@ -21,6 +21,7 @@ export function expectedStep(s: State): Expected {
   if (m.merged) return { key: 'done', selector: s.rightPanel === 'recap' ? '[data-done]' : null };
   if (m.prCreated && m.teammateApproved) return { key: 'approved', selector: '[data-merge]' };
   if (m.prCreated) {
+    if (!s.pr.reviewer) return { key: 'review:noReviewer', selector: '[data-add-reviewer]' };
     if (s.reviewStage !== 'commented') return { key: `review:${s.reviewStage}`, selector: null };
     return { key: 'review:commented', selector: s.commentOpen ? '[data-reply]' : '[data-comment-node]' };
   }

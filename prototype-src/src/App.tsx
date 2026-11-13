@@ -96,6 +96,18 @@ export function App() {
 
   // Hidden reset: Ctrl/Cmd+Shift+R handled in-app so it clears pmr: state, not just reloads.
   useEffect(() => {
+    // A held Enter or Space repeats; without this, the repeats press whatever button takes focus next
+    // (Apply fix, then Verify, then Next section). One press, one action.
+    const onRepeat = (e: KeyboardEvent) => {
+      if (e.repeat && (e.key === 'Enter' || e.key === ' ') && (e.target as Element).closest?.('button, [role="button"], [role="menuitem"]')) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+    window.addEventListener('keydown', onRepeat, true);
+    return () => window.removeEventListener('keydown', onRepeat, true);
+  }, []);
+  useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'r') {
         e.preventDefault();

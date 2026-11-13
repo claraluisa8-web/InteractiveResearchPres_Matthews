@@ -1488,3 +1488,12 @@ textarea.input::placeholder { color: var(--pmr-text-2); opacity: 1; }
 .comment-card [data-reply] { display: inline-flex; align-items: center; gap: 6px; }
 .comment-card__pr-comment { margin-top: 10px; }
 .comment-card__pr-comment .comment-card__who { font-weight: 600; white-space: pre; }
+
+/* An applied fix stays highlighted until the section is verified (feedback round 3). */
+.section-editor .cm-fix-row { background: rgba(62, 230, 168, 0.1); box-shadow: inset 3px 0 0 var(--pmr-cleared); }
+.section-editor .cm-line[data-note-kind='fix']::after { color: var(--pmr-text); font-weight: 600; }
+
+/* Feedback round 3: reviewer is picked, not assumed. */
+.pr-panel__add { margin-top: 10px; gap: 6px; }
+[data-add-reviewer] { gap: 6px; margin-top: 8px; }
+.pr-panel__reviewer { margin-top: 10px; }

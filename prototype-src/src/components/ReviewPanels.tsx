@@ -1,4 +1,5 @@
-import { FormEvent, useEffect, useRef } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { copy, t } from '../lib/copy';
 import { useEscape } from '../lib/escape';
 import { toScreen, useGeometry } from '../lib/geometry';
@@ -98,16 +99,24 @@ export function PRPanel() {
   const setPR = useScenario((s) => s.setPR);
   const closePR = useScenario((s) => s.closePR);
   const createPR = useScenario((s) => s.createPR);
+  const addReviewer = useScenario((s) => s.addReviewer);
   const ref = useRef<HTMLFormElement>(null);
+  const [warn, setWarn] = useState(false);
   useEscape(closePR);
   useEffect(() => {
     ref.current?.querySelector<HTMLElement>('input')?.focus();
   }, []);
-  const mates = collaborators.filter((c) => c.role === 'teammate');
-  const reviewer = mates.find((c) => c.id === form.reviewer) ?? mates[0];
+  const mates = collaborators.filter((c) => c.role === 'teammate' && c.status === 'active');
+  // Nobody is picked for the person (feedback round 3).
+  const reviewer = mates.find((c) => c.id === form.reviewer);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
+    if (!reviewer) {
+      log('click', { target: 'createPR', noReviewer: true });
+      setWarn(true);
+      return;
+    }
     log('input', { field: 'prTitle', text: form.title });
     createPR();
   };
@@ -139,25 +148,31 @@ export function PRPanel() {
       </label>
       <div className="field">
         <span className="pmr-label field__label" id="pr-reviewers">{pr.reviewersLabel}</span>
+        {mates.length > 0 ? (
+          <label className="select pr-panel__select">
+            <span className="sr-only">{t(pr.reviewerSelect)}</span>
+            <select value={reviewer?.id ?? ''} onChange={(e) => setPR({ reviewer: e.target.value || null })} aria-labelledby="pr-reviewers" data-reviewer-select>
+              <option value="">{t(pr.reviewerPlaceholder)}</option>
+              {mates.map((m) => <option key={m.id} value={m.id}>{m.email ? `${m.name} (${m.email})` : m.name}</option>)}
+            </select>
+            <Icon name="chevron-down" />
+          </label>
+        ) : (
+          <p className="field__help">{t(pr.noTeammates)}</p>
+        )}
         {reviewer && (
           <div className="pr-panel__reviewer">
             <span className="avatar">{initials(reviewer.name)}</span>
             <span className="pr-panel__reviewer-text">
               <span className="pr-panel__reviewer-name">{reviewer.name}</span>
               {reviewer.email && <span className="field__help pr-panel__email">{reviewer.email}</span>}
-              <span className="field__help">{reviewer.status === 'suggested' ? pr.reviewerHint : copy.roles.teammate.menuBody}</span>
+              <span className="field__help">{copy.roles.teammate.menuBody}</span>
             </span>
           </div>
         )}
-        {mates.length > 1 && (
-          <label className="select pr-panel__select">
-            <span className="sr-only">{t(pr.reviewerSelect)}</span>
-            <select value={reviewer?.id} onChange={(e) => setPR({ reviewer: e.target.value })} aria-labelledby="pr-reviewers">
-              {mates.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-            </select>
-            <Icon name="chevron-down" />
-          </label>
-        )}
+        <button type="button" className="pmr-button pmr-button--secondary pr-panel__add" onClick={addReviewer}>
+          <Icon name="add" size={14} />{t(pr.addTeammate)}
+        </button>
       </div>
       <label className="checkbox pr-panel__attach">
         <input type="checkbox" checked={form.attachReceipt} onChange={(e) => setPR({ attachReceipt: e.target.checked })} />
@@ -165,7 +180,37 @@ export function PRPanel() {
         <span>{pr.attachReceipt}</span>
       </label>
       <button type="submit" className="pmr-button right-panel__wide" data-create-pr>{pr.primary}</button>
+      {warn && (
+        <NoReviewerDialog
+          onProceed={() => { setWarn(false); log('click', { target: 'proceedWithoutReviewer' }); createPR(); }}
+          onCancel={() => { setWarn(false); requestAnimationFrame(() => ref.current?.querySelector<HTMLElement>('[data-reviewer-select], .pr-panel__add')?.focus()); }}
+        />
+      )}
     </form>
+  );
+}
+
+/** Feedback round 3: creating a PR with no human reviewer asks first. */
+function NoReviewerDialog({ onProceed, onCancel }: { onProceed: () => void; onCancel: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const nr = pr.noReviewer;
+  useEscape(onCancel);
+  usePopupFocus(ref, '[data-noreviewer-cancel]', { trap: true });
+  // Portalled to the stage so the scrim covers everything, not just the PR panel.
+  const host = document.querySelector('.stage');
+  if (!host) return null;
+  return createPortal(
+    <div className="scrim" onPointerDown={(e) => e.target === e.currentTarget && onCancel()}>
+      <div ref={ref} className="pmr-glass dialog" role="alertdialog" aria-modal="true" aria-labelledby="no-reviewer-title" aria-describedby="no-reviewer-body">
+        <h2 id="no-reviewer-title" className="dialog__title">{t(nr.title)}</h2>
+        <p id="no-reviewer-body" className="dialog__body">{t(nr.body)}</p>
+        <div className="dialog__actions">
+          <button type="button" className="pmr-button pmr-button--secondary" onClick={onProceed}>{t(nr.proceed)}</button>
+          <button type="button" className="pmr-button" data-noreviewer-cancel onClick={onCancel}>{t(nr.cancel)}</button>
+        </div>
+      </div>
+    </div>,
+    host,
   );
 }
 
@@ -177,6 +222,7 @@ export function PRStatusCard() {
   const approved = useScenario((s) => s.milestones.teammateApproved);
   const stage = useScenario((s) => s.reviewStage);
   const merge = useScenario((s) => s.merge);
+  const addReviewer = useScenario((s) => s.addReviewer);
   const mate = collaborators.find((c) => c.id === reviewerId);
   const name = mate?.name ?? copy.people.teammate.fullName;
   const total = useScenario((s) => s.collaborators.some((c) => c.role === 'tester' && c.status === 'active')) ? 8 : 7;
@@ -200,10 +246,12 @@ export function PRStatusCard() {
           </li>
         )}
         <li>
-          <Icon name={approved ? 'pass-filled' : review.icon} className={approved ? 'is-pass' : undefined} />
+          <Icon name={approved ? 'pass-filled' : mate ? review.icon : 'circle-large-outline'} className={approved ? 'is-pass' : undefined} />
           <span>
             <span className="pr-status__title">{review.title}</span>
-            <span className="pr-status__meta">{approved ? t(tr.approvedCheck, { teammate: name }) : t(review.meta, { teammate: name })}</span>
+            <span className="pr-status__meta">
+              {approved ? t(tr.approvedCheck, { teammate: name }) : mate ? t(review.meta, { teammate: name }) : t(tr.noReviewerCheck)}
+            </span>
           </span>
         </li>
       </ul>
@@ -217,7 +265,13 @@ export function PRStatusCard() {
         {!approved && <Icon name="lock" size={14} />}
         {tr.merge}
       </button>
-      {!approved && (
+      {!mate && (
+        <button type="button" className="pmr-button pmr-button--secondary right-panel__wide" data-add-reviewer onClick={addReviewer}>
+          <Icon name="add" size={14} />{t(tr.addReviewer)}
+        </button>
+      )}
+      {!approved && !mate && <p className="pr-status__help">{t(tr.noReviewerHelp)}</p>}
+      {!approved && mate && (
         <p className="pr-status__help">
           {t(stage === 'commented' ? tr.mergeLockedReply : stage === 'reading' ? tr.readingReply : tr.mergeLocked, { teammateFirst: name.split(' ')[0] })}
         </p>
@@ -234,8 +288,9 @@ export function CommentCard() {
   const allThread = useScenario((s) => s.thread);
   const approved = useScenario((s) => s.milestones.teammateApproved);
   const view = useScenario((s) => s.view);
-  const setCommentOpen = useScenario((s) => s.setCommentOpen);
-  const setComposerTarget = useScenario((s) => s.setComposerTarget);
+  const addressTeammate = useScenario((s) => s.addressTeammate);
+  const closeComment = useScenario((s) => s.closeComment);
+  const threadRef = useRef<HTMLDivElement>(null);
   const showLine = useScenario((s) => s.showLine);
   const g = useGeometry();
   const cardRef = useRef<HTMLElement>(null);
@@ -251,7 +306,26 @@ export function CommentCard() {
   const before = hasComment ? indexed.filter(({ i }) => i < commentAt) : indexed;
   const after = hasComment ? indexed.filter(({ i }) => i >= commentAt) : [];
   const replied = stage === 'reading' || stage === 'approved';
-  useEscape(() => setCommentOpen(false));
+  useEscape(closeComment);
+  // Feedback round 3: new messages scroll into view on their own.
+  const lastCount = indexed.length;
+  useEffect(() => {
+    const el = threadRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+    const card = cardRef.current;
+    if (card) card.scrollTop = card.scrollHeight;
+  }, [lastCount, stage, hasComment]);
+  // A click anywhere outside the card closes it, except in the composer it's feeding.
+  useEffect(() => {
+    const onDown = (e: PointerEvent) => {
+      const el = e.target as Element;
+      if (cardRef.current?.contains(el)) return;
+      if (el.closest?.('.composer, .attachment-row, .attach-menu, [data-comment-node], .toast')) return;
+      closeComment();
+    };
+    document.addEventListener('pointerdown', onDown, true);
+    return () => document.removeEventListener('pointerdown', onDown, true);
+  }, [closeComment]);
   // Reply is the one thing to act on: it takes focus so Enter goes straight to writing.
   usePopupFocus(cardRef, '[data-reply]', { trap: true });
   if (!mate) return null;
@@ -284,7 +358,7 @@ export function CommentCard() {
   // Feedback round 2: replying happens in the composer below ("To: {name}", with an attach button),
   // not in a field squeezed into this card.
   const reply = () => {
-    setComposerTarget(mate.id);
+    addressTeammate(mate.id);
     requestAnimationFrame(() => document.querySelector<HTMLElement>('.composer__input')?.focus());
   };
 
@@ -303,11 +377,11 @@ export function CommentCard() {
           <span className="avatar avatar--small">{initials(mate.name)}</span>
           <span id="comment-author" className="comment-card__author">{hasComment ? mate.name : t(tr.messageLine)}</span>
           <span className="comment-card__meta" />
-          <button type="button" className="icon-button comment-card__close" aria-label={t(tr.closeComment)} data-tip={t(tr.closeComment)} onClick={() => setCommentOpen(false)}>
+          <button type="button" className="icon-button comment-card__close" aria-label={t(tr.closeComment)} data-tip={t(tr.closeComment)} onClick={closeComment}>
             <Icon name="close" size={14} />
           </button>
         </header>
-        <div className="comment-card__thread">
+        <div ref={threadRef} className="comment-card__thread">
           {before.map(({ m, i }) => renderMessage(m, i))}
           {hasComment && (
             <p className="comment-card__body comment-card__pr-comment">

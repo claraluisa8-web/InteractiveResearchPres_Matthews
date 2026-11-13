@@ -10,7 +10,9 @@ export interface LineInfo {
   /** Authorship mark in the gutter: rows inside the section. */
   author?: 'builder' | 'you';
   note?: string;
-  noteKind?: 'issue' | 'you' | 'plain';
+  noteKind?: 'issue' | 'you' | 'plain' | 'fix';
+  /** A row the accepted fix added. */
+  fix?: boolean;
   /** Section marker row drawn above this line. */
   marker?: string;
   inSection?: boolean;
@@ -73,7 +75,7 @@ export function sectionExtensions(annotate: Annotate): SectionExtensions {
       if (!li) continue;
       const line = state.doc.line(n);
       if (li.marker) b.add(line.from, line.from, Decoration.widget({ widget: new MarkerWidget(li.marker), block: true, side: -1 }));
-      const cls = [li.issue ? 'cm-issue-row' : '', li.inSection ? 'cm-in-section' : '', li.author === 'you' ? 'cm-your-row' : ''].filter(Boolean).join(' ');
+      const cls = [li.issue ? 'cm-issue-row' : '', li.fix ? 'cm-fix-row' : '', li.inSection ? 'cm-in-section' : '', li.author === 'you' ? 'cm-your-row' : ''].filter(Boolean).join(' ');
       const attrs: Record<string, string> = {};
       if (li.note) { attrs['data-note'] = li.note; attrs['data-note-kind'] = li.noteKind ?? 'plain'; }
       if (cls || li.note) b.add(line.from, line.from, Decoration.line({ class: cls, attributes: attrs }));
