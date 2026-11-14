@@ -3,6 +3,7 @@ import { copy, t } from '../lib/copy';
 import { usePopupFocus } from '../lib/usePopupFocus';
 import { useEscape } from '../lib/escape';
 import { giveTheGo } from '../lib/flow';
+import { log } from '../lib/log';
 import { subtitleFor } from '../lib/status';
 import { firstOf, useScenario } from '../lib/store';
 import { Icon } from './Icon';
@@ -14,6 +15,12 @@ const CHIP_FILES: Record<string, string> = {
   'PlanService.java': 'PlanService.java',
 };
 
+/** "CreatePlanRequest.java  +3" reads as three pages to step through (P3); say they're more files. */
+function chipLabel(chip: string) {
+  const m = chip.match(/^(.*?)\s+\+(\d+)$/);
+  return m ? `${m[1]}  ${t(copy.build.builderUpdate.moreFiles, { n: m[2] })}` : chip;
+}
+
 /** Top-right card: the builder's ready state (M1b) cross-fading into its update card (M2, frame 04). */
 export function BuildCard() {
   const collaborators = useScenario((s) => s.collaborators);
@@ -23,7 +30,9 @@ export function BuildCard() {
   const floatingFile = useScenario((s) => s.floatingFile);
   const openFile = useScenario((s) => s.openFile);
   const setUpdateCardOpen = useScenario((s) => s.setUpdateCardOpen);
+  const startDraft = useScenario((s) => s.startDraft);
   const builder = firstOf(collaborators, 'builder');
+  const reviewer = collaborators.some((c) => c.role === 'reviewer' && c.status === 'active');
   const readyRef = useRef<HTMLElement>(null);
   // The ready card's purple "Start from the spec" takes focus when it appears, so Enter starts the build.
   usePopupFocus(readyRef, '[data-start-build]', { when: !!builder && !buildStarted && readyVisible });
@@ -69,6 +78,17 @@ export function BuildCard() {
         </button>
       </header>
       <p className="build-card__body">{bu.body}</p>
+      {/* P3 testing: the file chips read as the task. Until there's a reviewer, the card names the next step. */}
+      {!reviewer && (
+        <div className="build-card__next">
+          <p className="pmr-label">{t(bu.nextLabel)}</p>
+          <p className="build-card__next-body">{t(bu.nextBody)}</p>
+          <button type="button" className="pmr-button" data-add-reviewer-next onClick={() => { log('click', { target: 'buildCardAddReviewer' }); startDraft('reviewer'); }}>
+            <Icon name="add" size={14} />{t(bu.nextButton)}
+          </button>
+        </div>
+      )}
+      <p className="pmr-label build-card__files-label">{t(bu.filesLabel)}</p>
       <div className="chips build-card__chips">
         {bu.chips.map((chip) => {
           const file = CHIP_FILES[chip];
@@ -82,7 +102,7 @@ export function BuildCard() {
               aria-pressed={open}
               onClick={() => openFile(open ? null : file)}
             >
-              {chip}
+              {chipLabel(chip)}
             </button>
           );
         })}

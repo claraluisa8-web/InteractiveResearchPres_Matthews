@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { sectionExtensions, type LineInfo } from '../lib/cmSection';
 import { copy, t } from '../lib/copy';
 import { useEscape } from '../lib/escape';
@@ -173,12 +173,19 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
       // Flagged rows and notes for this section's open issue.
       if (issueData && open) {
         const scope = safeRange('createPlan', text);
+        let flagged = 0;
         for (let n = scope.start; n <= scope.end; n++) {
           const line = lines[n - 1] ?? '';
-          if (issueData.flaggedLines.some((f) => line.includes(f.trim()))) map.set(n, { ...map.get(n), issue: true });
+          if (issueData.flaggedLines.some((f) => line.includes(f.trim()))) { map.set(n, { ...map.get(n), issue: true }); flagged++; }
           for (const [key, note] of Object.entries((issueData as { lineNotes?: Record<string, string> }).lineNotes ?? {})) {
             if (line.includes(key)) map.set(n, { ...map.get(n), note: t(note, names), noteKind: note.startsWith('{reviewer}') ? 'issue' : 'plain' });
           }
+        }
+        // P3 testing: an edit can remove the flagged lines while the issue is still open. Keep it red
+        // until the recheck passes, so the code never looks fixed when it isn't.
+        if (flagged === 0) {
+          const n = r.start;
+          map.set(n, { ...map.get(n), issue: true, note: t((ed.notStillMet as Record<string, { text: string }>)[String(issueData.id)]), noteKind: 'issue' });
         }
       }
       // An accepted fix stays highlighted until the section is verified (feedback round 3).
@@ -258,8 +265,18 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
                 role="reviewer"
                 label={t(ed.reviewerSays, names)}
                 text={issueData.reviewerSays}
-                note={issue?.status === 'savedAwaitingAgents' ? t(ed.rechecking) : cardNotes.reviewer ?? issue?.note}
-              />
+                note={issue?.status === 'savedAwaitingAgents' ? t(ed.rechecking) : cardNotes.reviewer ?? (issue?.note ? t(ed.stillOpenNote, { note: issue.note }) : undefined)}
+              >
+                {/* P3 testing: "View fix" sat at the bottom corner and was missed. It now sits with the issue it fixes. */}
+                {open && editor.mode === 'edit' && (
+                  <div className="agent-card__fix">
+                    {issue?.note && <p className="agent-card__fix-help">{t(ed.stillOpenHelp, names)}</p>}
+                    <button type="button" className="pmr-button" data-accept onClick={() => setEditorMode('diff')}>
+                      {t(ed.accept, names)}
+                    </button>
+                  </div>
+                )}
+              </AgentCard>
             </>
           ) : (
             <>
@@ -311,17 +328,6 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
               </div>
             )}
 
-            {/* Feedback round 7: one way in — see the fix first. Apply, Reject and Cancel live with the preview. */}
-            {def.issue && open && editor.mode === 'edit' && (
-              <>
-                <p className="pmr-label section-editor__resolve-label">{ed.resolveWithout}</p>
-                <div className="section-editor__row section-editor__row--tight">
-                  <button type="button" className="pmr-button pmr-button--secondary" data-accept onClick={() => setEditorMode('diff')}>
-                    {t(ed.accept, names)}
-                  </button>
-                </div>
-              </>
-            )}
           </div>
         </div>
 
@@ -400,12 +406,13 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
 
 const specText = () => specLines(1, 999).map((l) => l.text).join('\n');
 
-function AgentCard({ role, label, text, note }: { role: 'builder' | 'reviewer'; label: string; text: string; note?: string }) {
+function AgentCard({ role, label, text, note, children }: { role: 'builder' | 'reviewer'; label: string; text: string; note?: string; children?: ReactNode }) {
   return (
     <div className={`pmr-glass agent-card agent-card--${role}`}>
       <p className="agent-card__label"><Orb role={role} size={18} /><span className="pmr-label">{label}</span></p>
       <p className="agent-card__text">{text}</p>
       {note && <p className="agent-card__note" aria-live="polite">{note}</p>}
+      {children}
     </div>
   );
 }

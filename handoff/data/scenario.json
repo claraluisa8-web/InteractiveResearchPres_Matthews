@@ -368,6 +368,27 @@
       "metaSuffix": {
         "text": "just now",
         "new": true
+      },
+      "nextLabel": {
+        "text": "Next step",
+        "new": true
+      },
+      "nextBody": {
+        "text": "Add a reviewer. It checks this code against the spec before your pull request.",
+        "new": true,
+        "note": "P3 testing: the file chips read as the task; nothing named the next step."
+      },
+      "nextButton": {
+        "text": "Add a reviewer",
+        "new": true
+      },
+      "filesLabel": {
+        "text": "Generated files · open one to look, nothing to fix yet",
+        "new": true
+      },
+      "moreFiles": {
+        "text": "+{n} more",
+        "new": true
       }
     },
     "floatingFile": {
@@ -386,6 +407,11 @@
       "savedLabel": {
         "text": "Saved",
         "new": true
+      },
+      "saveToastNoReviewer": {
+        "text": "Saved. Next, add a reviewer to check the code.",
+        "new": true,
+        "note": "P3 testing: “will pick this up” didn’t say the edit doesn’t move the task on."
       }
     },
     "statusPill": "Building  ·  no issues",
@@ -1037,6 +1063,15 @@
     },
     "verifyRemainingToast": {
       "text": "Verified {n} sections with no issues.",
+      "new": true
+    },
+    "stillOpenNote": {
+      "text": "{note} Your edit didn’t fix it yet.",
+      "new": true,
+      "note": "P3 testing: the red cleared after a hand edit while the recheck still failed."
+    },
+    "stillOpenHelp": {
+      "text": "Not sure what’s missing? See what {reviewer} would change.",
       "new": true
     }
   },

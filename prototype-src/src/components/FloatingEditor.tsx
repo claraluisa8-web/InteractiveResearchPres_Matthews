@@ -44,7 +44,9 @@ export function FloatingEditor({ onToast }: { onToast: (message: string) => void
     log('save', { file, section: null, resolved: null });
     saveFile(file);
     setJustSaved(true);
-    onToast(t(ff.saveToast, { builder: builder?.name }));
+    // P3 testing: until a reviewer is on the team, the toast names the next step instead.
+    const hasReviewer = collaborators.some((c) => c.role === 'reviewer' && c.status === 'active');
+    onToast(hasReviewer ? t(ff.saveToast, { builder: builder?.name }) : t(ff.saveToastNoReviewer));
   };
 
   // Dashed tie from the panel's right edge to the builder orb (stage space, so it survives pan and zoom).

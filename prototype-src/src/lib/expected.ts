@@ -48,7 +48,7 @@ export function expectedStep(s: State): Expected {
   if (s.recommendation === 'shown' || s.recommendation === 'dismissed') {
     return { key: 'recommendation', selector: s.recCardOpen ? '[data-rec-primary]' : '.status-pill.is-button' };
   }
-  if (m.buildStarted) return reviewer ? { key: 'building', selector: null } : { key: 'buildNoReviewer', selector: '[data-plus]' };
+  if (m.buildStarted) return reviewer ? { key: 'building', selector: null } : { key: 'buildNoReviewer', selector: s.updateCardOpen ? '[data-add-reviewer-next]' : '[data-plus]' };
   if (builder) return { key: 'ready', selector: s.readyVisible ? '[data-start-build]' : null };
   if (s.collaborators.length === 0) return { key: 'empty', selector: '[data-plus]' };
   return { key: 'noBuilder', selector: '[data-plus]' };
