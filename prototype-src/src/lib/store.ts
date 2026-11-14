@@ -555,13 +555,18 @@ export const useScenario = create<ScenarioState>()(
       verifySection: (id) => {
         const s = get();
         const sections = { ...s.sections, [id]: { ...s.sections[id], status: 'verified' as const } };
+        // Verifying a section whose issue is still open is your call over the reviewer's finding.
+        const issueId = sectionById(id).issue;
+        const issues = issueId && s.issues[issueId]?.status === 'open'
+          ? { ...s.issues, [issueId]: { id: issueId, status: 'resolved' as const, how: 'overridden' as const } }
+          : s.issues;
         // A parent (createPlan) is verified once all its subsections are.
         const parent = sectionById(id).parent;
         if (parent) {
           const kids = sectionById(parent).children ?? [];
           if (kids.every((k) => sections[k].status === 'verified')) sections[parent] = { ...sections[parent], status: 'verified' };
         }
-        set({ sections });
+        set({ sections, issues });
       },
 
       verifyMany: (ids) => {

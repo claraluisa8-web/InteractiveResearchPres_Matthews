@@ -91,7 +91,7 @@ export interface IssueState {
   id: number;
   status: 'open' | 'fixPreview' | 'savedAwaitingAgents' | 'resolved' | 'rejected';
   /** How it was resolved; the receipt reads this (phase 4). */
-  how?: 'edited' | 'accepted' | 'rejected';
+  how?: 'edited' | 'accepted' | 'rejected' | 'overridden';
   /** The reviewer's last word after a recheck that didn't resolve it. */
   note?: string;
   /** Lines the accepted fix added, highlighted until the section is verified. */

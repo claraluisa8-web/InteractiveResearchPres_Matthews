@@ -68,7 +68,6 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
   const issueData = def.issue ? issueById(def.issue) : undefined;
   const open = issueOpen(issue);
   const verified = sections[def.id]?.status === 'verified';
-  const canVerify = !verified && (!def.issue || !open);
   const tab = editor.tab;
   // "Show line" from the teammate's comment opens the merged-ready code read-only.
   const isSpec = tab === SPEC;
@@ -76,6 +75,11 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
   const saved = files[tab] ?? '';
   const current = drafts[tab] ?? saved;
   const dirty = !isSpec && drafts[tab] !== undefined && drafts[tab] !== saved;
+  // Classmate feedback: a saved edit of your own unlocks Verify, even if the reviewer still flags it.
+  // Verifying then records that you verified over the finding.
+  const anyDirty = Object.entries(drafts).some(([f, d]) => d !== undefined && d !== files[f]);
+  const override = !!def.issue && open && issue?.status === 'open' && (!!issue.note || !!sections[def.id]?.editedByYou) && !anyDirty;
+  const canVerify = !verified && (!def.issue || !open || override);
   const original = useMemo(() => originalFile(tab, builder?.name ?? 'Builder'), [tab, builder?.name]);
   const fixCount = Object.values(issues).filter((i) => i.how === 'accepted').length;
 
@@ -223,9 +227,11 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
     ? t(ed.verifyHelpVerified)
     : !def.issue ? t(ed.verifyHelpOpen)
       : issue?.status === 'savedAwaitingAgents' ? t(ed.rechecking)
+        : override ? t(ed.verifyHelpOverride, names)
         : open ? ed.verifyHelpLocked
           : issue?.status === 'rejected' ? t(ed.afterResolve.reviewerRejected)
             : issue?.how === 'accepted' ? t(ed.fixAppliedHelp, names)
+            : issue?.how === 'overridden' ? t(ed.verifyHelpVerified)
             : t(ed.agentsAgree, names);
 
   return (
@@ -270,7 +276,7 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
                 {/* P3 testing: "View fix" sat at the bottom corner and was missed. It now sits with the issue it fixes. */}
                 {open && editor.mode === 'edit' && (
                   <div className="agent-card__fix">
-                    {issue?.note && <p className="agent-card__fix-help">{t(ed.stillOpenHelp, names)}</p>}
+                    <p className={issue?.note ? 'agent-card__fix-help' : 'pmr-label agent-card__fix-label'}>{issue?.note ? t(ed.stillOpenHelp, names) : t(ed.resolveWithoutManual)}</p>
                     <button type="button" className="pmr-button" data-accept onClick={() => setEditorMode('diff')}>
                       {t(ed.accept, names)}
                     </button>

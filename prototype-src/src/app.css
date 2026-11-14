@@ -1627,3 +1627,4 @@ textarea.input::placeholder { color: var(--pmr-text-2); opacity: 1; }
 .comment-card__other:hover { background: var(--pmr-row-hover); }
 .comment-card__other .codicon { margin-left: auto; color: var(--pmr-text-2); }
 .comment-card__other-dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--pmr-lavender); }
+.agent-card__fix-label { margin: 0 0 8px; }

@@ -9,7 +9,7 @@ For the Nov 13 pilot. One run end to end, with you as facilitator and a stand-in
 
 ## Say this (30 s)
 
-> "You're Leila, a senior engineer. Your team's approved spec for a Recurring Investments API is already attached to you. Get it built with AI agents, make sure you trust what they produced, and get it merged. Please think out loud, and before each click tell me what you expect to happen."
+> "You're Leila, a senior engineer. Your team's approved spec for a Recurring Investments API is already attached to you. Have one AI agent build it, have another agent and a teammate check that work so you can trust it, and get it merged. Please think out loud, and before each click tell me what you expect to happen."
 
 Then stop talking. Don't name buttons.
 

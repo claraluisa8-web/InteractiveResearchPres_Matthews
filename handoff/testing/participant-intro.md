@@ -6,7 +6,7 @@ Thank you so much for helping me test this! I'm a graduate student in NC State's
 
 The link below opens a working prototype of my concept, **The Pre-Merge Review**. It's a design prototype, not a real tool: the agents are scripted, nothing connects to a real codebase, and nothing you type leaves your browser.
 
-**Your scenario:** You're Leila, a senior engineer. Your team's approved API spec for a new Recurring Investments feature is already attached to you. Your goal is to get it built with AI agents, make sure you trust what they produced, and get it merged.
+**Your scenario:** You're Leila, a senior engineer. Your team's approved API spec for a new Recurring Investments feature is already attached to you. Your goal is to have one AI agent build it, have another agent (and a teammate) check that work so you can trust it, and get it merged.
 
 **During the session, please:**
 - Think out loud as you go.

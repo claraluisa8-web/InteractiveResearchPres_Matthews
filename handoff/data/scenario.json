@@ -258,16 +258,16 @@
   },
   "emptyState": {
     "coachTitle": "Start your team",
-    "coachBody": "Add a builder, reviewer, tester or teammate with the + next to your dot.",
+    "coachBody": "Add AI agents with the + next to your dot. A builder agent writes the code from your spec; a reviewer agent checks that code, so no agent signs off on its own work.",
     "statusPill": "Just you so far",
     "composerPlaceholder": "Describe what to build, or add a node…",
     "composerTarget": "To: Team"
   },
   "roles": {
     "builder": {
-      "menuTitle": "Builder",
-      "menuBody": "Writes code from your spec",
-      "defaultName": "Builder",
+      "menuTitle": "Builder agent",
+      "menuBody": "Writes the code from your spec",
+      "defaultName": "Builder agent",
       "orb": "builder",
       "defaultConfig": "Default  ·  your team",
       "subtitle": "IBM Bob  ·  Default",
@@ -276,18 +276,18 @@
       ]
     },
     "reviewer": {
-      "menuTitle": "Reviewer",
-      "menuBody": "Checks work against the spec",
-      "defaultName": "Reviewer",
+      "menuTitle": "Reviewer agent",
+      "menuBody": "Checks the builder’s code against the spec",
+      "defaultName": "Reviewer agent",
       "orb": "reviewer",
       "defaultConfig": "Spec review",
       "subtitle": "IBM Bob  ·  Spec review",
       "allowedToEdit": []
     },
     "tester": {
-      "menuTitle": "Tester",
+      "menuTitle": "Tester agent",
       "menuBody": "Writes and runs tests",
-      "defaultName": "Tester",
+      "defaultName": "Tester agent",
       "orb": "tester",
       "defaultConfig": "Contract tests",
       "subtitle": "IBM Bob  ·  Contract tests",
@@ -846,7 +846,7 @@
     "thisSection": "THIS SECTION",
     "verify": "Verify section",
     "next": "Next section",
-    "verifyHelpLocked": "Save your edit, then verify once both agents agree.",
+    "verifyHelpLocked": "Fix it in the code and save, or view the reviewer agent’s fix. Saving unlocks Verify.",
     "resolveWithout": "OR RESOLVE WITHOUT EDITING",
     "accept": {
       "text": "View {reviewer}’s fix",
@@ -1073,6 +1073,16 @@
     "stillOpenHelp": {
       "text": "Not sure what’s missing? See what {reviewer} would change.",
       "new": true
+    },
+    "resolveWithoutManual": {
+      "text": "Resolve without manual editing",
+      "new": true,
+      "note": "Classmate feedback wording."
+    },
+    "verifyHelpOverride": {
+      "text": "Your edit is saved. {reviewer} still flags it; verify if you’re sure it’s right. The receipt notes that you verified over the finding.",
+      "new": true,
+      "note": "Classmate feedback: any saved edit unlocks Verify."
     }
   },
   "allClear": {
@@ -1144,6 +1154,10 @@
     },
     "popupClose": {
       "text": "Close",
+      "new": true
+    },
+    "verifiedOverFinding": {
+      "text": "Verified by you over the finding",
       "new": true
     }
   },

@@ -33,7 +33,8 @@ export function receiptRows(cs: Collaborator[], sections: Record<string, Section
       if (r && !wrote.includes(r)) wrote.push(r);
     }
     const rejected = issueIds.some((i) => issues[i]?.how === 'rejected');
-    const reviewed = rejected ? t(ac.rejectedByYou) : def.reviewed === '—' || def.reviewed === 'Skimmed' ? def.reviewed : nameFor(def.reviewed, cs) ?? '—';
+    const overridden = issueIds.some((i) => issues[i]?.how === 'overridden');
+    const reviewed = rejected ? t(ac.rejectedByYou) : overridden ? t(ac.verifiedOverFinding) : def.reviewed === '—' || def.reviewed === 'Skimmed' ? def.reviewed : nameFor(def.reviewed, cs) ?? '—';
     const tested = def.tested === '—' ? '—' : nameFor(def.tested, cs) ?? '—';
     return { id: def.id, section: def.label, mono: def.mono, wrote: wrote.join(' + ') || '—', reviewed, tested };
   });
