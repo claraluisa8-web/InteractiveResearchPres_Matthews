@@ -290,7 +290,7 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
   display: flex;
   flex-direction: column;
   background: var(--pmr-scrim);
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(2px);
   opacity: 0;
   transform: scale(0.98);
   transition: opacity 0.2s ease, transform 0.2s ease;
@@ -402,7 +402,11 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
 .tree .prototype:hover .pearl, .tree .prototype:focus-visible .pearl { filter: url(#pearl-glow) brightness(1.08) drop-shadow(0 0 4px rgb(185 168 255 / 0.55)); }
 .tree .prototype:focus { outline: none; }
 .tree .prototype:focus-visible .pearl-ring { stroke: var(--accent); }
-.tree .prototype-badge { cursor: pointer; }
+.tree .prototype-cta { cursor: pointer; }
+.tree .prototype-cta rect { fill: var(--pmr-button); transition: filter 0.15s ease; }
+.tree .prototype-cta:hover rect { filter: brightness(1.08); }
+.tree .prototype-cta text { fill: var(--pmr-text-on-accent); font-weight: 600; font-size: 13px; }
+.tree .prototype-cta__icon { fill: var(--pmr-text-on-accent); }
 .pearl-dot {
   flex: none;
   width: 10px;
@@ -413,37 +417,61 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
   box-shadow: 0 0 0 1px rgb(124 92 255 / 0.35), 0 0 6px rgb(185 168 255 / 0.7);
 }
 
-/* The prototype viewer covers the whole chart, and the prototype fills it. */
+/* The prototype opens as a framed window centered over the dimmed tree (prototypeviewer.js sizes it). */
 #prototype-viewer {
   position: absolute;
   inset: 0;
   z-index: 4;
+  display: grid;
+  place-items: center;
+  background: var(--pmr-scrim);
+  backdrop-filter: blur(2px);
+  animation: prototype-fade 0.2s ease;
+}
+@keyframes prototype-fade { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { #prototype-viewer { animation: none; } }
+#prototype-viewer[hidden] { display: none; }
+.prototype-window {
   display: flex;
   flex-direction: column;
+  max-width: 100%;
+  overflow: hidden;
   background: var(--pmr-canvas);
-  opacity: 0;
-  transition: opacity 0.2s ease;
+  border: 1px solid var(--pmr-btn-2-stroke);
+  border-radius: var(--pmr-r-card);
+  box-shadow: var(--pmr-shadow);
 }
-#prototype-viewer.open { opacity: 1; }
-#prototype-viewer[hidden] { display: none; }
 .prototype-header {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px 10px 16px;
+  padding: 8px 8px 8px 16px;
   color: var(--text);
   background: var(--pmr-title-bar);
   border-bottom: 1px solid var(--pmr-divider);
 }
 .prototype-header h2 { flex: 1; margin: 0; font-size: 0.95rem; font-weight: 600; }
 .prototype-header .pearl-dot { margin-right: 0; }
-#prototype-new-tab { color: var(--accent-text); font-size: 0.85rem; text-underline-offset: 3px; }
-#prototype-new-tab:hover { color: var(--text); }
+.prototype-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px 1px;
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-decoration: none;
+  background: var(--pmr-btn-2);
+  border: 1px solid var(--pmr-btn-2-stroke);
+  border-radius: var(--pmr-r-button);
+}
+.prototype-action:hover { border-color: rgba(255, 255, 255, 0.32); }
 #prototype-close {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   padding: 0;
   color: var(--muted);
   background: transparent;
@@ -452,6 +480,6 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
   cursor: pointer;
 }
 #prototype-close:hover { color: var(--text); border-color: rgba(255, 255, 255, 0.32); }
-#prototype-close:focus-visible, #prototype-new-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-#prototype-frame { flex: 1; min-height: 0; display: flex; }
+#prototype-close:focus-visible, .prototype-action:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#prototype-frame { display: flex; }
 #prototype-frame iframe { display: block; border: 0; background: var(--pmr-canvas); }

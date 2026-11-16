@@ -12,12 +12,28 @@ function createPrototypeViewer({onClose}) {
   let iframe = null;
   let current = null;
 
-  // The iframe fills the overlay; the prototype widens its own stage to fit whatever it gets.
+  const win = viewer.querySelector(".prototype-window");
+  const header = viewer.querySelector(".prototype-header");
+
+  // The prototype opens as a framed window over the dimmed tree, not edge to edge: 16:10 (its
+  // 1440x900 design), as large as fits with a margin around it, and never wider than MAX_W.
+  const MAX_W = 960;
+  const MARGIN = 56;
   function fit() {
     if (!iframe) return;
-    iframe.style.width = "100%";
-    iframe.style.height = "100%";
+    const r = viewer.getBoundingClientRect();
+    const head = header.offsetHeight;
+    const w = Math.max(320, Math.min(r.width - MARGIN * 2, (r.height - MARGIN * 2 - head) * 1.6, MAX_W));
+    win.style.width = `${Math.round(w)}px`;
+    iframe.style.width = `${Math.round(w)}px`;
+    iframe.style.height = `${Math.round(w / 1.6)}px`;
   }
+  new ResizeObserver(fit).observe(viewer);
+
+  // A click on the dimmed tree around the window closes it.
+  viewer.addEventListener("click", event => {
+    if (event.target === viewer) close();
+  });
 
   function open(d) {
     const proto = d.data.prototype;
@@ -30,15 +46,15 @@ function createPrototypeViewer({onClose}) {
     iframe.src = `${proto.src}?embed=1`;
     frameBox.replaceChildren(iframe);
     viewer.hidden = false;
+    // Sized right away (not in an animation frame, which a background tab may never run).
+    fit();
+    iframe.focus();
     requestAnimationFrame(() => {
-      if (current !== d) return; // closed again before the next frame
-      viewer.classList.add("open");
-      fit();
-      iframe.focus();
+      if (current === d) viewer.classList.add("open"); // fade in, unless closed again already
     });
   }
 
-  function close() {
+  function close({restoreFocus = true} = {}) {
     if (!current) return;
     const d = current;
     current = null;
@@ -46,10 +62,10 @@ function createPrototypeViewer({onClose}) {
     viewer.hidden = true;
     frameBox.replaceChildren(); // unloads the prototype, so it starts fresh next time
     iframe = null;
-    onClose(d);
+    if (restoreFocus) onClose(d);
   }
 
-  closeButton.addEventListener("click", close);
+  closeButton.addEventListener("click", () => close());
 
   // Escape inside the iframe never reaches this page, so the prototype posts a message when
   // Esc has nothing left to close there. Only messages from our own iframe count.

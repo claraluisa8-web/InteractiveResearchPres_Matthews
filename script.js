@@ -78,6 +78,18 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
 
   svg.call(zoom).on("dblclick.zoom", null);
 
+  function placeCtas() {
+    svg.selectAll(".prototype-cta").each(function() {
+      const label = this.parentNode.querySelector(":scope > text");
+      const box = label?.getBBox();
+      if (!box || !box.width) return;
+      const words = this.querySelector("text");
+      d3.select(this).select("rect").attr("width", 28 + words.getComputedTextLength() + 14);
+      d3.select(this).attr("transform", `translate(${box.x + box.width + 14},-14)`);
+    });
+  }
+  document.fonts?.ready.then(() => requestAnimationFrame(placeCtas));
+
   function update(event, source) {
     const duration = event?.altKey ? 2500 : 300; // hold the alt key to slow down the transition
     const nodes = root.descendants().reverse();
@@ -177,17 +189,32 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
       .append("title")
         .text("View map");
 
-    // The prototype topic gets an "Open prototype" badge after its label, like a map's.
-    text.filter(d => d.data.prototype)
-      .select("tspan:last-child")
-      .append("tspan")
-        .attr("class", "map-badge prototype-badge")
-        .text("  Open prototype")
-        .on("click", (event, d) => {
-          event.stopPropagation();
-          goTo(d, event);
-          onOpenPrototype(d);
-        });
+    // The prototype topic's call to action: a pill button after its label (it replaced a bare
+    // "Open prototype" text badge). The orb node stays the keyboard button; the pill is for the pointer.
+    text.filter(d => d.data.prototype).each(function(d) {
+      const cta = d3.select(this.parentNode).append("g")
+          .attr("class", "prototype-cta")
+          .attr("aria-hidden", "true")
+          .on("click", (event) => {
+            event.stopPropagation();
+            goTo(d, event);
+            onOpenPrototype(d);
+          });
+      const pill = cta.append("rect").attr("height", 28).attr("rx", 14);
+      cta.append("path")
+          .attr("class", "prototype-cta__icon")
+          .attr("d", "M0 0 L8 5 L0 10 Z")
+          .attr("transform", "translate(13,9)");
+      cta.append("text")
+          .attr("x", 28)
+          .attr("y", 14)
+          .attr("dy", "0.35em")
+          .text("Try the prototype");
+      cta.append("title").text("Open the Pre-Merge Review prototype");
+    });
+    // Measure once the text is laid out (and again when the web font arrives): the pill sits
+    // 14px after the label and is as wide as its own words.
+    requestAnimationFrame(placeCtas);
 
     // Transition nodes to their new position.
     node.merge(nodeEnter)
@@ -442,6 +469,9 @@ const chart = createTree(data, {
   onSelect: d => {
     selected = d;
     mapViewer.close(); // moving to another topic closes any open map
+    // ...and the prototype window, so it never sits over the tree while someone moves on.
+    // Focus stays where the person is navigating (sidebar, Next, search), not on the orb.
+    if (!d.data.prototype) prototypeViewer.close({restoreFocus: false});
     showDetails(d);
     sidebar?.setCurrent(d);
   },
