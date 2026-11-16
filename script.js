@@ -201,6 +201,16 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
       .append("title")
         .text("View map");
 
+    // The root (the problem statement) gets a small eyebrow label above its text, so the long
+    // statement reads as what it is. It uses the topic's short name.
+    nodeEnter.filter(d => d.depth === 0).append("text")
+        .attr("class", "root-eyebrow")
+        .attr("text-anchor", "end")
+        .attr("x", -10)
+        .attr("y", d => -((d.lines.length - 1) / 2) * lineHeight - lineHeight - 6)
+        .attr("dy", "0.31em")
+        .text(d => (d.data.short || "Problem statement").toUpperCase());
+
     // The prototype topic's call to action: a pill button after its label (it replaced a bare
     // "Open prototype" text badge). The orb node stays the keyboard button; the pill is for the pointer.
     text.filter(d => d.data.prototype).each(function(d) {

@@ -213,7 +213,7 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
 #outline .label.response::before { border-style: dashed; }
 #outline .label.visited::before { background: var(--muted); border-color: var(--muted); }
 #outline .label.current { font-weight: 600; }
-#outline .label.current::before { background: transparent; border: 2px solid var(--pmr-cleared); }
+#outline .label.current::before { background: transparent; border: 2px solid var(--pmr-stem-active); }
 #outline .label:focus-visible { outline-offset: -2px; }
 #outline .map-mark { flex: none; padding-right: 8px; font-size: 0.85rem; }
 
@@ -258,11 +258,11 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
 .tree .links path.on-path { stroke: var(--pmr-stem-active); }
 .tree .nodes g { cursor: pointer; }
 /* Hollow rings: 8px for topics, 10px for categories (circles are drawn at r=5). An opened
-   category fills in; the current topic gets a mint ring. The Solution orb stays the bright one. */
+   category fills in; the current topic gets a ring in the bright blue of the path that leads to it. The Solution orb stays the bright one. */
 .tree circle { fill: var(--pmr-canvas); stroke: var(--pmr-text-2); stroke-width: 1.5; transform: scale(0.8); }
 .tree .has-children circle { transform: none; }
 .tree .has-children:not(.collapsed) circle { fill: var(--pmr-text-2); }
-.tree .selected circle { stroke: var(--pmr-cleared); stroke-width: 2.5; }
+.tree .selected circle { stroke: var(--pmr-stem-active); stroke-width: 2.5; }
 /* Responses (dashed boxes in the mind map): dashed ring, italic label. */
 .tree .response circle { fill: none; stroke: var(--muted); stroke-dasharray: 2 2; }
 .tree .response text { font-style: italic; fill: var(--muted); }
@@ -403,6 +403,7 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
 .tree .prototype:hover .pearl, .tree .prototype:focus-visible .pearl { filter: url(#pearl-glow) brightness(1.08) drop-shadow(0 0 4px rgb(185 168 255 / 0.55)); }
 .tree .prototype:focus { outline: none; }
 .tree .prototype:focus-visible .pearl-ring { stroke: var(--accent); }
+.tree .root-eyebrow { fill: var(--pmr-text-2); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; }
 .tree .prototype-cta { cursor: pointer; }
 .tree .prototype-cta rect { fill: var(--pmr-button); transition: filter 0.15s ease; }
 .tree .prototype-cta:hover rect { filter: brightness(1.08); }
