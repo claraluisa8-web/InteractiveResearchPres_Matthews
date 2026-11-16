@@ -1,9 +1,8 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { copy, t } from '../lib/copy';
 import { useEscape } from '../lib/escape';
 import { toScreen, useGeometry } from '../lib/geometry';
-import { caughtPerLine, footnote, receiptRows, receiptText } from '../lib/receipt';
+import { caughtPerLine, footnote, receiptRows, receiptText, unopenedCount } from '../lib/receipt';
 import { topSections } from '../lib/sections';
 import { log } from '../lib/log';
 import { usePopupFocus } from '../lib/usePopupFocus';
@@ -11,6 +10,7 @@ import { initials, mateTone } from '../lib/status';
 import type { Collaborator, ThreadMessage } from '../lib/types';
 import { questionFor, reviewersOf, useScenario } from '../lib/store';
 import { Icon } from './Icon';
+import { Truncate } from './Truncate';
 
 const ac = copy.allClear;
 const pr = copy.pullRequest;
@@ -75,7 +75,10 @@ export function ReceiptPanel({ onToast }: { onToast: (message: string) => void }
         <tbody>
           {rows.map((r) => (
             <tr key={r.id}>
-              <th scope="row" className={r.mono ? 'is-mono' : undefined}>{r.section}</th>
+              <th scope="row" className={r.mono ? 'is-mono' : undefined}>
+                {r.section}
+                {r.note && <span className="receipt__note">{r.note}</span>}
+              </th>
               <td>{r.wrote}</td>
               <td className={r.reviewed === t(ac.rejectedByYou) ? 'is-rejected' : undefined}>{r.reviewed}</td>
               <td>{r.tested}</td>
@@ -99,24 +102,19 @@ export function PRPanel() {
   const setPR = useScenario((s) => s.setPR);
   const closePR = useScenario((s) => s.closePR);
   const createPR = useScenario((s) => s.createPR);
-  const addReviewer = useScenario((s) => s.addReviewer);
   const ref = useRef<HTMLFormElement>(null);
-  const [warn, setWarn] = useState(false);
   useEscape(closePR);
   useEffect(() => {
     ref.current?.querySelector<HTMLElement>('input')?.focus();
   }, []);
-  // Feedback round 4: every human teammate in the constellation reviews; none is picked for you.
-  const mates = reviewersOf(collaborators);
+  // Feedback round 4: every human teammate in the constellation reviews. P1/P5 (frame 09): a suggested
+  // teammate is pre-filled when there's none, and anyone can be added here without leaving the panel.
+  const reviewers = collaborators.filter((c) => c.role === 'teammate' && (c.status === 'active' || c.status === 'suggested'));
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    if (!mates.length) {
-      log('click', { target: 'createPR', noReviewer: true });
-      setWarn(true);
-      return;
-    }
     log('input', { field: 'prTitle', text: form.title });
+    log('click', { target: 'createPR', reviewers: reviewers.length });
     createPR();
   };
 
@@ -145,67 +143,106 @@ export function PRPanel() {
         <textarea className="input textarea" value={form.description} onChange={(e) => setPR({ description: e.target.value })} rows={7} />
         <span className="field__help pr-panel__draft"><Icon name="sparkle" size={12} />{pr.draftNote}</span>
       </label>
-      <div className="field">
-        <span className="pmr-label field__label" id="pr-reviewers">{pr.reviewersLabel}</span>
-        {mates.length > 0 ? (
-          <>
-            <ul className="pr-panel__reviewers" aria-labelledby="pr-reviewers">
-              {mates.map((m) => (
-                <li key={m.id} className="pr-panel__reviewer">
-                  <span className={`avatar avatar--tone-${mateTone(m.id, collaborators) ?? 1}`}>{initials(m.name)}</span>
-                  <span className="pr-panel__reviewer-text">
-                    <span className="pr-panel__reviewer-name">{m.name}</span>
-                    {m.email && <span className="field__help pr-panel__email">{m.email}</span>}
-                  </span>
-                </li>
-              ))}
-            </ul>
-            <p className="field__help">{t(pr.reviewersHelp)}</p>
-          </>
-        ) : (
-          <p className="field__help">{t(pr.noTeammates)}</p>
-        )}
-        <button type="button" className="pmr-button pmr-button--secondary pr-panel__add" onClick={addReviewer}>
-          <Icon name="add" size={14} />{t(pr.addTeammate)}
-        </button>
-      </div>
+      <ReviewerField reviewers={reviewers} />
       <label className="checkbox pr-panel__attach">
         <input type="checkbox" checked={form.attachReceipt} onChange={(e) => setPR({ attachReceipt: e.target.checked })} />
         <span className="checkbox__box" aria-hidden="true"><Icon name="check" size={12} /></span>
         <span>{pr.attachReceipt}</span>
       </label>
       <button type="submit" className="pmr-button right-panel__wide" data-create-pr>{pr.primary}</button>
-      {warn && (
-        <NoReviewerDialog
-          onProceed={() => { setWarn(false); log('click', { target: 'proceedWithoutReviewer' }); createPR(); }}
-          onCancel={() => { setWarn(false); requestAnimationFrame(() => ref.current?.querySelector<HTMLElement>('.pr-panel__add')?.focus()); }}
-        />
-      )}
     </form>
   );
 }
 
-/** Feedback round 3: creating a PR with no human reviewer asks first. */
-function NoReviewerDialog({ onProceed, onCancel }: { onProceed: () => void; onCancel: () => void }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const nr = pr.noReviewer;
-  useEscape(onCancel);
-  usePopupFocus(ref, '[data-noreviewer-cancel]', { trap: true });
-  // Portalled to the stage so the scrim covers everything, not just the PR panel.
-  const host = document.querySelector('.stage');
-  if (!host) return null;
-  return createPortal(
-    <div className="scrim" onPointerDown={(e) => e.target === e.currentTarget && onCancel()}>
-      <div ref={ref} className="pmr-glass dialog" role="alertdialog" aria-modal="true" aria-labelledby="no-reviewer-title" aria-describedby="no-reviewer-body">
-        <h2 id="no-reviewer-title" className="dialog__title">{t(nr.title)}</h2>
-        <p id="no-reviewer-body" className="dialog__body">{t(nr.body)}</p>
-        <div className="dialog__actions">
-          <button type="button" className="pmr-button pmr-button--secondary" onClick={onProceed}>{t(nr.proceed)}</button>
-          <button type="button" className="pmr-button" data-noreviewer-cancel onClick={onCancel}>{t(nr.cancel)}</button>
-        </div>
+const DIRECTORY = copy.people.directory.people;
+
+/** Frame 09's REVIEWERS: chips for each reviewer, and a typeahead over the (dummy) people directory. */
+function ReviewerField({ reviewers }: { reviewers: Collaborator[] }) {
+  const collaborators = useScenario((s) => s.collaborators);
+  const addTeammateDirect = useScenario((s) => s.addTeammateDirect);
+  const removeSuggested = useScenario((s) => s.removeSuggested);
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(0);
+  const q = query.trim().toLowerCase();
+  const taken = new Set(reviewers.filter((r) => r.status === 'active').map((r) => r.name));
+  const matches = DIRECTORY.filter((p) => !taken.has(p.name) && (!q || p.name.toLowerCase().split(/\s+/).some((w) => w.startsWith(q)) || p.name.toLowerCase().startsWith(q))).slice(0, 6);
+  const show = open && matches.length > 0;
+  const pick = (p: { name: string; email: string }) => {
+    log('click', { target: 'prReviewerPick', name: p.name });
+    addTeammateDirect(p);
+    setQuery('');
+    setOpen(false);
+  };
+  return (
+    <div className="field pr-panel__reviewer-field">
+      <span className="pmr-label field__label" id="pr-reviewers">{pr.reviewersLabel}</span>
+      {reviewers.length > 0 && (
+        <ul className="pr-panel__reviewers" aria-labelledby="pr-reviewers">
+          {reviewers.map((m) => (
+            <li key={m.id} className={`pr-panel__reviewer${m.status === 'suggested' ? ' is-suggested' : ''}`}>
+              <span className={`avatar avatar--tone-${mateTone(m.id, collaborators) ?? 1}`}>{initials(m.name)}</span>
+              <span className="pr-panel__reviewer-text">
+                <Truncate text={m.name} className="pr-panel__reviewer-name" />
+                <span className="field__help pr-panel__email">{m.status === 'suggested' ? `${t(pr.suggested)}  ·  ${pr.reviewerHint}` : m.email}</span>
+              </span>
+              {m.status === 'suggested' && (
+                <button type="button" className="icon-button" aria-label={t(pr.removeReviewer, { name: m.name })} data-tip={t(pr.removeReviewer, { name: m.name })} onClick={() => removeSuggested(m.id)}>
+                  <Icon name="close" size={14} />
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="pr-panel__search">
+        <Icon name="person-add" size={14} />
+        <input
+          className="input"
+          value={query}
+          placeholder={t(pr.reviewerSearch)}
+          aria-label={t(pr.reviewerSearchLabel)}
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={show}
+          aria-controls="pr-reviewer-options"
+          aria-activedescendant={show ? `pr-reviewer-${active}` : undefined}
+          data-pr-reviewer-search
+          onFocus={() => setOpen(true)}
+          onChange={(e) => { setQuery(e.target.value); setOpen(true); setActive(0); }}
+          onBlur={() => window.setTimeout(() => setOpen(false), 120)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape' && show) { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); setOpen(false); return; }
+            if (!show) return;
+            if (e.key === 'ArrowDown') { e.preventDefault(); setActive((i) => (i + 1) % matches.length); }
+            if (e.key === 'ArrowUp') { e.preventDefault(); setActive((i) => (i - 1 + matches.length) % matches.length); }
+            if (e.key === 'Enter') { e.preventDefault(); pick(matches[active]); }
+          }}
+        />
+        {show && (
+          <ul id="pr-reviewer-options" className="pmr-glass suggestions pr-panel__options" role="listbox" aria-label={t(pr.reviewerSearchLabel)}>
+            {matches.map((p, i) => (
+              <li
+                key={p.email}
+                id={`pr-reviewer-${i}`}
+                role="option"
+                aria-selected={i === active}
+                className={`suggestions__item${i === active ? ' is-active' : ''}`}
+                onPointerDown={(e) => { e.preventDefault(); pick(p); }}
+                onPointerEnter={() => setActive(i)}
+              >
+                <span className="avatar avatar--small" aria-hidden="true">{initials(p.name)}</span>
+                <span className="suggestions__text">
+                  <span className="suggestions__name">{p.name}</span>
+                  <span className="suggestions__email">{p.email}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
-    </div>,
-    host,
+      <p className="field__help">{t(pr.reviewersHelp)}</p>
+    </div>
   );
 }
 
@@ -215,6 +252,7 @@ export function PRStatusCard() {
   const attach = useScenario((s) => s.pr.attachReceipt);
   const approved = useScenario((s) => s.milestones.teammateApproved);
   const addReviewer = useScenario((s) => s.addReviewer);
+  const merge = useScenario((s) => s.merge);
   const mates = reviewersOf(collaborators);
   const total = collaborators.some((c) => c.role === 'tester' && c.status === 'active') ? 8 : 7;
   const hasTester = total === 8;
@@ -261,12 +299,23 @@ export function PRStatusCard() {
           </li>
         )}
       </ul>
+      {/* P1/P5: never auto-merge. Approval unlocks Merge, and the user clicks it. */}
       {approved ? (
-        <p className="pr-status__success" role="status">
-          <Icon name="pass-filled" className="is-pass" />{t(tr.merging)}
-        </p>
+        <>
+          <p className="pr-status__success" role="status">
+            <Icon name="pass-filled" className="is-pass" />{t(tr.merging)}
+          </p>
+          <button type="button" className="pmr-button right-panel__wide" data-merge onClick={() => { log('click', { target: 'merge' }); merge(); }}>
+            <Icon name="git-merge" size={14} />{t(tr.mergeButton)}
+          </button>
+        </>
       ) : mates.length ? (
-        <p className="pr-status__help">{t(tr.autoMergeHelp)}</p>
+        <>
+          <button type="button" className="pmr-button pmr-button--locked right-panel__wide" aria-disabled="true" data-merge>
+            <Icon name="lock" size={14} />{t(tr.mergeButton)}
+          </button>
+          <p className="pr-status__help">{t(tr.mergeLocked)}</p>
+        </>
       ) : (
         <>
           <button type="button" className="pmr-button pmr-button--secondary right-panel__wide" data-add-reviewer onClick={addReviewer}>
@@ -443,8 +492,12 @@ export function CommentCard() {
 export function RecapPanel() {
   const collaborators = useScenario((s) => s.collaborators);
   const thread = useScenario((s) => s.thread);
+  const sections = useScenario((s) => s.sections);
   const setRightPanel = useScenario((s) => s.setRightPanel);
+  const openSaveDialog = useScenario((s) => s.openSaveDialog);
   const mates = reviewersOf(collaborators).filter((c) => c.review === 'approved');
+  const unopened = unopenedCount(sections);
+  const followUps = mates.filter((m) => m.followUp);
   const lines = caughtPerLine(collaborators, mates[0]?.id ?? null);
   const max = Math.max(...lines.map((l) => l.n), 1);
   const nameOf = (id: string) => (id === 'you' ? copy.people.you.displayName : collaborators.find((c) => c.id === id)?.name ?? '');
@@ -471,12 +524,30 @@ export function RecapPanel() {
           </p>
         ))}
       </div>
+      {/* P1/P5: bulk verify is honest. A neutral count, not a warning. */}
+      {unopened > 0 && <p className="recap__unopened">{unopened === 1 ? t(rc.unopenedStatOne) : t(rc.unopenedStat, { n: unopened })}</p>}
+      {followUps.length > 0 && (
+        <>
+          <p className="pmr-label recap__group">{t(rc.followUpsLabel)}</p>
+          <ul className="recap__followups">
+            {followUps.map((m) => (
+              <li key={m.id}>
+                <Icon name="tasklist" size={14} />
+                <span>{m.followUp}<span className="recap__followup-who">{m.name}</span></span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
       <p className="pmr-label recap__group">{rc.perLineLabel}</p>
+      {/* P1/P5: the label column is as wide as the longest pair (capped at 55%), so bars never touch names. */}
       <ul className="recap__lines">
         {lines.map((l) => (
           <li key={l.id}>
-            <span className="recap__pair">{nameOf(l.a)}<Icon name="arrow-both" size={14} label="and" />{nameOf(l.b)}</span>
-            <span className="recap__bar" style={{ width: (l.n / max) * 156 }} aria-hidden="true" />
+            <Truncate text={`${nameOf(l.a)} and ${nameOf(l.b)}`} className="recap__pair">
+              {nameOf(l.a)}<Icon name="arrow-both" size={14} label="and" />{nameOf(l.b)}
+            </Truncate>
+            <span className="recap__track" aria-hidden="true"><span className="recap__bar" style={{ width: `${(l.n / max) * 100}%` }} /></span>
             <span className="recap__n">{l.n}</span>
           </li>
         ))}
@@ -515,6 +586,9 @@ export function RecapPanel() {
       )}
       <div className="right-panel__actions recap__actions">
         <button type="button" className="pmr-button pmr-button--secondary" onClick={() => setRightPanel('receipt')}>{rc.actions[0]}</button>
+        <button type="button" className="pmr-button pmr-button--secondary recap__save" data-save-team-recap onClick={() => openSaveDialog('recap')}>
+          <Icon name="save" size={14} />{t(rc.saveTeam)}
+        </button>
         <button type="button" className="pmr-button" data-done onClick={done}>{rc.actions[1]}</button>
       </div>
     </aside>

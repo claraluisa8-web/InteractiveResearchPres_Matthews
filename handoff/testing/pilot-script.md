@@ -21,12 +21,12 @@ Then stop talking. Don't name buttons.
 | Give the go | Start from the spec, the chip, or any message | They expect it to start on its own |
 | Add a reviewer | `+` again, or "add a reviewer" in the composer | They skip it (the issue never appears without one) |
 | Tester suggestion | Add tester / Not now | They read the lavender ring as an error |
-| Red line | Click the line, badge or red pill | They don't connect red with "the agents disagree" |
+| Red line | Waits until nothing is open, then a toast: See sections. Or the line's badge, the rail's "!" or the red pill | They don't connect red with "the agents disagree" |
 | Sections | Open Idempotency key | They open a verified row first, or miss the subsections |
 | Fix | Edit and Save, or Accept fix, or Reject | They save nonsense and how they read the reviewer's reply; whether they find Verify |
 | Finish the rest | "Verify the remaining sections" once both errors are verified, or Next section | Whether they trust the bulk verify or open each section first |
-| Receipt, then PR | Open pull request (every teammate reviews), then Create pull request | They skip reading the receipt, or choose Proceed anyway with no teammate |
-| Review | Reply to each teammate's comment in the composer; it merges on its own | They look for a Merge button, or miss a second teammate's comment |
+| Receipt, then PR | Open pull request; a reviewer is pre-filled (their teammate, or Dana Kim) and anyone can be picked from the field; then Create pull request | They skip reading the receipt, or remove the suggested reviewer |
+| Review | Reply to each teammate's comment in the composer; approval unlocks Merge, and they click it | They miss a second teammate's comment, or don't find Merge |
 
 If they're stuck for over a minute, ask "What are you looking for?" before you help. Note that you helped.
 
@@ -36,7 +36,7 @@ Ask two questions:
 1. "Which part did you trust least, and why?"
 2. "What did the red line mean to you when it appeared?"
 
-Then export the log: the **⋯** menu at top right, then **Export session log** (or Ctrl/Cmd+Shift+E). Two files download: `pmr-session-PILOT-<date>.json` and a readable `.md` with milestone timings, off-path moments, hints and everything they typed.
+Reaching the recap asks once to export the log. Otherwise: the **⋯** menu at top right, then **Export session log** (or Ctrl/Cmd+Shift+E). **Export all sessions** in the same menu downloads every session saved in this browser. Two files download: `pmr-session-PILOT-<date>.json` and a readable `.md` with milestone timings, off-path moments, hints and everything they typed.
 
 ## Between participants
 

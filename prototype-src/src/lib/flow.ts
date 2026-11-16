@@ -67,6 +67,15 @@ export function useFlow() {
     }
   }, [floatingSettled, setRecommendation]);
 
+  // P1/P5: the builder's update card has done its job once a reviewer is on the team (its "Next step"
+  // was to add one), so it closes. The status pill still reopens it.
+  const reviewerId = reviewer?.id;
+  useEffect(() => {
+    if (!reviewerId) return;
+    const s = useScenario.getState();
+    if (s.milestones.buildStarted && s.updateCardOpen) s.setUpdateCardOpen(false);
+  }, [reviewerId]);
+
   // A tester arriving any way (Add tester, Adjust first, the + menu) settles the suggestion.
   // A removed reviewer takes its pending suggestion with it.
   useEffect(() => {
@@ -100,6 +109,13 @@ export function scheduleRecheck(ids: number[], section?: string) {
   }, TIMING.recheckDelay);
 }
 
+/** Any panel, menu or floating card on screen (the M4 issue waits for none). */
+export function anythingOpen(s: ReturnType<typeof useScenario.getState>) {
+  const suggestion = s.recommendation === 'shown' || s.recommendation === 'dismissed';
+  return !!(s.addMenu || s.configure || s.popover || (suggestion && s.recCardOpen) || s.floatingFile || s.sectionsLine
+    || s.editor || s.rightPanel || s.specOpen || s.commentOpen || (s.milestones.buildStarted && s.updateCardOpen));
+}
+
 /** M4 (issue raised once the suggestion is handled) and M7 (every section verified). */
 export function useIssueFlow() {
   const collaborators = useScenario((s) => s.collaborators);
@@ -110,12 +126,15 @@ export function useIssueFlow() {
   const builder = firstOf(collaborators, 'builder');
   const reviewer = firstOf(collaborators, 'reviewer');
   const handled = recommendation === 'accepted' || recommendation === 'dismissed' || recommendation === 'skipped';
+  // P1/P5: both participants missed the red line because it appeared behind the "Adjust first" panel.
+  // The issue waits until no panel, menu or card is open; App then announces it with a toast.
+  const busy = useScenario((s) => anythingOpen(s));
 
   useEffect(() => {
-    if (m.issueRaised || !m.buildStarted || !builder || !reviewer || !handled) return;
+    if (m.issueRaised || !m.buildStarted || !builder || !reviewer || !handled || busy) return;
     const id = window.setTimeout(raiseIssue, TIMING.issueDelay);
     return () => window.clearTimeout(id);
-  }, [m.issueRaised, m.buildStarted, builder, reviewer, handled, raiseIssue]);
+  }, [m.issueRaised, m.buildStarted, builder, reviewer, handled, busy, raiseIssue]);
 
   useEffect(() => {
     if (!m.issueRaised || m.allSectionsVerified) return;
@@ -144,8 +163,6 @@ export function useIssueFlow() {
 export function useReviewFlow() {
   const thread = useScenario((s) => s.thread);
   const collaborators = useScenario((s) => s.collaborators);
-  const approved = useScenario((s) => s.milestones.teammateApproved);
-  const merged = useScenario((s) => s.milestones.merged);
 
   // A message outside the review (before the PR, or after approval) gets a short answer.
   useEffect(() => {
@@ -185,10 +202,5 @@ export function useReviewFlow() {
   }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => { for (const id of timers.current.values()) window.clearTimeout(id); }, []);
 
-  // Feedback round 4: approval merges the pull request; no Merge button. A beat of success first.
-  useEffect(() => {
-    if (!approved || merged) return;
-    const id = window.setTimeout(() => useScenario.getState().merge(), TIMING.autoMerge);
-    return () => window.clearTimeout(id);
-  }, [approved, merged]);
+  // P1/P5: never auto-merge (reverses feedback round 4). Approval unlocks Merge; the user clicks it.
 }

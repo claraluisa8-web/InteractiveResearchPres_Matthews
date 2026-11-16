@@ -4,12 +4,14 @@ import { displayName, mateTone, subtitleFor } from '../lib/status';
 import { SUGGESTED_ID, countOpen } from '../lib/geometry';
 import { firstOf, useScenario } from '../lib/store';
 import type { Role } from '../lib/types';
+import { log } from '../lib/log';
 import { Icon } from './Icon';
+import { Truncate } from './Truncate';
 import { Orb } from './Orb';
-import { RailFooter } from './SessionHistory';
+import { RailFooter, SaveTeamButton } from './SessionHistory';
 
 /** Team rail (from frame 05 on): appears once three or more are in the constellation, You included. */
-export function TeamRail({ showFit, onFit, onToast }: { showFit: boolean; onFit: () => void; onToast: (message: string) => void }) {
+export function TeamRail({ showFit, onFit }: { showFit: boolean; onFit: () => void }) {
   const collaborators = useScenario((s) => s.collaborators);
   const recommendation = useScenario((s) => s.recommendation);
   const suggestion = recommendation === 'shown' || recommendation === 'dismissed';
@@ -38,22 +40,28 @@ export function TeamRail({ showFit, onFit, onToast }: { showFit: boolean; onFit:
   const merged = useScenario((s) => s.milestones.merged);
   // After the merge the rail always shows, since it holds Start a new session.
   if (rows.length < 3 && !merged) {
-    return <RailHidden showFit={showFit} onFit={onFit} />;
+    return <RailHidden showFit={showFit} onFit={onFit} canSave={!!builder} />;
   }
-  return <RailBody rows={rows} showFit={showFit} onFit={onFit} onToast={onToast} checkedRow={checkedRow} flagged={flagged} suggestion={suggestion} reviewerId={reviewer?.id} />;
+  return <RailBody rows={rows} showFit={showFit} onFit={onFit} checkedRow={checkedRow} flagged={flagged} suggestion={suggestion} reviewerId={reviewer?.id} />;
 }
 
 /** Below three people there's no rail; report a zero height so the layout doesn't make room for one. */
-function RailHidden({ showFit, onFit }: { showFit: boolean; onFit: () => void }) {
+function RailHidden({ showFit, onFit, canSave }: { showFit: boolean; onFit: () => void; canSave: boolean }) {
   const setRailHeight = useScenario((s) => s.setRailHeight);
   useEffect(() => setRailHeight(0), [setRailHeight]);
-  return showFit ? <FitButton onFit={onFit} standalone /> : null;
+  return (
+    <div className="rail-standalone">
+      {/* P1/P5 (item 16): Save constellation is on screen from the moment a builder joins, even before the rail. */}
+      {canSave && <SaveTeamButton from="standalone" className="pmr-glass save-team-button--standalone" />}
+      {showFit && <FitButton onFit={onFit} standalone />}
+    </div>
+  );
 }
 
 type Row = { id: string; role: Role; name: string; sub: string; draft: boolean; otherType?: string };
 
-function RailBody({ rows, showFit, onFit, onToast, checkedRow, flagged, suggestion, reviewerId }: {
-  rows: Row[]; showFit: boolean; onFit: () => void; onToast: (message: string) => void;
+function RailBody({ rows, showFit, onFit, checkedRow, flagged, suggestion, reviewerId }: {
+  rows: Row[]; showFit: boolean; onFit: () => void;
   checkedRow: (id: string) => boolean; flagged: Set<string | undefined>; suggestion: boolean; reviewerId?: string;
 }) {
   const collaborators = useScenario((s) => s.collaborators);
@@ -74,6 +82,14 @@ function RailBody({ rows, showFit, onFit, onToast, checkedRow, flagged, suggesti
     return () => { ro.disconnect(); setRailHeight(0); };
   }, [setRailHeight]);
   const reviewer = { id: reviewerId };
+  const openSections = useScenario((s) => s.openSections);
+  const openIssueLine = () => {
+    const s = useScenario.getState();
+    const b = firstOf(s.collaborators, 'builder');
+    const rv = firstOf(s.collaborators, 'reviewer');
+    if (s.editor) s.closeEditor();
+    openSections(b && rv ? [b.id, rv.id] : undefined);
+  };
 
   return (
     <nav ref={ref} className="pmr-glass rail" aria-label={t(copy.constellation.teamLabel, { n: rows.length })}>
@@ -83,7 +99,7 @@ function RailBody({ rows, showFit, onFit, onToast, checkedRow, flagged, suggesti
       </div>
       <ul className="rail__list">
         {rows.map((r) => (
-          <li key={r.id}>
+          <li key={r.id} className="rail__item">
             <button
               type="button"
               className={`rail__row${popover === r.id ? ' is-open' : ''}`}
@@ -100,19 +116,32 @@ function RailBody({ rows, showFit, onFit, onToast, checkedRow, flagged, suggesti
                 <Orb role={r.role} size={24} name={r.name} otherType={r.otherType} outline={r.draft} tone={mateTone(r.id, collaborators)} />
               </span>
               <span className="rail__text">
-                <span className="rail__name">{r.name}</span>
+                <Truncate text={r.name} className="rail__name" />
                 <span className="rail__sub">{r.sub}</span>
               </span>
               {checkedRow(r.id) ? (
                 <span className="rail__marker rail__marker--check" aria-hidden="true"><Icon name="check" size={12} /></span>
               ) : flagged.has(r.id) ? (
-                <span className="rail__marker rail__marker--issue" aria-hidden="true">{copy.issueLine.teamRailFlag}</span>
+                <span className="rail__marker-space" aria-hidden="true" />
               ) : suggestion && r.id === reviewer?.id && <span className="rail__marker rail__marker--suggestion" aria-hidden="true" />}
             </button>
+            {/* P1/P5: the "!" is its own button: it opens the sections for this agent's issue line. */}
+            {!checkedRow(r.id) && flagged.has(r.id) && (
+              <button
+                type="button"
+                className="rail__marker rail__marker--issue rail__marker--button"
+                aria-label={t(copy.issueLine.railFlagLabel, { name: r.name })}
+                data-tip={t(copy.issueLine.railFlagLabel, { name: r.name })}
+                data-rail-issue={r.id}
+                onClick={() => { log('click', { target: 'railIssueFlag', agent: r.id }); openIssueLine(); }}
+              >
+                {copy.issueLine.teamRailFlag}
+              </button>
+            )}
           </li>
         ))}
       </ul>
-      <RailFooter onToast={onToast} />
+      <RailFooter />
     </nav>
   );
 }

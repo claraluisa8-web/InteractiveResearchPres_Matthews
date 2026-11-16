@@ -6,7 +6,7 @@ import type { Collaborator, IssueState, SectionState } from './types';
 
 // Frame 08's receipt and frame 11's per-line counts, all derived from state and the user's names.
 
-export interface ReceiptRow { id: string; section: string; mono: boolean; wrote: string; reviewed: string; tested: string }
+export interface ReceiptRow { id: string; section: string; mono: boolean; wrote: string; reviewed: string; tested: string; note?: string }
 
 const ac = copy.allClear;
 
@@ -36,7 +36,14 @@ export function receiptRows(cs: Collaborator[], sections: Record<string, Section
     const overridden = issueIds.some((i) => issues[i]?.how === 'overridden');
     const reviewed = rejected ? t(ac.rejectedByYou) : overridden ? t(ac.verifiedOverFinding) : def.reviewed === '—' || def.reviewed === 'Skimmed' ? def.reviewed : nameFor(def.reviewed, cs) ?? '—';
     const tested = def.tested === '—' ? '—' : nameFor(def.tested, cs) ?? '—';
-    return { id: def.id, section: def.label, mono: def.mono, wrote: wrote.join(' + ') || '—', reviewed, tested };
+    // P1/P5: say how each row was verified. Accepted fixes name the reviewer; bulk-verified rows say so.
+    const units = def.children ?? [def.id];
+    const bulk = units.every((k) => sections[k]?.via === 'bulk');
+    const opened = units.some((k) => sections[k]?.opened);
+    const note = issueIds.some((i) => issues[i]?.how === 'accepted')
+      ? t(ac.acceptedFix, { reviewer: nameFor('reviewer', cs) ?? '' })
+      : bulk ? t(opened ? ac.verifiedTogetherOpened : ac.verifiedTogether) : undefined;
+    return { id: def.id, section: def.label, mono: def.mono, wrote: wrote.join(' + ') || '—', reviewed, tested, note };
   });
 }
 
@@ -61,10 +68,15 @@ export function receiptText(cs: Collaborator[], sections: Record<string, Section
     t(ac.receiptMeta, { total }).replace(/\s+·\s+/g, ' · '),
     '',
     pad(c1, widths[0]) + pad(c2, widths[1]) + pad(c3, widths[2]) + c4,
-    ...rows.map((r) => pad(r.section, widths[0]) + pad(r.wrote, widths[1]) + pad(r.reviewed, widths[2]) + r.tested),
+    ...rows.flatMap((r) => [pad(r.section, widths[0]) + pad(r.wrote, widths[1]) + pad(r.reviewed, widths[2]) + r.tested, ...(r.note ? [`  ${r.note}`] : [])]),
     '',
     footnote(cs, sections),
   ].join('\n');
+}
+
+/** P1/P5: sections (or subsections) verified with the bulk button and never opened. A neutral count. */
+export function unopenedCount(sections: Record<string, SectionState>): number {
+  return Object.values(sections).filter((x) => x.via === 'bulk' && !x.opened).length;
 }
 
 export interface CaughtLine { a: string; b: string; id: string; n: number }

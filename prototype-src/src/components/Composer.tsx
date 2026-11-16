@@ -9,6 +9,7 @@ import { log } from '../lib/log';
 import { thinkingDelay } from '../lib/timing';
 import { PromptChip } from './BuildCards';
 import { Icon } from './Icon';
+import { requestSave } from './SessionHistory';
 
 // While the builder waits, these keep their own replies and don't start the build (anyMessageStartsBuild).
 const KEEP_OWN_REPLY = new Set(['addAgent', 'rename', 'spec']);
@@ -53,6 +54,11 @@ export function Composer({ onToast }: { onToast: (message: string) => void }) {
   const both = target === 'both' && editorOpen && !!builder && !!reviewer;
   const targetAgent = both ? undefined : agents.find((c) => c.id === target);
   const effectiveTarget = both ? 'both' : targetAgent || targetMate ? target : 'team';
+  const targetText = both
+    ? t(copy.editor.composerTarget, { builder: builder!.name, reviewer: reviewer!.name })
+    : targetAgent || targetMate
+      ? t(copy.constellation.composerTargetAgent, { name: (targetAgent ?? targetMate)!.name })
+      : copy.emptyState.composerTarget;
   const hasTeam = active(collaborators).length > 0;
   const ready = !!builder && !buildStarted;
 
@@ -155,6 +161,8 @@ export function Composer({ onToast }: { onToast: (message: string) => void }) {
         // M8 also fires when the user asks to merge or ship once every line is clear.
         if (m.intent === 'merge' && ctx === 'allClear' && !s.milestones.prOpened) s.openPR();
         if (m.intent === 'rename' && m.targetId) s.editCollaborator(m.targetId, { focusName: true, prefillName: m.newName });
+        // P1/P5: "save", "save this team", "save constellation" open the save dialog.
+        if (m.intent === 'saveTeam') requestSave('composer');
       }, thinkingDelay()),
     );
   };
@@ -256,7 +264,8 @@ export function Composer({ onToast }: { onToast: (message: string) => void }) {
             <span>{t(copy.chrome.composerAddNode)}</span>
           </button>
         )}
-        <label className="composer__pill composer__target">
+        {/* P1/P5: a long name is cut in the pill; the full "To:" shows on hover and focus. */}
+        <label className="composer__pill composer__target" data-tip={targetText.length > 24 ? targetText : undefined}>
           <select value={effectiveTarget} onChange={(e) => setTarget(e.target.value)} aria-label={t(copy.chrome.composerTargetLabel)}>
             <option value="team">{copy.emptyState.composerTarget}</option>
             {editorOpen && builder && reviewer && (
@@ -269,13 +278,7 @@ export function Composer({ onToast }: { onToast: (message: string) => void }) {
               <option key={m.id} value={m.id}>{t(copy.constellation.composerTargetAgent, { name: m.name })}</option>
             ))}
           </select>
-          <span className="composer__target-text" aria-hidden="true">
-            {both
-              ? t(copy.editor.composerTarget, { builder: builder!.name, reviewer: reviewer!.name })
-              : targetAgent || targetMate
-                ? t(copy.constellation.composerTargetAgent, { name: (targetAgent ?? targetMate)!.name })
-                : copy.emptyState.composerTarget}
-          </span>
+          <span className="composer__target-text" aria-hidden="true">{targetText}</span>
           <Icon name="chevron-down" />
         </label>
         <input

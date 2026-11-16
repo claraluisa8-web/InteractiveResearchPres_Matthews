@@ -134,7 +134,7 @@ export function AddMenu({ onLoaded }: { onLoaded?: (message: string) => void } =
             ))}
           </>
         )}
-        <div className="add-menu__footer">{copy.addMenu.footer}</div>
+        <div className="add-menu__footer">{t(copy.addMenu.footer)}</div>
       </div>
       {subOpen && (
         <div className="pmr-glass menu add-menu__sub" role="menu" aria-label={copy.roles.other.menuTitle} style={{ left: subLeft, top: 52 * 4 + 40 }}>

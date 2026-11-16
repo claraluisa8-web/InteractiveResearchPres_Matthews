@@ -12,6 +12,8 @@ export interface Expected {
   selector: string | null;
 }
 
+const ISSUE_WAYS_IN = '[data-issue-badge], [data-rail-issue], [data-toast-action]';
+
 /** The step the designed path expects next, worked out from state alone. */
 export function expectedStep(s: State): Expected {
   const m = s.milestones;
@@ -19,7 +21,8 @@ export function expectedStep(s: State): Expected {
   const reviewer = firstOf(s.collaborators, 'reviewer');
 
   if (m.merged) return { key: 'done', selector: s.rightPanel === 'recap' ? '[data-done]' : '[data-new-session]' };
-  if (m.prCreated && m.teammateApproved) return { key: 'approved', selector: null };
+  // P1/P5: approval unlocks Merge; the user clicks it.
+  if (m.prCreated && m.teammateApproved) return { key: 'approved', selector: s.rightPanel ? null : '[data-merge]' };
   if (m.prCreated) {
     if (!reviewersOf(s.collaborators).length) return { key: 'review:noReviewer', selector: '[data-add-reviewer]' };
     if (s.reviewStage !== 'commented') return { key: `review:${s.reviewStage}`, selector: null };
@@ -42,7 +45,8 @@ export function expectedStep(s: State): Expected {
     return { key: `editor:${def.id}:verify`, selector: '[data-verify]' };
   }
   if (s.sectionsLine) return { key: 'sections', selector: countOpen(s.issues) ? '.subsection-row.is-issue' : '[data-open-first]' };
-  if (m.issueRaised) return { key: 'issue', selector: countOpen(s.issues) ? '[data-issue-badge]' : '.status-pill.is-button' };
+  // P1/P5: the team rail's "!" badges and the toast's See sections lead to the same place.
+  if (m.issueRaised) return { key: 'issue', selector: countOpen(s.issues) ? ISSUE_WAYS_IN : '.status-pill.is-button' };
   if (s.configure) return { key: `draft:${s.configure.id}`, selector: '.configure__primary' };
   if (s.addMenu) return { key: 'addMenu', selector: '.add-menu [role="menuitem"]' };
   if (s.recommendation === 'shown' || s.recommendation === 'dismissed') {
@@ -62,6 +66,7 @@ export const affordanceName = (selector: string | null) =>
     '[data-start-build]': copy.build.readyCard.primary,
     '[data-rec-primary]': copy.recommendation.actions[0],
     '[data-issue-badge]': 'Issue badge',
+    [ISSUE_WAYS_IN]: 'Issue badge, rail flag or See sections',
     '.subsection-row.is-issue': 'First issue row',
     '[data-open-first]': 'Open first section',
     '.code-panel__save': copy.editor.save,

@@ -9,6 +9,7 @@ import { initials } from '../lib/status';
 const DIRECTORY = copy.people.directory.people;
 import { useOutside } from '../lib/useOutside';
 import { Icon } from './Icon';
+import { Truncate } from './Truncate';
 import { Orb } from './Orb';
 
 const f = copy.configurePanel.fields;
@@ -102,6 +103,14 @@ export function ConfigurePanel() {
     patch({ allowedToEdit: on ? [...form.allowedToEdit, opt] : form.allowedToEdit.filter((x) => x !== opt) });
 
   const isTeammate = c.role === 'teammate';
+  // P1/P5: only configurations that fit the role (the builder never offers Spec review); the panel says
+  // which role it is, and the builder's copy describes building, not checking.
+  const isBuilder = c.role === 'builder';
+  const byRole = f.configurationByRole as unknown as Record<string, string[]>;
+  const roleOptions = byRole[c.role] ?? f.configurationOptions;
+  const configOptions = roleOptions.includes(form.configuration) || !form.configuration ? roleOptions : [form.configuration, ...roleOptions];
+  const editHelp = (f.allowedToEditHelpByRole as unknown as Record<string, string>)[c.role] ?? f.allowedToEditHelp;
+  const roleLabel = copy.roles[c.role].menuTitle + (c.role === 'other' && form.otherType ? `  ·  ${form.otherType}` : '');
 
   // People whose first or last name starts with what's typed (every letter has someone).
   const query = form.name.trim().toLowerCase();
@@ -127,8 +136,8 @@ export function ConfigurePanel() {
           <Orb role={c.role} size={32} otherType={form.otherType} />
         )}
         <div className="configure__heading">
-          <h2 id="configure-title" className="configure__title">{shownName}</h2>
-          <p className="configure__subtitle">{copy.configurePanel.subtitle}</p>
+          <h2 id="configure-title" className="configure__title"><Truncate text={shownName} /></h2>
+          <p className="configure__subtitle"><span className="configure__role">{roleLabel}</span>  ·  {copy.configurePanel.subtitle}</p>
         </div>
         <button type="button" className="icon-button configure__close" aria-label={copy.configurePanel.secondary} data-tip={copy.configurePanel.secondary} onClick={cancelAndReturn}>
           <Icon name="close" />
@@ -254,7 +263,7 @@ export function ConfigurePanel() {
               <span className="pmr-label field__label">{f.configuration}</span>
               <span className="select">
                 <select value={form.configuration} onChange={(e) => patch({ configuration: e.target.value })}>
-                  {f.configurationOptions.map((o) => <option key={o} value={o}>{o.replace(/\s+·\s+/g, ' · ')}</option>)}
+                  {configOptions.map((o) => <option key={o} value={o}>{o.replace(/\s+·\s+/g, ' · ')}</option>)}
                 </select>
                 <Icon name="chevron-down" />
               </span>
@@ -267,7 +276,7 @@ export function ConfigurePanel() {
             </label>
 
             <label className="field">
-              <span className="pmr-label field__label">{f.checksAgainst}</span>
+              <span className="pmr-label field__label">{isBuilder ? t(f.buildsFrom) : f.checksAgainst}</span>
               <span className="select select--mono">
                 <select defaultValue={f.checksAgainstValue}>
                   <option value={f.checksAgainstValue}>{f.checksAgainstValue}</option>
@@ -284,12 +293,12 @@ export function ConfigurePanel() {
                 <span className="input__value">{copy.project.strictness.value}</span>
                 <span className="input__note">{copy.project.strictness.lockedNote}</span>
               </div>
-              <p className="field__help">{copy.project.strictness.help}</p>
+              <p className="field__help">{isBuilder ? t(f.builderStrictnessHelp) : copy.project.strictness.help}</p>
             </div>
 
             <fieldset className="field">
               <legend className="pmr-label field__label">{f.allowedToEdit}</legend>
-              <p className="field__help field__help--top">{f.allowedToEditHelp}</p>
+              <p className="field__help field__help--top">{editHelp}</p>
               <div className="checkbox-row">
                 {f.allowedOptions.filter((o) => o !== f.lockedOption).map((o) => (
                   <label key={o} className="checkbox">

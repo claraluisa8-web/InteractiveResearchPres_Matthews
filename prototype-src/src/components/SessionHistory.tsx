@@ -16,11 +16,9 @@ const st = copy.saveTeam;
  * Feedback round 4: the team rail's footer. "Session history" drops down the receipt and recap for
  * this session and the saved constellations; "Save constellation" keeps the team for other work.
  */
-export function RailFooter({ onToast }: { onToast: (message: string) => void }) {
+export function RailFooter() {
   const merged = useScenario((s) => s.milestones.merged);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [saveOpen, setSaveOpen] = useState(false);
-  const saveRef = useRef<HTMLButtonElement>(null);
   return (
     <>
     {/* Feedback round 6: once the PR has merged, a fresh start lives in the sidebar, not in a panel. */}
@@ -50,25 +48,50 @@ export function RailFooter({ onToast }: { onToast: (message: string) => void }) 
         </button>
         {historyOpen && <HistoryMenu onClose={() => setHistoryOpen(false)} />}
       </div>
-      <button
-        ref={saveRef}
-        type="button"
-        className="rail__footer-button rail__footer-button--icon"
-        aria-label={t(st.button)}
-        data-tip={t(st.button)}
-        data-save-team
-        onClick={() => setSaveOpen(true)}
-      >
-        <Icon name="save" size={14} />
-      </button>
-      {saveOpen && (
-        <SaveTeamDialog
-          onClose={() => { setSaveOpen(false); requestAnimationFrame(() => saveRef.current?.focus()); }}
-          onSaved={(msg) => { setSaveOpen(false); onToast(msg); }}
-        />
-      )}
     </div>
+    {/* P1/P5 (item 16): a labeled button, not an icon alone, so it can't be missed. */}
+    <SaveTeamButton from="rail" className="rail__save" />
     </>
+  );
+}
+
+/** Log every save attempt with where it came from and the state it was in (P1/P5 item 16). */
+export function requestSave(from: string) {
+  const s = useScenario.getState();
+  log('click', {
+    target: 'saveConstellation',
+    from,
+    context: {
+      members: s.collaborators.filter((c) => c.status === 'active').length,
+      merged: s.milestones.merged,
+      prCreated: s.milestones.prCreated,
+      panel: s.rightPanel,
+      editor: !!s.editor,
+    },
+  });
+  s.openSaveDialog(from);
+}
+
+export function SaveTeamButton({ from, className }: { from: string; className?: string }) {
+  return (
+    <button type="button" className={`pmr-button pmr-button--secondary save-team-button${className ? ` ${className}` : ''}`} data-save-team onClick={() => requestSave(from)}>
+      <Icon name="save" size={14} />{t(st.button)}
+    </button>
+  );
+}
+
+/** The Save constellation dialog, opened from anywhere through the store. */
+export function SaveTeamHost({ onToast }: { onToast: (message: string, opts?: { ms?: number }) => void }) {
+  const dialog = useScenario((s) => s.saveDialog);
+  const closeSaveDialog = useScenario((s) => s.closeSaveDialog);
+  if (!dialog) return null;
+  const back = () => document.querySelector<HTMLElement>(dialog.from === 'recap' ? '[data-save-team-recap]' : '[data-save-team]');
+  return (
+    <SaveTeamDialog
+      from={dialog.from}
+      onClose={() => { closeSaveDialog(); requestAnimationFrame(() => back()?.focus()); }}
+      onSaved={(msg) => { closeSaveDialog(); onToast(msg, { ms: 5000 }); requestAnimationFrame(() => back()?.focus()); }}
+    />
   );
 }
 
@@ -167,7 +190,7 @@ function TeamDetail({ team }: { team: SavedTeam }) {
   );
 }
 
-function SaveTeamDialog({ onClose, onSaved }: { onClose: () => void; onSaved: (message: string) => void }) {
+function SaveTeamDialog({ from, onClose, onSaved }: { from: string; onClose: () => void; onSaved: (message: string) => void }) {
   const ref = useRef<HTMLFormElement>(null);
   const savedTeamId = useScenario((s) => s.savedTeamId);
   const setSavedTeamId = useScenario((s) => s.setSavedTeamId);
@@ -183,7 +206,7 @@ function SaveTeamDialog({ onClose, onSaved }: { onClose: () => void; onSaved: (m
     if (!name.trim()) { setError(true); ref.current?.querySelector<HTMLElement>('input[type="text"]')?.focus(); return; }
     const team = saveTeam({ id: savedTeamId, name: name.trim(), options: opts, sessionTitle: t(sh.sessionTitle) });
     setSavedTeamId(team.id);
-    log('click', { target: 'saveTeam', options: opts });
+    log('click', { target: 'saveTeam', from, options: opts, updated: !!existing });
     onSaved(t(existing ? st.updatedToast : st.savedToast, { name: team.name }));
   };
   const toggle = (k: keyof typeof opts) => setOpts((o) => ({ ...o, [k]: !o[k] }));

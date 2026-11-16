@@ -10,6 +10,9 @@ import type { Line } from '../lib/types';
 import { usePanZoom } from '../lib/useView';
 import { useTweenedGeometry } from '../lib/tween';
 import { Icon } from './Icon';
+
+/** Characters that fit in an orb label's 168px before it's cut (13px semibold). */
+const LABEL_FITS = 22;
 import { Orb } from './Orb';
 
 const LINE_GAP = 9; // Clara's rule: lines stop 8–10px short of orbs.
@@ -282,7 +285,7 @@ export function Constellation({ scale, onLineHover }: ConstellationProps) {
           {showCoach && (
             <div className="pmr-glass coach" role="note">
               <p className="coach__title">{copy.emptyState.coachTitle}</p>
-              <p className="coach__body">{copy.emptyState.coachBody}</p>
+              <p className="coach__body">{t(copy.emptyState.coachBody)}</p>
             </div>
           )}
         </div>
@@ -365,6 +368,8 @@ function CollaboratorNode({ n, linked, dim }: { n: Node; linked: boolean; dim: b
           className={`orb-button${linked ? ' is-linked' : ''}`}
           data-orb={c.id}
           aria-label={`${c.name}, ${sub}`}
+          // P1/P5: a label too long for its 168px column ends in an ellipsis; the orb shows the full name.
+          data-tip={displayName(c).length > LABEL_FITS ? displayName(c) : undefined}
           aria-haspopup="dialog"
           aria-expanded={popover === c.id}
           onClick={() => (suggesting ? setRecCardOpen(true) : openPopover(popover === c.id ? null : c.id))}

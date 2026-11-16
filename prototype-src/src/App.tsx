@@ -17,14 +17,15 @@ import { SpecViewer } from './components/SpecViewer';
 import { StatusPill } from './components/StatusPill';
 import { TeamRail } from './components/TeamRail';
 import { TitleBar } from './components/TitleBar';
-import { Toast } from './components/Toast';
+import { Toast, type ToastAction, type ToastState } from './components/Toast';
 import { Tooltip } from './components/Tooltip';
 import { copy, t } from './lib/copy';
 import { useFlow, useIssueFlow, useReviewFlow } from './lib/flow';
 import { computeGeometry, countOpen } from './lib/geometry';
 import { ISSUE_SECTION_IDS, sectionById, topSections } from './lib/sections';
 import { useFocusRescue, useIdleHints } from './lib/hints';
-import { LOGGING, exportLog, log, resetLog } from './lib/log';
+import { LOGGING, PARTICIPANT, exportAllLogs, exportLog, log, resetLog } from './lib/log';
+import { SaveTeamHost } from './components/SessionHistory';
 import { startOver } from './lib/reset';
 import { statusPill } from './lib/status';
 import { useScenario } from './lib/store';
@@ -32,12 +33,13 @@ import { STAGE_H, useStageScale } from './lib/useStageScale';
 import { fitView, isIdentity } from './lib/useView';
 
 const TOAST_MS = 3000;
+const TOAST_ACTION_MS = 8000;
 
 export function App() {
   const { scale, width: stageWidth } = useStageScale();
   const [activeTab, setActiveTab] = useState<'constellation' | 'code'>('constellation');
-  const [dialog, setDialog] = useState<'startOver' | 'about' | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [dialog, setDialog] = useState<'startOver' | 'about' | 'export' | null>(null);
+  const [toast, setToast] = useState<ToastState | null>(null);
   const [lineHover, setLineHover] = useState<LineHover | null>(null);
   const [fitting, setFitting] = useState(false);
   const toastTimer = useRef<number>();
@@ -84,12 +86,27 @@ export function App() {
   useIssueFlow();
   useReviewFlow();
 
-  const showToast = useCallback((message: string) => {
+  const showToast = useCallback((message: string, opts?: { action?: ToastAction; ms?: number }) => {
     log('toast', { target: message });
     window.clearTimeout(toastTimer.current);
-    setToast(message);
-    toastTimer.current = window.setTimeout(() => setToast(null), TOAST_MS);
+    setToast({ text: message, action: opts?.action });
+    toastTimer.current = window.setTimeout(() => setToast(null), opts?.ms ?? (opts?.action ? TOAST_ACTION_MS : TOAST_MS));
   }, []);
+  const clearToast = useCallback(() => { window.clearTimeout(toastTimer.current); setToast(null); }, []);
+
+  // P1/P5: the issue is raised only once nothing is open (useIssueFlow), then announced with its next step.
+  const wasRaised = useRef(milestones.issueRaised);
+  useEffect(() => {
+    if (milestones.issueRaised && !wasRaised.current) {
+      const s = useScenario.getState();
+      const b = s.collaborators.find((c) => c.role === 'builder' && c.status === 'active');
+      const r = s.collaborators.find((c) => c.role === 'reviewer' && c.status === 'active');
+      showToast(t(copy.issueLine.raisedToast, { reviewer: r?.name, builder: b?.name }), {
+        action: { label: t(copy.issueLine.raisedToastAction), run: () => { log('click', { target: 'toast:seeSections' }); useScenario.getState().openSections(); } },
+      });
+    }
+    wasRaised.current = milestones.issueRaised;
+  }, [milestones.issueRaised, showToast]);
   const closeDialog = useCallback(() => setDialog(null), []);
 
   // Feedback round 4: the merge happens on its own; say so as the recap opens.
@@ -98,6 +115,20 @@ export function App() {
     if (milestones.merged && !wasMerged.current) showToast(t(copy.teammateReview.mergedToast));
     wasMerged.current = milestones.merged;
   }, [milestones.merged, showToast]);
+
+  // P1/P5: with ?test set, reaching the recap asks once whether to export the session log.
+  useEffect(() => {
+    if (!LOGGING || rightPanel !== 'recap' || !milestones.merged) return;
+    const key = `pmr:export-prompted:${PARTICIPANT}`;
+    try {
+      if (localStorage.getItem(key)) return;
+      localStorage.setItem(key, '1');
+    } catch {
+      return;
+    }
+    const id = window.setTimeout(() => setDialog('export'), 1200);
+    return () => window.clearTimeout(id);
+  }, [rightPanel, milestones.merged]);
 
   // Hidden reset: Ctrl/Cmd+Shift+R handled in-app so it clears pmr: state, not just reloads.
   useEffect(() => {
@@ -214,7 +245,7 @@ export function App() {
       >
         <Canvas />
         <Constellation scale={scale} onLineHover={onLineHover} />
-        <TeamRail showFit={!isIdentity(view)} onFit={fitTeam} onToast={showToast} />
+        <TeamRail showFit={!isIdentity(view)} onFit={fitTeam} />
         <BuildCard />
         {suggestion && recCardOpen && <RecommendationCard />}
         {sectionsLine && <SectionsPanel />}
@@ -242,10 +273,11 @@ export function App() {
           onTab={onTab}
           onStartOver={() => setDialog('startOver')}
           onExport={() => exportLog() && showToast(t(copy.chrome.exported))}
+          onExportAll={() => { log('click', { target: 'exportAll' }); if (exportAllLogs()) showToast(t(copy.chrome.exportedAll)); }}
           onAbout={() => setDialog('about')}
         />
         <Replies raised={pill.target === 'ready' && readyVisible} />
-        <Toast message={toast} />
+        <Toast toast={toast} onAction={clearToast} />
         <Composer onToast={showToast} />
         <Legend
           items={[
@@ -257,6 +289,7 @@ export function App() {
         <StatusPill text={pill.text} tone={pill.tone} onClick={onPill} />
         {editor && <SectionEditor onToast={showToast} />}
         {specOpen && <SpecViewer />}
+        <SaveTeamHost onToast={showToast} />
         <Tooltip scale={scale} />
         {dialog === 'startOver' && (
           <Dialog
@@ -278,6 +311,20 @@ export function App() {
             }
           >
             {LOGGING ? t(sc.bodyLogging) : t(sc.body)}
+          </Dialog>
+        )}
+        {dialog === 'export' && (
+          <Dialog
+            title={t(copy.recap.exportPrompt.title)}
+            onClose={() => { log('click', { target: 'exportPrompt:dismiss' }); closeDialog(); }}
+            actions={
+              <>
+                <button type="button" className="pmr-button pmr-button--secondary" onClick={() => { log('click', { target: 'exportPrompt:notNow' }); closeDialog(); }}>{t(copy.recap.exportPrompt.notNow)}</button>
+                <button type="button" className="pmr-button" onClick={() => { log('click', { target: 'exportPrompt:export' }); closeDialog(); if (exportLog()) showToast(t(copy.chrome.exported)); }}>{t(copy.recap.exportPrompt.export)}</button>
+              </>
+            }
+          >
+            {t(copy.recap.exportPrompt.body)}
           </Dialog>
         )}
         {dialog === 'about' && (

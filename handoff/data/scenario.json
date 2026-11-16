@@ -171,6 +171,11 @@
       "about": {
         "text": "About this prototype",
         "new": true
+      },
+      "exportAll": {
+        "text": "Export all sessions",
+        "new": true,
+        "note": "P1/P5"
       }
     },
     "about": {
@@ -254,11 +259,19 @@
       "text": "Approved specs are read-only for every agent.",
       "new": true,
       "note": "Same as configurePanel.fields.lockedHelp; shown as a toast when someone types in the spec."
+    },
+    "exportedAll": {
+      "text": "All session logs downloaded",
+      "new": true
     }
   },
   "emptyState": {
     "coachTitle": "Start your team",
-    "coachBody": "Add AI agents with the + next to your dot. A builder agent writes the code from your spec; a reviewer agent checks that code, so no agent signs off on its own work.",
+    "coachBody": {
+      "text": "Add agents and teammates with the + next to your dot.",
+      "new": true,
+      "note": "P1/P5: the + adds more than agents."
+    },
     "statusPill": "Just you so far",
     "composerPlaceholder": "Describe what to build, or add a node…",
     "composerTarget": "To: Team"
@@ -320,7 +333,11 @@
   },
   "addMenu": {
     "label": "ADD TO YOUR CONSTELLATION",
-    "footer": "Add as many of each as you need."
+    "footer": {
+      "text": "Add as many agents and teammates as you need.",
+      "new": true,
+      "note": "P1/P5"
+    }
   },
   "configurePanel": {
     "subtitle": "Set up how this collaborator works.",
@@ -349,7 +366,49 @@
       "lockedOption": "The spec",
       "lockedHelp": "Approved specs are read-only for every agent.",
       "connectsTo": "CONNECTS TO",
-      "connectAction": "+ Connect"
+      "connectAction": "+ Connect",
+      "configurationByRole": {
+        "new": true,
+        "note": "P1/P5: only configurations that fit the role. A participant picked Spec review for the builder and thought the reviewer was already added.",
+        "builder": [
+          "Default  ·  your team",
+          "Spec-first build",
+          "Test-first build"
+        ],
+        "reviewer": [
+          "Spec review",
+          "Strict security review"
+        ],
+        "tester": [
+          "Contract tests",
+          "Default  ·  your team"
+        ],
+        "other": [
+          "Default  ·  your team",
+          "Spec review",
+          "Strict security review"
+        ]
+      },
+      "buildsFrom": {
+        "text": "BUILDS FROM",
+        "new": true,
+        "note": "Builder only; reviewer and tester keep CHECKS AGAINST."
+      },
+      "builderStrictnessHelp": {
+        "text": "How closely it must follow the spec. Set by org policy.",
+        "new": true
+      },
+      "allowedToEditHelpByRole": {
+        "new": true,
+        "builder": "Files it can write without asking you",
+        "reviewer": "Reviewers suggest fixes; they don’t edit unless you allow it",
+        "tester": "Usually test files only",
+        "other": "Files this agent can change without asking you"
+      },
+      "roleLabel": {
+        "text": "{role}",
+        "new": true
+      }
     },
     "primary": "Add to constellation",
     "secondary": "Cancel",
@@ -500,6 +559,19 @@
     },
     "badgeLabel": {
       "text": "{n} issues between {builder} and {reviewer}. Open sections",
+      "new": true
+    },
+    "raisedToast": {
+      "text": "{reviewer} found 2 issues with {builder}’s work",
+      "new": true,
+      "note": "P1/P5: shown once no panel, menu or card is open."
+    },
+    "raisedToastAction": {
+      "text": "See sections",
+      "new": true
+    },
+    "railFlagLabel": {
+      "text": "See {name}’s issues",
       "new": true
     }
   },
@@ -1002,8 +1074,9 @@
       "new": true
     },
     "fixAppliedToast": {
-      "text": "Applied {reviewer}’s fix. Look it over, then verify the section.",
-      "new": true
+      "text": "Applied and saved. Look it over, then verify the section.",
+      "new": true,
+      "note": "P1/P5: Apply fix saves; Verify is always the last step."
     },
     "fixAppliedNote": {
       "text": "{reviewer}’s fix  ·  applied",
@@ -1083,6 +1156,42 @@
       "text": "Your edit is saved. {reviewer} still flags it; verify if you’re sure it’s right. The receipt notes that you verified over the finding.",
       "new": true,
       "note": "Classmate feedback: any saved edit unlocks Verify."
+    },
+    "resolvedTitle": {
+      "text": "Resolved",
+      "new": true,
+      "note": "P1/P5: once an issue is resolved, the agents’ argument collapses into this card."
+    },
+    "resolvedLine": {
+      "new": true,
+      "1": "{what} at L{start}–{end}  ·  matches the spec’s 409",
+      "2": "{what} at L{start}–{end}  ·  matches the spec’s Location header"
+    },
+    "resolvedWhat": {
+      "new": true,
+      "1": "Check added",
+      "2": "Location header added"
+    },
+    "resolvedHow": {
+      "new": true,
+      "accepted": "With {reviewer}’s fix. {builder} and {reviewer} agree.",
+      "edited": "With your edit. {builder} and {reviewer} agree."
+    },
+    "rejectedTitle": {
+      "text": "Finding rejected",
+      "new": true
+    },
+    "rejectedLine": {
+      "text": "You rejected {reviewer}’s finding. It’s on the receipt with your name.",
+      "new": true
+    },
+    "overriddenTitle": {
+      "text": "Verified over the finding",
+      "new": true
+    },
+    "overriddenLine": {
+      "text": "{reviewer} still flagged this when you verified it. The receipt says so.",
+      "new": true
     }
   },
   "allClear": {
@@ -1159,6 +1268,19 @@
     "verifiedOverFinding": {
       "text": "Verified by you over the finding",
       "new": true
+    },
+    "verifiedTogether": {
+      "text": "Verified together, not opened",
+      "new": true,
+      "note": "P1/P5: bulk verify stays, the receipt is honest about it."
+    },
+    "verifiedTogetherOpened": {
+      "text": "Verified together",
+      "new": true
+    },
+    "acceptedFix": {
+      "text": "Accepted {reviewer}’s fix",
+      "new": true
     }
   },
   "pullRequest": {
@@ -1216,7 +1338,27 @@
       }
     },
     "reviewersHelp": {
-      "text": "Everyone on your team who’s a person reviews this pull request.",
+      "text": "Everyone on your team who’s a person reviews this pull request. Pick someone here to add them to your constellation.",
+      "new": true
+    },
+    "reviewerSearch": {
+      "text": "Add a reviewer…",
+      "new": true
+    },
+    "reviewerSearchLabel": {
+      "text": "Search people",
+      "new": true
+    },
+    "suggested": {
+      "text": "Suggested",
+      "new": true
+    },
+    "removeReviewer": {
+      "text": "Remove {name}",
+      "new": true
+    },
+    "noMatches": {
+      "text": "No one by that name",
       "new": true
     }
   },
@@ -1241,7 +1383,10 @@
       }
     ],
     "merge": "Merge",
-    "mergeLocked": "Merging unlocks when {teammateFirst} approves.",
+    "mergeLocked": {
+      "text": "Merge unlocks once every reviewer approves.",
+      "new": true
+    },
     "comment": {
       "author": "{teammate}",
       "meta": "commented on this line  ·  2m",
@@ -1284,7 +1429,7 @@
       "new": true
     },
     "statusApproved": {
-      "text": "Approved  ·  merging",
+      "text": "Approved  ·  ready to merge",
       "new": true
     },
     "you": {
@@ -1354,7 +1499,7 @@
       "new": true
     },
     "noReviewerHelp": {
-      "text": "Add a teammate to review. It merges on its own once they approve.",
+      "text": "Add a teammate to review. Merge unlocks once they approve.",
       "new": true
     },
     "addReviewer": {
@@ -1366,22 +1511,26 @@
         "body": "Can the 409 response include the original plan id so clients can recover?",
         "answer": "Makes sense, thanks. Approving.",
         "new": true,
-        "note": "Round 4: one question per human reviewer, in the order they joined. The first is the original comment."
+        "note": "Round 4: one question per human reviewer, in the order they joined. The first is the original comment.",
+        "followUp": "include the original plan id in the 409 response"
       },
       {
         "body": "Should the 409 path log the duplicate key? Support will want to trace client retries.",
         "answer": "Got it, that works for me. Approving.",
-        "new": true
+        "new": true,
+        "followUp": "log the duplicate key on the 409 path"
       },
       {
         "body": "Is the Idempotency-Key header documented in the OpenAPI spec so client teams know to send it?",
         "answer": "Great, thanks for confirming. Approving.",
-        "new": true
+        "new": true,
+        "followUp": "document the Idempotency-Key header in the OpenAPI spec"
       },
       {
         "body": "Do the contract tests cover a retry that arrives after the first request failed?",
         "answer": "Thanks, that covers it. Approving.",
-        "new": true
+        "new": true,
+        "followUp": "add a contract test for a retry after a failed create"
       }
     ],
     "reviewRow": {
@@ -1401,11 +1550,12 @@
       "new": true
     },
     "autoMergeHelp": {
-      "text": "Merges on its own once every reviewer approves.",
-      "new": true
+      "text": "Merge unlocks once every reviewer approves.",
+      "new": true,
+      "note": "P1/P5: never auto-merge (reverses feedback round 4)."
     },
     "merging": {
-      "text": "Everyone approved. Merging into main…",
+      "text": "Everyone approved. Ready to merge.",
       "new": true
     },
     "mergedToast": {
@@ -1422,6 +1572,15 @@
     },
     "otherWaitingOpen": {
       "text": "Open {teammateFirst}’s comment",
+      "new": true
+    },
+    "approvalWithFollowUp": {
+      "text": "Approving. Follow-up added: {followUp}",
+      "new": true,
+      "note": "P1/P5: a reply that agrees to a change adds a follow-up."
+    },
+    "mergeButton": {
+      "text": "Merge pull request",
       "new": true
     }
   },
@@ -1508,6 +1667,30 @@
     "newSessionHelp": {
       "text": "Clears the constellation and the code for a fresh start. Saved constellations and their history stay.",
       "new": true
+    },
+    "unopenedStat": {
+      "text": "{n} sections verified without opening",
+      "new": true,
+      "note": "P1/P5: a neutral stat, not a warning."
+    },
+    "unopenedStatOne": {
+      "text": "1 section verified without opening",
+      "new": true
+    },
+    "followUpsLabel": {
+      "text": "FOLLOW-UPS ON #482",
+      "new": true
+    },
+    "saveTeam": {
+      "text": "Save constellation",
+      "new": true
+    },
+    "exportPrompt": {
+      "new": true,
+      "title": "Export this session log?",
+      "body": "Two files download: the log and a readable summary. Please send both to the researcher.",
+      "export": "Export",
+      "notNow": "Not now"
     }
   },
   "$newCopy": [
@@ -1537,8 +1720,9 @@
   "constellation": {
     "$note": "Phase 1 copy that isn't drawn in Figma. All new.",
     "plusLabel": {
-      "text": "Add to your constellation",
-      "new": true
+      "text": "Add to your constellation: agents or teammates",
+      "new": true,
+      "note": "P1/P5: the + adds more than agents."
     },
     "showWholeTeam": {
       "text": "Show whole team",
@@ -1961,8 +2145,9 @@
       "new": true
     },
     "savedToast": {
-      "text": "Saved “{name}”. Find it under Session history.",
-      "new": true
+      "text": "Saved {name}. Find it under Session history",
+      "new": true,
+      "note": "P1/P5: stays 5 s."
     },
     "updatedToast": {
       "text": "Updated “{name}”.",

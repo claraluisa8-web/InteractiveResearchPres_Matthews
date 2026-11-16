@@ -8,7 +8,7 @@ import {
   ISSUE_SECTION_IDS, applyFix, changedLines, diffLines, issueById, originalFile, safeRange, sectionById, specLines, topSections, type SectionRole,
 } from '../lib/sections';
 import { firstOf, useScenario } from '../lib/store';
-import type { Collaborator } from '../lib/types';
+import type { Collaborator, IssueState } from '../lib/types';
 import { CodeEditor } from './CodeEditor';
 import { Icon } from './Icon';
 import { Orb } from './Orb';
@@ -21,8 +21,10 @@ const SPEC = 'recurring-investments.yaml';
 const CODE_SIZE = { font: 13, line: 23 };
 
 /** "{builder} and {reviewer}" with the Codicon instead of the glyph (scenario.json $description). */
+// The copy marks a line between two people with the arrow-both glyph; it's drawn as the Codicon, never as text.
+const LINK_MARK = '\u2194';
 function WithLinkIcon({ text }: { text: string }) {
-  const parts = text.split('↔');
+  const parts = text.split(LINK_MARK);
   return (
     <>
       {parts.map((p, i) => (
@@ -112,7 +114,10 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
   const save = () => {
     if (isSpec) return;
     setJustSaved(true);
-    const waiting = st().saveSectionFile(tab);
+    // P1/P5: only this section's own issue goes back to the agents, and nothing once it's verified.
+    // (A save after Verify used to send the other issue in the same file to recheck, and log it.)
+    const scope = def.issue && !verified ? [def.issue] : [];
+    const waiting = st().saveSectionFile(tab, scope);
     if (waiting.length) {
       onToast(t(ed.afterSaveToast, names));
       scheduleRecheck(waiting, def.id);
@@ -219,7 +224,7 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
   const lineNames = lineIds(def, collaborators).map((id) => (id === 'you' ? copy.people.you.displayName : collaborators.find((c) => c.id === id)?.name ?? ''));
   const crumb = def.issue
     ? t(ed.breadcrumb, { ...names, section: def.label, n: nIssue, total: ISSUE_SECTION_IDS.length })
-    : [lineNames.join(' ↔ '), def.parent ? sectionById(def.parent).label : null, def.label].filter(Boolean).join('  ·  ');
+    : [lineNames.join(` ${LINK_MARK} `), def.parent ? sectionById(def.parent).label : null, def.label].filter(Boolean).join('  ·  ');
   const writtenBy = changedLines(original, current).size > 0 ? t(ed.meta, names) : t(ed.meta, names).split('·')[0].trim();
   const tabs = [...def.files, SPEC];
 
@@ -263,7 +268,13 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
             </p>
             <UrgencyProgress label={t(ed.progressText, { verified: topDone, total: tops.length })} />
           </div>
-          {issueData ? (
+          {issueData && !open && issue ? (
+            <>
+              {/* P1/P5: once resolved, the agents' argument collapses into one resolved card. */}
+              <ResolvedCard issueId={issueData.id} how={issue.how} names={names} fixLines={issue.fixLines} text={current} />
+              <SpecCard from={issueData.specExcerpt.lines[0]} to={issueData.specExcerpt.lines[1]} highlight={2} />
+            </>
+          ) : issueData ? (
             <>
               <AgentCard role="builder" label={t(ed.builderSays, names)} text={issueData.builderSays} note={cardNotes.builder} />
               <SpecCard from={issueData.specExcerpt.lines[0]} to={issueData.specExcerpt.lines[1]} highlight={2} />
@@ -294,7 +305,7 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
           <div
             className="section-editor__actions"
             onKeyDown={(e) => {
-              // ← → (and ↑ ↓) step between Verify, Next section, Accept fix and Reject.
+              // Arrow keys step between Verify, Next section, Accept fix and Reject.
               if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
               const items = [...e.currentTarget.querySelectorAll<HTMLElement>('button')];
               const i = items.indexOf(document.activeElement as HTMLElement);
@@ -353,7 +364,8 @@ export function SectionEditor({ onToast }: { onToast: (message: string) => void 
                 {ed.unsaved}
               </span>
             )}
-            {!locked && (
+            {/* P1/P5: Apply fix saves the change, so Save stays hidden until the user types again. */}
+            {!locked && !(issue?.how === 'accepted' && !dirty && !justSaved) && (
               <SaveButton saved={justSaved && !dirty} label={ed.save} savedLabel={t(ed.savedLabel)} className="code-panel__save" onClick={save} />
             )}
           </div>
@@ -419,6 +431,36 @@ function AgentCard({ role, label, text, note, children }: { role: 'builder' | 'r
       <p className="agent-card__text">{text}</p>
       {note && <p className="agent-card__note" aria-live="polite">{note}</p>}
       {children}
+    </div>
+  );
+}
+
+function ResolvedCard({ issueId, how, names, fixLines, text }: {
+  issueId: number; how?: IssueState['how']; names: { builder: string; reviewer: string };
+  fixLines?: { line: number; text: string }[]; text: string;
+}) {
+  if (how === 'rejected' || how === 'overridden') {
+    return (
+      <div className="pmr-glass agent-card agent-card--resolved">
+        <p className="agent-card__label"><Icon name="circle-slash" size={14} /><span className="pmr-label">{t(how === 'rejected' ? ed.rejectedTitle : ed.overriddenTitle)}</span></p>
+        <p className="agent-card__text">{t(how === 'rejected' ? ed.rejectedLine : ed.overriddenLine, names)}</p>
+      </div>
+    );
+  }
+  // Where the fix sits: the accepted fix's own lines, else the section's lines in the saved code.
+  const sec = copy.issues.find((i) => i.id === issueId)!.section;
+  const range = fixLines?.length
+    ? { start: Math.min(...fixLines.map((f) => f.line)), end: Math.max(...fixLines.map((f) => f.line)) }
+    : safeRange(sec, text);
+  const key = String(issueId) as '1' | '2';
+  const what = (ed.resolvedWhat as unknown as Record<string, string>)[key];
+  const line = (ed.resolvedLine as unknown as Record<string, string>)[key];
+  const howText = (ed.resolvedHow as unknown as Record<string, string>)[how === 'accepted' ? 'accepted' : 'edited'];
+  return (
+    <div className="pmr-glass agent-card agent-card--resolved" data-resolved-card>
+      <p className="agent-card__label"><span className="agent-card__check" aria-hidden="true"><Icon name="check" size={12} /></span><span className="pmr-label">{t(ed.resolvedTitle)}</span></p>
+      <p className="agent-card__text">{t(line, { what, start: range.start, end: range.end })}</p>
+      <p className="agent-card__note">{t(howText, names)}</p>
     </div>
   );
 }

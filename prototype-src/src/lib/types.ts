@@ -26,6 +26,8 @@ export interface Collaborator {
   commentAt?: number;
   /** Which of the scripted review questions this teammate asks. */
   question?: number;
+  /** P1/P5: a change the user agreed to in their reply; listed under the merged PR. */
+  followUp?: string;
 }
 
 /** Not yet in the constellation: a draft being configured, or a teammate being added for the PR. */
@@ -85,6 +87,10 @@ export interface SectionState {
   id: string;
   status: 'issues' | 'open' | 'verified';
   editedByYou: boolean;
+  /** P1/P5: opened in the section editor at least once. */
+  opened?: boolean;
+  /** P1/P5: verified with "Verify the remaining sections" rather than one by one. */
+  via?: 'bulk';
 }
 
 export interface IssueState {

@@ -458,8 +458,8 @@ button { cursor: pointer; }
   pointer-events: none;
 }
 .node__label--right { align-items: flex-start; transform: none; text-align: left; }
-.node__name { font-size: 13px; font-weight: 600; line-height: 17px; }
-.node__sub { font-size: 11px; line-height: 15px; color: var(--pmr-text-2); margin-top: 1px; white-space: pre; }
+.node__name { max-width: 168px; overflow: hidden; text-overflow: ellipsis; font-size: 13px; font-weight: 600; line-height: 17px; }
+.node__sub { max-width: 200px; overflow: hidden; text-overflow: ellipsis; font-size: 11px; line-height: 15px; color: var(--pmr-text-2); margin-top: 1px; white-space: pre; }
 
 .floor {
   position: absolute;
@@ -1374,11 +1374,15 @@ textarea.input::placeholder { color: var(--pmr-text-2); opacity: 1; }
 .recap__label { font-size: 11px; line-height: 15px; color: var(--pmr-text-2); }
 .recap__group { margin: 14px 0 0; padding-top: 14px; border-top: 1px solid var(--pmr-divider); }
 .recap__lines { list-style: none; margin: 10px 0 0; padding: 0; }
-.recap__lines li { display: flex; align-items: center; height: 28px; font-size: 12px; }
-.recap__pair { display: inline-flex; align-items: center; gap: 8px; width: 184px; }
+.recap__lines { display: grid; grid-template-columns: fit-content(55%) 1fr auto; column-gap: 16px; align-items: center; }
+.recap__lines li { display: contents; font-size: 12px; }
+.recap__lines li > * { height: 28px; font-size: 12px; }
+.recap__pair { display: block; line-height: 28px; }
+.recap__pair .codicon { vertical-align: -2px; margin: 0 6px; }
+.recap__track { display: flex; align-items: center; min-width: 0; }
 .recap__pair .codicon { color: var(--pmr-text-2); }
 .recap__bar { height: 10px; border-radius: 5px; background: var(--pmr-lavender); }
-.recap__n { margin-left: 8px; font-weight: 600; }
+.recap__n { display: flex; align-items: center; justify-content: flex-end; font-weight: 600; }
 .recap__month { display: flex; gap: 34px; margin-top: 12px; }
 .recap__spark { display: flex; align-items: flex-end; gap: 8px; height: 38px; }
 .recap__spark span { width: 14px; border-radius: 3px; background: rgba(138, 130, 253, 0.45); }
@@ -1628,3 +1632,40 @@ textarea.input::placeholder { color: var(--pmr-text-2); opacity: 1; }
 .comment-card__other .codicon { margin-left: auto; color: var(--pmr-text-2); }
 .comment-card__other-dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--pmr-lavender); }
 .agent-card__fix-label { margin: 0 0 8px; }
+
+/* P1/P5: user-entered names that don't fit end in an ellipsis; the full name is in the tooltip. */
+.truncate { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.toast--action { display: flex; align-items: center; gap: 12px; padding-right: 8px; pointer-events: auto; }
+.toast__action { height: 26px; padding: 0 12px 1px; border: 0; border-radius: var(--pmr-r-pill); background: var(--pmr-button); color: var(--pmr-text-on-accent); font: 500 12px/1 var(--pmr-font); cursor: pointer; }
+.rail__item { position: relative; }
+.rail__marker-space { width: 18px; height: 18px; margin-left: auto; flex: none; }
+.rail__marker--button { position: absolute; right: 9px; top: 50%; margin: 0; border: 0; transform: translateY(-50%); cursor: pointer; }
+.rail__marker--button::after { content: ''; position: absolute; inset: -5px; }
+.rail__marker--button:hover { filter: brightness(1.15); }
+.configure__role { color: var(--pmr-text); font-weight: 600; }
+.receipt__note { display: block; margin-top: 3px; font-family: var(--pmr-font); font-size: 11px; line-height: 14px; color: var(--pmr-text-2); }
+.receipt__table td, .receipt__table th { overflow-wrap: anywhere; }
+.recap__unopened { margin: 12px 0 0; font-size: 12px; line-height: 16px; color: var(--pmr-text-2); }
+.recap__followups { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 12px; line-height: 16px; }
+.recap__followups li { display: flex; gap: 8px; align-items: flex-start; }
+.recap__followups .codicon { margin-top: 1px; color: var(--pmr-text-2); }
+.recap__followup-who { display: block; color: var(--pmr-text-2); }
+.recap__save { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+/* P1/P5 item 16: Save constellation is a labeled button in the rail and, before the rail, on its own. */
+.save-team-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 30px; padding: 0 12px 1px; font-size: 12px; white-space: nowrap; }
+.rail__save { flex: none; width: 100%; margin-top: 8px; }
+.rail-standalone { position: absolute; left: 16px; top: 52px; z-index: 15; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.rail-standalone .fit-button--standalone { position: static; }
+.save-team-button--standalone { height: 34px; border-radius: var(--pmr-r-button); }
+/* P1/P5: a resolved issue's card replaces the builder and reviewer cards. */
+.agent-card--resolved .agent-card__label { display: flex; align-items: center; gap: 8px; }
+.agent-card__check { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--pmr-cleared); color: var(--pmr-text-on-accent); }
+/* P1/P5 (frame 09): the reviewer field's typeahead. */
+.pr-panel__reviewer-text { flex: 1; min-width: 0; }
+.pr-panel__reviewer.is-suggested .avatar { outline: 1px dashed var(--pmr-text-2); outline-offset: 2px; }
+.pr-panel__reviewer.is-suggested .pr-panel__email { font-family: var(--pmr-font); }
+.pr-panel__search { position: relative; display: flex; align-items: center; margin-top: 10px; }
+.pr-panel__search > .codicon { position: absolute; left: 10px; color: var(--pmr-text-2); pointer-events: none; }
+.pr-panel__search .input { width: 100%; padding-left: 32px; }
+.pr-panel__options { top: calc(100% + 4px); }
+.recap__actions .pmr-button { flex: 1 1 auto; padding: 0 12px 1px; white-space: nowrap; }

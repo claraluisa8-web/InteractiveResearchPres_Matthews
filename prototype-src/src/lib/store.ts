@@ -140,7 +140,7 @@ interface ScenarioState {
   setEditorMode: (mode: 'edit' | 'diff' | 'reject') => void;
   setEditorTab: (tab: string) => void;
   /** Save a file from the section editor; returns the issue ids now waiting on a recheck. */
-  saveSectionFile: (file: string) => number[];
+  saveSectionFile: (file: string, scope?: number[]) => number[];
   recheck: (ids: number[]) => void;
   acceptFix: (issue: number) => void;
   rejectIssue: (issue: number) => void;
@@ -169,11 +169,21 @@ interface ScenarioState {
   replyToTeammate: (id: string, text: string) => void;
   approve: (id: string) => void;
   merge: () => void;
+  /** P1/P5 (frame 09): add a person from the PR panel's reviewer field straight into the constellation. */
+  addTeammateDirect: (person: { name: string; email: string }) => void;
+  removeSuggested: (id: string) => void;
+  /** P1/P5: the Save constellation dialog, opened from the rail, the recap or the composer. */
+  saveDialog: { from: string } | null;
+  openSaveDialog: (from: string) => void;
+  closeSaveDialog: () => void;
   showLine: () => void;
   pushReply: (reply: Omit<Reply, 'id'>) => number;
   updateReply: (id: number, patch: Partial<Reply>) => void;
   dismissReply: (id: number) => void;
 }
+
+/** Words that agree to a reviewer's suggested change. */
+const AGREES = /\b(yes|yeah|yep|sure|will do|i'?ll do|agree[ds]?|makes sense|sounds good|good (idea|call|point)|ok(ay)?|definitely|absolutely|of course|done|on it)\b/i;
 
 export const issueSection = (issue: number) => copy.issues.find((i) => i.id === issue)!.section;
 
@@ -333,6 +343,9 @@ export const useScenario = create<ScenarioState>()(
       prevComposerTarget: null,
       attachments: [],
       commentWith: null,
+      saveDialog: null,
+      openSaveDialog: (from) => set({ saveDialog: { from }, addMenu: null, popover: null }),
+      closeSaveDialog: () => set({ saveDialog: null }),
 
       openAddMenu: (anchor, highlight) => set({ addMenu: { anchor, highlight }, popover: null }),
       closeAddMenu: () => set({ addMenu: null }),
@@ -445,7 +458,8 @@ export const useScenario = create<ScenarioState>()(
           updateCardOpen: true,
         });
       },
-      setUpdateCardOpen: (v) => set({ updateCardOpen: v }),
+      // P1/P5: one floating card at a time. Opening one closes the other.
+      setUpdateCardOpen: (v) => set(v ? { updateCardOpen: true, recCardOpen: false } : { updateCardOpen: false }),
 
       // M4: the builder and reviewer line turns red. A pending tester suggestion quietly expires.
       raiseIssue: () =>
@@ -476,13 +490,18 @@ export const useScenario = create<ScenarioState>()(
       openSection: (id, tab) => {
         const s = get();
         if (!s.sectionsLine && !s.milestones.allSectionsVerified) get().openSections();
-        set({ editor: { section: id, tab: tab ?? sectionById(id).file, mode: 'edit' }, linkIds: null, popover: null, cardNotes: {} });
+        const sec = get().sections[id];
+        set({
+          editor: { section: id, tab: tab ?? sectionById(id).file, mode: 'edit' },
+          linkIds: null, popover: null, cardNotes: {},
+          ...(sec && !sec.opened ? { sections: { ...get().sections, [id]: { ...sec, opened: true } } } : {}),
+        });
       },
       closeEditor: () => set({ editor: null }),
       setEditorMode: (mode) => set((s) => (s.editor ? { editor: { ...s.editor, mode } } : {})),
       setEditorTab: (tab) => set((s) => (s.editor ? { editor: { ...s.editor, tab } } : {})),
 
-      saveSectionFile: (file) => {
+      saveSectionFile: (file, scope) => {
         const s = get();
         const draft = s.fileDrafts[file];
         const { [file]: _, ...rest } = s.fileDrafts;
@@ -503,7 +522,9 @@ export const useScenario = create<ScenarioState>()(
         }
         // Issues whose code lives in this file go back to both agents (flow-and-milestones: Save to recheck).
         const waiting = Object.values(s.issues)
-          .filter((i) => (i.status === 'open' || i.status === 'savedAwaitingAgents') && sectionById(issueSection(i.id)).files.includes(file))
+          // P1/P5: from the section editor only the section's own issue goes back (scope), so a save
+          // after Verify never sends another section's issue to recheck.
+          .filter((i) => (i.status === 'open' || i.status === 'savedAwaitingAgents') && sectionById(issueSection(i.id)).files.includes(file) && (!scope || scope.includes(i.id)))
           .map((i) => i.id);
         const issues = { ...s.issues };
         for (const id of waiting) issues[id] = { ...issues[id], status: 'savedAwaitingAgents', note: undefined };
@@ -571,6 +592,7 @@ export const useScenario = create<ScenarioState>()(
 
       verifyMany: (ids) => {
         for (const id of ids) get().verifySection(id);
+        set((s) => ({ sections: Object.fromEntries(Object.entries(s.sections).map(([k, v]) => [k, ids.includes(k) ? { ...v, via: 'bulk' as const } : v])) }));
       },
 
       setLinkIds: (ids) => set({ linkIds: ids }),
@@ -619,7 +641,23 @@ export const useScenario = create<ScenarioState>()(
       // M8: the PR panel. Every teammate in the constellation reviews (feedback round 4).
       openPR: () => {
         const s = get();
+        // P1/P5 (frame 09): with no teammate yet, the reviewer field is pre-filled with a suggestion,
+        // shown as a ghost orb; it joins on Create pull request. Never a "no human reviewer" error.
+        const hasMate = s.collaborators.some((c) => c.role === 'teammate' && c.status !== 'draft');
+        let collaborators = s.collaborators;
+        let seq = s.seq;
+        if (!hasMate) {
+          const kept = s.collaborators.filter((c) => c.status !== 'draft');
+          const p = copy.people.teammate;
+          collaborators = [...kept, {
+            id: `teammate-${seq++}`, role: 'teammate', name: p.fullName, email: t(p.email), configuration: '', allowedToEdit: [],
+            crossTeamRequests: false, connectsTo: ['you'], status: 'suggested', addedAt: Date.now(),
+            slot: pickSlot('teammate', kept.map((x) => x.slot), linkPoints(['you'], kept)),
+          }];
+        }
         set({
+          collaborators,
+          seq,
           rightPanel: 'pr',
           sectionsLine: null,
           editor: null,
@@ -638,8 +676,10 @@ export const useScenario = create<ScenarioState>()(
       // M9: the PR exists; every teammate starts reviewing. With none ("Proceed anyway") merging waits for one.
       createPR: () => {
         const s = get();
-        const ids = reviewersOf(s.collaborators).map((c) => c.id);
-        const collaborators = startReview(s.collaborators, ids);
+        // The suggested reviewer joins now (frame 09: "Joins the constellation as a teammate").
+        const joined = s.collaborators.map((c) => (c.status === 'suggested' && c.role === 'teammate' ? { ...c, status: 'active' as const, addedAt: Date.now() } : c));
+        const ids = reviewersOf(joined).map((c) => c.id);
+        const collaborators = startReview(joined, ids);
         set({
           collaborators,
           rightPanel: null,
@@ -654,7 +694,11 @@ export const useScenario = create<ScenarioState>()(
       setCommentOpen: (v) => set({ commentOpen: v }),
       replyToTeammate: (id, text) =>
         set((s) => {
-          const collaborators = s.collaborators.map((c) => (c.id === id ? { ...c, reviewStage: 'reading' as const } : c));
+          // P1/P5: a reply that agrees to the change ("yes", "sure", "will do"…) adds a follow-up.
+          const agrees = AGREES.test(text);
+          const collaborators = s.collaborators.map((c) =>
+            c.id === id ? { ...c, reviewStage: 'reading' as const, followUp: agrees ? (questionFor(c) as { followUp?: string }).followUp : undefined } : c,
+          );
           return {
             collaborators,
             thread: [...s.thread, { from: 'you', text, with: id, attachments: s.attachments.length ? s.attachments : undefined }],
@@ -675,19 +719,44 @@ export const useScenario = create<ScenarioState>()(
         const all = reviewersOf(collaborators).every((c) => c.review === 'approved');
         set({
           collaborators,
-          thread: [...s.thread, { from: 'teammate', text: q.answer, with: id }],
+          thread: [...s.thread, { from: 'teammate', text: mate.followUp ? t(copy.teammateReview.approvalWithFollowUp, { followUp: mate.followUp }) : q.answer, with: id }],
           reviewStage: aggregateStage(collaborators),
           // Feedback round 7: the card stays open so their answer is seen; the user closes it.
           ...(all ? { milestones: { ...s.milestones, teammateApproved: true } } : {}),
         });
       },
 
-      // M11
+      // M11: P1/P5, never automatic. After approval the user clicks Merge.
       merge: () =>
         set((s) => ({
           milestones: { ...s.milestones, merged: true },
           rightPanel: 'recap',
         })),
+
+      addTeammateDirect: (person) => {
+        const s = get();
+        const ghost = s.collaborators.find((c) => c.status === 'suggested' && c.role === 'teammate' && c.name === person.name);
+        if (ghost) {
+          set({ collaborators: s.collaborators.map((c) => (c.id === ghost.id ? { ...c, status: 'active' as const } : c)), firstAdded: true });
+          return;
+        }
+        if (s.collaborators.some((c) => c.role === 'teammate' && c.status === 'active' && c.name === person.name)) return;
+        const kept = s.collaborators.filter((c) => c.status !== 'draft');
+        const c: Collaborator = {
+          id: `teammate-${s.seq}`, role: 'teammate', name: person.name, email: person.email, configuration: '', allowedToEdit: [],
+          crossTeamRequests: false, connectsTo: ['you'], status: 'active', addedAt: Date.now(),
+          slot: pickSlot('teammate', kept.map((x) => x.slot), linkPoints(['you'], kept)),
+        };
+        const next = [...kept, c];
+        set({ collaborators: next, seq: s.seq + 1, firstAdded: true });
+        // Added after the PR exists: they start reviewing too (round 4).
+        const after = get();
+        if (after.milestones.prCreated && !after.milestones.merged) {
+          const collaborators = startReview(after.collaborators, [c.id]);
+          set({ collaborators, reviewStage: aggregateStage(collaborators), milestones: { ...after.milestones, teammateApproved: false } });
+        }
+      },
+      removeSuggested: (id) => set((s) => ({ collaborators: s.collaborators.filter((c) => !(c.id === id && c.status === 'suggested')) })),
 
       // "Show line" opens the createPlan 409 branch read-only (frame 10 to 07).
       showLine: () => {
@@ -715,9 +784,10 @@ export const useScenario = create<ScenarioState>()(
         set((s) => ({
           recommendation: r,
           recCardOpen: cardOpen ?? s.recCardOpen,
+          ...(cardOpen ? { updateCardOpen: false } : {}),
           milestones: r === 'shown' ? { ...s.milestones, recommendationShown: true } : s.milestones,
         })),
-      setRecCardOpen: (v) => set({ recCardOpen: v, popover: null }),
+      setRecCardOpen: (v) => set(v ? { recCardOpen: true, popover: null, updateCardOpen: false } : { recCardOpen: false, popover: null }),
 
       addDirect: (role) => {
         const { collaborators, seq, milestones } = get();

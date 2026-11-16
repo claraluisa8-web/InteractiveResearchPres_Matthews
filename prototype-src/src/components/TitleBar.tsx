@@ -12,15 +12,18 @@ interface TitleBarProps {
   onStartOver: () => void;
   onAbout: () => void;
   onExport: () => void;
+  onExportAll: () => void;
 }
 
-export function TitleBar({ activeTab, onTab, onStartOver, onAbout, onExport }: TitleBarProps) {
+export function TitleBar({ activeTab, onTab, onStartOver, onAbout, onExport, onExportAll }: TitleBarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const items = [
     { id: 'start-over', label: t(copy.chrome.overflowMenu.startOver), run: onStartOver },
     ...(LOGGING ? [{ id: 'export', label: t(copy.chrome.overflowMenu.exportLog), run: onExport }] : []),
+    // P1/P5: every pmr:session:* in this browser, for the researcher's own machine.
+    { id: 'export-all', label: t(copy.chrome.overflowMenu.exportAll), run: onExportAll },
     { id: 'about', label: t(copy.chrome.overflowMenu.about), run: onAbout },
   ];
 

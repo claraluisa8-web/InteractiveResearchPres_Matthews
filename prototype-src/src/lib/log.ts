@@ -162,6 +162,8 @@ function watchEdits() {
 // Clicks, with on-path / off-path against the expected next affordance
 
 const PANELS = '.configure, .section-editor, .sections-panel, .right-panel, .comment-card, .rec-card, .add-menu';
+/** P1/P5: any open panel, menu, card or dialog. Clicks inside one are never "off path". */
+const OPEN_LAYERS = `${PANELS}, .menu, .dialog, .popover, .build-card, .floating-editor, .pr-status, .line-card, .spec-card, .suggestions, .toast`;
 const INTERACTIVE = 'button, a, select, input[type="checkbox"], [role="menuitem"], [role="tab"], .line-group';
 
 function targetId(el: Element): string {
@@ -189,7 +191,8 @@ function onClick(e: MouseEvent) {
   const expectedEl = expected.selector ? document.querySelector(expected.selector) : null;
   const panel = expectedEl?.closest(PANELS);
   const samePanel = !!panel && panel.contains(el);
-  if (!onPath && expected.selector && !samePanel) log('offPath', { expected: affordanceName(expected.selector), actual: target });
+  const inLayer = !!el.closest(OPEN_LAYERS);
+  if (!onPath && expected.selector && !samePanel && !inLayer) log('offPath', { expected: affordanceName(expected.selector), actual: target });
 }
 
 // ---------------------------------------------------------------------------
@@ -246,6 +249,25 @@ export function summary(): string {
     ...(inputs.length ? inputs.map((e) => `- ${e.t} s, ${e.field}: "${e.text}"${e.intent ? ` (intent ${e.intent}, score ${e.score})` : ''}`) : ['None.']),
     '',
   ].join('\n');
+}
+
+/** P1/P5: every session in this browser (pmr:session:*), as one .json, plus each one's readable summary. */
+export function exportAllLogs() {
+  const all: { id: string; events: LogEvent[] }[] = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith('pmr:session:') || key === CURRENT) continue;
+      const evs = store.read<LogEvent[]>(key);
+      if (evs) all.push({ id: key.slice('pmr:session:'.length), events: evs });
+    }
+  } catch {
+    return false;
+  }
+  if (!all.length) return false;
+  const date = new Date().toISOString().slice(0, 10);
+  download(`pmr-sessions-all-${date}.json`, JSON.stringify({ exportedAt: new Date().toISOString(), sessions: all }, null, 2), 'application/json');
+  return true;
 }
 
 export function exportLog() {
