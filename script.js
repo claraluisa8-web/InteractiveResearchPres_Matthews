@@ -17,7 +17,8 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
 
   // Radius of the pearl orb, and how far its label sits from the centre.
   const pearlRadius = 17;
-  const pearlLabelGap = pearlRadius + 9;
+  // The prototype's label starts under the orb and its reflection.
+  const protoLabelTop = pearlRadius + 22;
 
   // Rows are separated by multiples of dx pixels, columns by dy pixels. (dx is a height and
   // dy a width, because the tree is laid out sideways with the root on the left.)
@@ -26,12 +27,21 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
   const dy = 280;
 
   root.each(d => d.lines = wrap(d.data.name));
+  // The prototype's label sits under its orb on two short lines, with the pill below, so it never
+  // runs into the next column when a neighbouring branch opens. It takes the height of this many lines.
+  const protoRows = 9;
+  root.each(d => {
+    if (!d.data.prototype) return;
+    const i = d.data.name.indexOf(":");
+    d.lines = i > 0 ? [d.data.name.slice(0, i + 1), d.data.name.slice(i + 1).trim()] : wrap(d.data.name);
+  });
+  const rows = d => (d.data.prototype ? protoRows : d.lines.length);
 
   // Define the tree layout and the shape for links. Neighbouring nodes are spaced by how
   // many lines their labels take up, plus a gap (bigger between different parents).
   const tree = d3.tree()
       .nodeSize([dx, dy])
-      .separation((a, b) => (a.lines.length + b.lines.length) / 2 + (a.parent === b.parent ? 0.8 : 1.6));
+      .separation((a, b) => (rows(a) + rows(b)) / 2 + (a.parent === b.parent ? 0.8 : 1.6));
   const diagonal = d3.linkHorizontal().x(d => d.y).y(d => d.x);
 
   // Create the SVG container, a zoomable layer, and inside it a layer for the links and
@@ -79,13 +89,15 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
   svg.call(zoom).on("dblclick.zoom", null);
 
   function placeCtas() {
-    svg.selectAll(".prototype-cta").each(function() {
-      const label = this.parentNode.querySelector(":scope > text");
-      const box = label?.getBBox();
-      if (!box || !box.width) return;
+    svg.selectAll(".prototype-cta").each(function(d) {
       const words = this.querySelector("text");
-      d3.select(this).select("rect").attr("width", 28 + words.getComputedTextLength() + 14);
-      d3.select(this).attr("transform", `translate(${box.x + box.width + 14},-14)`);
+      // The SVG is built before it's on the page, where text measures 0: estimate until it can be measured.
+      const len = words.getComputedTextLength() || words.textContent.length * 7.6;
+      const w = 28 + len + 14;
+      d3.select(this).select("rect").attr("width", w);
+      // Centred under the label's last line.
+      const top = protoLabelTop + (d.lines.length - 1) * lineHeight + 14;
+      d3.select(this).attr("transform", `translate(${-w / 2},${top})`);
     });
   }
   document.fonts?.ready.then(() => requestAnimationFrame(placeCtas));
@@ -102,7 +114,7 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
         .duration(duration);
 
     // Update the nodes…
-    const node = gNode.selectAll("g")
+    const node = gNode.selectAll(":scope > g") // node groups only, not the groups inside the orb
       .data(nodes, d => d.id);
 
     // Enter any new nodes at the parent's previous position.
@@ -165,13 +177,13 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
 
     // One line per tspan, vertically centred on the node.
     const text = nodeEnter.append("text")
-        .attr("text-anchor", d => d._children ? "end" : "start");
+        .attr("text-anchor", d => d.data.prototype ? "middle" : d._children ? "end" : "start");
 
     text.selectAll("tspan")
       .data(d => d.lines.map((line, i) => ({line, i, d})))
       .join("tspan")
-        .attr("x", ({d}) => d._children ? -10 : d.data.prototype ? pearlLabelGap : 10)
-        .attr("y", ({i, d}) => (i - (d.lines.length - 1) / 2) * lineHeight)
+        .attr("x", ({d}) => d.data.prototype ? 0 : d._children ? -10 : 10)
+        .attr("y", ({i, d}) => d.data.prototype ? protoLabelTop + i * lineHeight : (i - (d.lines.length - 1) / 2) * lineHeight)
         .attr("dy", "0.31em")
         .text(({line}) => line);
 
@@ -214,6 +226,7 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
     });
     // Measure once the text is laid out (and again when the web font arrives): the pill sits
     // 14px after the label and is as wide as its own words.
+    placeCtas();
     requestAnimationFrame(placeCtas);
 
     // Transition nodes to their new position.
@@ -286,7 +299,7 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
   // Highlight the clicked node, zoom to it, and pass it to the side panel.
   function select(d, event) {
     selected = d;
-    gNode.selectAll("g").classed("selected", n => n === d);
+    gNode.selectAll(":scope > g").classed("selected", n => n === d);
     markPath();
     focus(d, event);
     onSelect(d);

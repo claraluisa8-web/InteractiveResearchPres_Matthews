@@ -405,7 +405,7 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
 .tree .prototype-cta { cursor: pointer; }
 .tree .prototype-cta rect { fill: var(--pmr-button); transition: filter 0.15s ease; }
 .tree .prototype-cta:hover rect { filter: brightness(1.08); }
-.tree .prototype-cta text { fill: var(--pmr-text-on-accent); font-weight: 600; font-size: 13px; }
+.tree .prototype-cta text { fill: var(--pmr-text-on-accent); stroke: none; font-weight: 600; font-size: 13px; }
 .tree .prototype-cta__icon { fill: var(--pmr-text-on-accent); }
 .pearl-dot {
   flex: none;
