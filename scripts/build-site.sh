@@ -16,4 +16,10 @@ rsync -a \
 mkdir -p _site/prototype
 cp -r prototype-src/dist/. _site/prototype/
 
+# Stamp the tree map's own CSS and JS links with this build's version, so a new deploy is never
+# hidden behind the browser's cached copy (GitHub Pages lets browsers keep files for 10 minutes).
+VERSION=$(git rev-parse --short HEAD 2>/dev/null || date +%s)
+sed -i.bak -E "s#(href=\"(shared/[a-z]+|style)\.css)\"#\1?v=$VERSION\"#g; s#(src=\"[a-z]+\.js)\"#\1?v=$VERSION\"#g" _site/index.html
+rm -f _site/index.html.bak
+
 echo "Built _site/. Serve it with: npm run serve:offline"
