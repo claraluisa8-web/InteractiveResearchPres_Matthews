@@ -16,6 +16,7 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
         if (svg) svg.style.transform = `translate(${transform.x}px, ${transform.y}px) scale(${transform.k})`;
       });
   d3.select(canvas).call(zoom).on("dblclick.zoom", null);
+  const quick = () => (matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 200);
 
   async function load(src) {
     if (!cache.has(src)) {
@@ -78,6 +79,7 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
         svg.querySelectorAll(".hotspot.active").forEach(h => h.classList.remove("active"));
         el.classList.add("active");
         onHotspot(d, info);
+        enlarge(svg, el, info);
       };
       el.addEventListener("click", activate);
       el.addEventListener("keydown", event => {
@@ -89,6 +91,55 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
     }
     onOpen(d);
   }
+
+  // Clicking a section opens it enlarged: a full-window view of just that part of the map, with
+  // its title and note. Esc, the close button or a click outside closes it and returns focus.
+  const CLOSE_ICON = '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+  const box = document.createElement("div");
+  box.id = "map-enlarged";
+  box.setAttribute("role", "dialog");
+  box.setAttribute("aria-modal", "true");
+  box.setAttribute("aria-labelledby", "map-enlarged-title");
+  box.hidden = true;
+  box.innerHTML = `<div class="enlarged-card">
+      <div class="enlarged-header">
+        <div class="enlarged-text"><h2 id="map-enlarged-title"></h2><div class="enlarged-note"></div></div>
+        <button type="button" class="enlarged-close" aria-label="Close enlarged view (Esc)">${CLOSE_ICON}</button>
+      </div>
+      <div class="enlarged-figure"></div>
+    </div>`;
+  document.body.append(box);
+  let returnFocus = null;
+  function enlarge(svg, el, info) {
+    const b = el.getBBox();
+    const pad = Math.min(b.width, b.height) * 0.04;
+    const copy = svg.cloneNode(true);
+    copy.querySelectorAll(".hotspot").forEach(h => h.remove());
+    copy.removeAttribute("style");
+    copy.removeAttribute("class");
+    copy.setAttribute("viewBox", `${b.x - pad} ${b.y - pad} ${b.width + 2 * pad} ${b.height + 2 * pad}`);
+    copy.setAttribute("aria-hidden", "true");
+    box.querySelector("#map-enlarged-title").textContent = info.title;
+    const note = box.querySelector(".enlarged-note");
+    note.replaceChildren(...(info.note || "").split("\n").filter(l => l.trim()).map(line => {
+      const p = document.createElement("p");
+      p.textContent = line;
+      return p;
+    }));
+    box.querySelector(".enlarged-figure").replaceChildren(copy);
+    returnFocus = el;
+    box.hidden = false;
+    box.querySelector(".enlarged-close").focus();
+  }
+  function closeEnlarged() {
+    if (box.hidden) return false;
+    box.hidden = true;
+    box.querySelector(".enlarged-figure").replaceChildren();
+    returnFocus?.focus();
+    return true;
+  }
+  box.querySelector(".enlarged-close").addEventListener("click", closeEnlarged);
+  box.addEventListener("click", event => { if (event.target === box) closeEnlarged(); });
 
   // "Show hotspots": outline every hotspot for a moment.
   let flashTimer;
@@ -102,6 +153,7 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
 
   function close() {
     if (!current) return;
+    closeEnlarged();
     current = null;
     viewer.classList.remove("open");
     viewer.hidden = true;
@@ -112,7 +164,6 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
 
   // Zoom buttons, so nobody has to know about scroll-to-zoom. Steps of 1.5x around the centre,
   // within the same 0.5x to 4x range; Fit returns to the whole map.
-  const quick = () => (matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 200);
   document.getElementById("map-zoom-in").addEventListener("click", () => d3.select(canvas).transition().duration(quick()).call(zoom.scaleBy, 1.5));
   document.getElementById("map-zoom-out").addEventListener("click", () => d3.select(canvas).transition().duration(quick()).call(zoom.scaleBy, 1 / 1.5));
   document.getElementById("map-fit").addEventListener("click", () => d3.select(canvas).transition().duration(quick()).call(zoom.transform, d3.zoomIdentity));
@@ -121,7 +172,7 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
   document.addEventListener("keydown", event => {
     if (current && event.key === "Escape") {
       event.stopImmediatePropagation();
-      close();
+      if (!closeEnlarged()) close();
     }
   }, true);
 

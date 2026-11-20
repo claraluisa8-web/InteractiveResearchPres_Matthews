@@ -108,7 +108,49 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
       d3.select(this).attr("transform", `translate(${-w / 2},${top})`);
     });
   }
-  document.fonts?.ready.then(() => requestAnimationFrame(placeCtas));
+  // Once Red Hat has loaded, lay out again with its real widths.
+  document.fonts?.ready.then(() => { update(null, root); requestAnimationFrame(placeCtas); });
+
+  // Columns are spaced by their labels, so no label ever runs into another column, whichever
+  // branches are open. A topic with children has its label on its left; one without, on its right
+  // (plus the map icon); the orb's label and pill sit centered under it. Each gap fits the widest
+  // right-side label of one column plus the widest left-side label of the next, plus a margin.
+  const measureCtx = document.createElement("canvas").getContext("2d");
+  const fontFamily = () => getComputedStyle(document.body).fontFamily || "sans-serif";
+  function textWidth(text, weight = 600, size = 13, family = fontFamily()) {
+    measureCtx.font = `${weight} ${size}px ${family}`;
+    return measureCtx.measureText(text).width;
+  }
+  function labelWidth(d) {
+    let w = d3.max(d.lines, line => textWidth(line));
+    if (d.depth === 1 && d.data.stage) w += textWidth("00  ", 500, 12, "'Red Hat Mono', monospace");
+    return w * 1.04; // headroom for the selected (heavier) weight and font loading
+  }
+  const columnGap = 36;
+  const minColumn = 120;
+  function placeColumns(visible) {
+    const left = [], right = [];
+    for (const d of visible) {
+      const k = d.depth;
+      left[k] ??= 0;
+      right[k] ??= 0;
+      if (d.data.prototype) {
+        const half = Math.max(pearlRadius + 8, labelWidth(d) / 2, (textWidth("Try the prototype") + 42) / 2);
+        left[k] = Math.max(left[k], half);
+        right[k] = Math.max(right[k], half);
+      } else if (d._children) {
+        left[k] = Math.max(left[k], labelWidth(d) + 10);
+        right[k] = Math.max(right[k], 8);
+      } else {
+        right[k] = Math.max(right[k], labelWidth(d) + 10 + (d.data.map ? 26 : 0));
+      }
+    }
+    const x = [0];
+    for (let k = 1; k < left.length; k++) {
+      x[k] = x[k - 1] + Math.max(minColumn, (right[k - 1] || 0) + (left[k] || 0) + columnGap);
+    }
+    for (const d of visible) d.y = x[d.depth];
+  }
 
   // The guided path moves the view briefly (200 ms), and not at all with reduced motion.
   const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -119,8 +161,9 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
     const nodes = root.descendants().reverse();
     const links = root.links();
 
-    // Compute the new tree layout.
+    // Compute the new tree layout, then space the columns by the labels that are showing.
     tree(root);
+    placeColumns(root.descendants());
 
     const transition = svg.transition()
         .duration(duration);
