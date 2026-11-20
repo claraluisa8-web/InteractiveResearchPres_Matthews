@@ -459,16 +459,26 @@ function showDetails(d) {
   const path = d.ancestors().reverse().map(n => n.data.name);
   document.getElementById("detail-path").textContent = path.slice(1, -1).join(" › ");
   document.getElementById("detail-title").textContent = d.data.name;
-  document.getElementById("detail-note").textContent = d.data.note || "";
+  setNote(d.data.note);
   document.getElementById("detail-map").hidden = !d.data.map;
   document.getElementById("detail-open-all").hidden = !d._children;
+}
+
+// A note can hold several paragraphs, separated by "\n": each becomes its own <p>.
+function setNote(note) {
+  const paragraphs = (note || "").split("\n").filter(line => line.trim()).map(line => {
+    const p = document.createElement("p");
+    p.textContent = line;
+    return p;
+  });
+  document.getElementById("detail-note").replaceChildren(...paragraphs);
 }
 
 // Show a map hotspot's note in the side panel, under the map's topic.
 function showHotspot(d, info) {
   document.getElementById("detail-path").textContent = `${d.data.name} ✱`;
   document.getElementById("detail-title").textContent = info.title;
-  document.getElementById("detail-note").textContent = info.note || "";
+  setNote(info.note);
   document.getElementById("detail-map").hidden = true;
   document.getElementById("detail-open-all").hidden = true;
 }

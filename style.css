@@ -393,6 +393,8 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
 #detail-path { margin: 0; color: var(--muted); font-size: 0.75rem; line-height: 1.4; min-height: 1em; }
 #detail-title { margin: 6px 0 10px; font-size: 18px; font-weight: 600; line-height: 24px; }
 #detail-note { margin: 0; font-size: 13px; line-height: 20px; }
+#detail-note p { margin: 0; }
+#detail-note p + p { margin-top: 8px; }
 
 /* Medium screens: narrower sidebar and notes card. */
 @media (max-width: 1100px) {
