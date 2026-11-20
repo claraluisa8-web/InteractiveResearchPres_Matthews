@@ -1,20 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 7022 7973">
   <!-- stakeholder-map.svg: raster export of Clara's Figma frame with clickable hotspot groups. Image paths are relative to index.html. -->
   <image href="maps/img/stakeholder-map.png" xlink:href="maps/img/stakeholder-map.png" x="0" y="0" width="7022" height="7973" preserveAspectRatio="none"/>
-  <g id="sh-senior-engineer" class="pmr-hotspot"><rect x="2841" y="3690" width="743" height="743" rx="372" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="sh-sets-expectations" class="pmr-hotspot"><rect x="3010" y="1659" width="452" height="100" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="sh-shapes-the-ask" class="pmr-hotspot"><rect x="3042" y="2265" width="389" height="100" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="sh-produces-output" class="pmr-hotspot"><rect x="3001" y="3007" width="464" height="92" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="sh-coding-agent" class="pmr-hotspot"><rect x="2360" y="4279" width="309" height="102" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="sh-review-agent" class="pmr-hotspot"><rect x="2204" y="5432" width="356" height="118" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="sh-instruction-files" class="pmr-hotspot"><rect x="2370" y="4002" width="289" height="118" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="sh-knowledge-base" class="pmr-hotspot"><rect x="1439" y="5643" width="309" height="118" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="sh-code-reviewers" class="pmr-hotspot"><rect x="2884" y="5288" width="336" height="76" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="sh-engineering-manager" class="pmr-hotspot"><rect x="4296" y="4824" width="416" height="118" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="sh-product-manager" class="pmr-hotspot"><rect x="4071" y="2951" width="352" height="76" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="sh-client" class="pmr-hotspot"><rect x="3105" y="2471" width="264" height="118" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="sh-cto" class="pmr-hotspot"><rect x="1943" y="2162" width="268" height="118" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="sh-policies" class="pmr-hotspot"><rect x="605" y="1886" width="214" height="76" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="sh-auditors" class="pmr-hotspot"><rect x="1252" y="1883" width="226" height="76" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="sh-ai-vendors" class="pmr-hotspot"><rect x="1919" y="1600" width="316" height="118" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <clipPath id="sh-outside-rings"><path clip-rule="evenodd" d="M0,0H7022V7973H0ZM713.5,4061.5a2499,2499 0 1,0 4998,0a2499,2499 0 1,0 -4998,0Z"/></clipPath>
+  <g id="sh-senior-engineer" class="pmr-hotspot"><path d="M2840.5,4061.5a372,372 0 1,0 744,0a372,372 0 1,0 -744,0Z" fill-rule="evenodd" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="sh-produces-output" class="pmr-hotspot"><path d="M2082.5,4061.5a1130,1130 0 1,0 2260,0a1130,1130 0 1,0 -2260,0ZM2840.5,4061.5a372,372 0 1,0 744,0a372,372 0 1,0 -744,0Z" fill-rule="evenodd" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="sh-shapes-the-ask" class="pmr-hotspot"><path d="M1316.5,4061.5a1896,1896 0 1,0 3792,0a1896,1896 0 1,0 -3792,0ZM2082.5,4061.5a1130,1130 0 1,0 2260,0a1130,1130 0 1,0 -2260,0Z" fill-rule="evenodd" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="sh-sets-expectations" class="pmr-hotspot"><path d="M713.5,4061.5a2499,2499 0 1,0 4998,0a2499,2499 0 1,0 -4998,0ZM1316.5,4061.5a1896,1896 0 1,0 3792,0a1896,1896 0 1,0 -3792,0Z" fill-rule="evenodd" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="sh-external" class="pmr-hotspot" clip-path="url(#sh-outside-rings)"><rect x="440" y="1180" width="1960" height="1220" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
 </svg>

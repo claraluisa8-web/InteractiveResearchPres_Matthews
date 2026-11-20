@@ -29,7 +29,7 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
   root.each(d => d.lines = wrap(d.data.name));
   // The prototype's label sits under its orb on two short lines, with the pill below, so it never
   // runs into the next column when a neighbouring branch opens. It takes the height of this many lines.
-  const protoRows = 9;
+  const protoRows = 14;
   root.each(d => {
     if (!d.data.prototype) return;
     const i = d.data.name.indexOf(":");
@@ -490,18 +490,29 @@ function showDetails(d) {
   const path = d.ancestors().reverse().map(n => n.data.name);
   document.getElementById("detail-path").textContent = path.slice(1, -1).join(" › ");
   document.getElementById("detail-title").textContent = d.data.name;
-  setNote(d.data.note);
+  setNote(d.data.note, d.data.quote);
   document.getElementById("detail-map").hidden = !d.data.map;
   document.getElementById("detail-open-all").hidden = !d._children;
 }
 
 // A note can hold several paragraphs, separated by "\n": each becomes its own <p>.
-function setNote(note) {
+// A quote ({ text, who }) follows as a block quote, attributed by role only.
+function setNote(note, quote) {
   const paragraphs = (note || "").split("\n").filter(line => line.trim()).map(line => {
     const p = document.createElement("p");
     p.textContent = line;
     return p;
   });
+  if (quote) {
+    const block = document.createElement("blockquote");
+    block.className = "detail-quote";
+    const text = document.createElement("p");
+    text.textContent = `\u201C${quote.text}\u201D`;
+    const who = document.createElement("footer");
+    who.textContent = quote.who;
+    block.append(text, who);
+    paragraphs.push(block);
+  }
   document.getElementById("detail-note").replaceChildren(...paragraphs);
 }
 

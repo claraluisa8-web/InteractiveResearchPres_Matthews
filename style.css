@@ -111,7 +111,7 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
 
 /* Secondary buttons (tokens.css .pmr-button--secondary) */
 .stepper { display: flex; gap: 8px; margin-top: 12px; }
-.stepper button, #reset, #detail-map, #detail-open-all, #detail-show-hotspots, #map-close {
+.stepper button, #reset, #detail-map, #detail-open-all, #detail-show-hotspots, #map-close, .map-zoom button {
   font: inherit;
   color: var(--text);
   background: var(--pmr-btn-2);
@@ -120,7 +120,7 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
   cursor: pointer;
   transition: background var(--pmr-t-hover) var(--pmr-ease), border-color var(--pmr-t-hover) var(--pmr-ease);
 }
-.stepper button:hover:not(:disabled), #reset:hover, #detail-map:hover, #detail-open-all:hover, #detail-show-hotspots:hover, #map-close:hover {
+.stepper button:hover:not(:disabled), #reset:hover, #detail-map:hover, #detail-open-all:hover, #detail-show-hotspots:hover, #map-close:hover, .map-zoom button:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.32);
 }
@@ -259,10 +259,12 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
 .tree .nodes g { cursor: pointer; }
 /* Hollow rings: 8px for topics, 10px for categories (circles are drawn at r=5). An opened
    category fills in; the current topic gets a ring in the bright blue of the path that leads to it. The Solution orb stays the bright one. */
-.tree circle { fill: var(--pmr-canvas); stroke: var(--pmr-text-2); stroke-width: 1.5; transform: scale(0.8); }
-.tree .has-children circle { transform: none; }
-.tree .has-children:not(.collapsed) circle { fill: var(--pmr-text-2); }
-.tree .selected circle { stroke: var(--pmr-stem-active); stroke-width: 2.5; }
+.tree :not(.prototype) > circle { fill: var(--pmr-canvas); stroke: var(--pmr-text-2); stroke-width: 1.5; transform: scale(0.8); }
+.tree .has-children:not(.prototype) > circle { transform: none; }
+.tree .has-children:not(.collapsed):not(.prototype) > circle { fill: var(--pmr-text-2); }
+.tree .selected:not(.prototype) > circle { stroke: var(--pmr-stem-active); stroke-width: 2.5; }
+/* The orb, when selected, shows its focus ring in the path blue instead. */
+.tree .prototype.selected .pearl-ring { stroke: var(--pmr-stem-active); }
 /* Responses (dashed boxes in the mind map): dashed ring, italic label. */
 .tree .response circle { fill: none; stroke: var(--muted); stroke-dasharray: 2 2; }
 .tree .response text { font-style: italic; fill: var(--muted); }
@@ -304,7 +306,7 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
 
 .map-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 12px;
   padding: 16px;
   border-bottom: 1px solid var(--pmr-divider);
@@ -312,8 +314,8 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
 .map-header h2 { margin: 0; font-size: 1rem; font-weight: 600; }
 .map-hint { flex: 1; margin: 0; color: var(--muted); font-size: 0.8rem; }
 #map-close {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   font-size: 1.2rem;
   line-height: 1;
   color: var(--muted);
@@ -553,3 +555,14 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
 #guide-exit { margin-top: 8px; padding: 2px 0; font: 500 0.8rem var(--pmr-font); color: var(--accent-text); background: none; border: 0; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 #guide-exit:hover { color: var(--text); }
 #guide-entry button:focus-visible, .guide-nav button:focus-visible, #guide-exit:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Map zoom buttons (mapviewer.js): zoom out, zoom in, fit. */
+.map-zoom { display: flex; gap: 4px; }
+.map-zoom button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 32px; height: 32px; padding: 0 8px; font-size: 0.8rem; font-weight: 500; }
+.map-zoom button:focus-visible, #map-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#map-close { display: grid; place-items: center; }
+
+/* A participant quote under a theme group's note (data.js "quote"). */
+#detail-note .detail-quote { margin: 12px 0 0; padding: 2px 0 2px 12px; border-left: 2px solid var(--accent); }
+#detail-note .detail-quote p { font-size: 13px; line-height: 20px; }
+#detail-note .detail-quote footer { margin-top: 6px; font-size: 0.75rem; font-weight: 600; color: var(--muted); }

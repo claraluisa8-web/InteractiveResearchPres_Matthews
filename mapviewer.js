@@ -110,6 +110,13 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
 
   closeButton.addEventListener("click", close);
 
+  // Zoom buttons, so nobody has to know about scroll-to-zoom. Steps of 1.5x around the centre,
+  // within the same 0.5x to 4x range; Fit returns to the whole map.
+  const quick = () => (matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 200);
+  document.getElementById("map-zoom-in").addEventListener("click", () => d3.select(canvas).transition().duration(quick()).call(zoom.scaleBy, 1.5));
+  document.getElementById("map-zoom-out").addEventListener("click", () => d3.select(canvas).transition().duration(quick()).call(zoom.scaleBy, 1 / 1.5));
+  document.getElementById("map-fit").addEventListener("click", () => d3.select(canvas).transition().duration(quick()).call(zoom.transform, d3.zoomIdentity));
+
   // Escape closes the map before anything else gets the key.
   document.addEventListener("keydown", event => {
     if (current && event.key === "Escape") {

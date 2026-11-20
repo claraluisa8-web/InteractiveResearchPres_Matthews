@@ -1,23 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 9300 9500">
   <!-- ecosystem-map.svg: raster export of Clara's Figma frame with clickable hotspot groups. Image paths are relative to index.html. -->
   <image href="maps/img/ecosystem-map.png" xlink:href="maps/img/ecosystem-map.png" x="0" y="0" width="9300" height="9500" preserveAspectRatio="none"/>
-  <g id="eco-center" class="pmr-hotspot"><rect x="4174" y="5127" width="860" height="860" rx="430" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="eco-work-intake" class="pmr-hotspot"><rect x="7070" y="2543" width="516" height="290" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="eco-executing" class="pmr-hotspot"><rect x="7070" y="8220" width="437" height="290" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="eco-testing-review" class="pmr-hotspot"><rect x="1437" y="8220" width="696" height="705" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="eco-deployment" class="pmr-hotspot"><rect x="1544" y="2543" width="586" height="290" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="eco-requirements-review" class="pmr-hotspot"><rect x="4673" y="3573" width="376" height="124" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="eco-context-gathering" class="pmr-hotspot"><rect x="6077" y="4484" width="330" height="124" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="eco-spec-driven-development" class="pmr-hotspot"><rect x="5904" y="6673" width="444" height="108" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="eco-plan-review" class="pmr-hotspot"><rect x="6235" y="5994" width="322" height="124" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="eco-progress-monitoring" class="pmr-hotspot"><rect x="5839" y="7314" width="357" height="124" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="eco-mid-task-redirection" class="pmr-hotspot"><rect x="6556" y="6320" width="371" height="108" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="eco-line-by-line-diff-review" class="pmr-hotspot"><rect x="3205" y="7256" width="419" height="108" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="eco-cross-model-checking" class="pmr-hotspot"><rect x="2596" y="6942" width="396" height="108" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="eco-fresh-session-review" class="pmr-hotspot"><rect x="2571" y="6696" width="384" height="124" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="eco-pull-request-review" class="pmr-hotspot"><rect x="4174" y="7412" width="355" height="108" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="eco-dev-done-sign-off" class="pmr-hotspot"><rect x="2651" y="6467" width="340" height="108" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="eco-authorship-tagging" class="pmr-hotspot"><rect x="2609" y="4417" width="349" height="108" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="eco-traceability-audit" class="pmr-hotspot"><rect x="2662" y="4752" width="322" height="124" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
-  <g id="eco-commit-merge" class="pmr-hotspot"><rect x="2609" y="4084" width="322" height="124" rx="24" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="eco-center" class="pmr-hotspot"><path d="M4174,5557a430,430 0 1,0 860,0a430,430 0 1,0 -860,0Z" fill-rule="evenodd" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="eco-work-intake" class="pmr-hotspot"><path d="M4604.0,5127.0L4604.0,2206.0A3351,3351 0 0,1 7955.0,5557.0L5034.0,5557.0A430,430 0 0,0 4604.0,5127.0Z" fill-rule="evenodd" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="eco-executing" class="pmr-hotspot"><path d="M5034.0,5557.0L7955.0,5557.0A3351,3351 0 0,1 4604.0,8908.0L4604.0,5987.0A430,430 0 0,0 5034.0,5557.0Z" fill-rule="evenodd" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="eco-testing-review" class="pmr-hotspot"><path d="M4604.0,5987.0L4604.0,8908.0A3351,3351 0 0,1 1253.0,5557.0L4174.0,5557.0A430,430 0 0,0 4604.0,5987.0Z" fill-rule="evenodd" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="eco-deployment" class="pmr-hotspot"><path d="M4174.0,5557.0L1253.0,5557.0A3351,3351 0 0,1 4604.0,2206.0L4604.0,5127.0A430,430 0 0,0 4174.0,5557.0Z" fill-rule="evenodd" fill="#000" fill-opacity="0" stroke="none"/></g>
 </svg>

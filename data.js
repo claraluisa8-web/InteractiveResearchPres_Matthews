@@ -11,7 +11,8 @@
 // it's drawn with a dashed circle and italic label.
 // Add "stage" (1-8) on a top-level branch to put it on the guided path, in that order.
 // "revised" on a How Might We question stores alternative wording; it isn't shown.
-// A note can hold several paragraphs, separated by "\n".
+// A note can hold several paragraphs, separated by "\n". "quote" ({ text, who }) shows a participant
+// quote under the note, attributed by role only.
 
 // Shorthand for a response item.
 const response = name => ({ name, response: true });
@@ -26,44 +27,187 @@ const data = {
       name: "Research Approach",
       note: "Who we heard from and how the research was analyzed, before any mapping or design.",
       children: [
-        {
-          name: "Who we heard from",
-          note: "32 participants: 20 engineers, 7 product designers, 2 product managers and 3 students.\nEngineers ranged from early-career to principal and director level, at fintech platforms, a large regulated brokerage and IBM Research."
-        },
+        { name: "Who we heard from", note: "7 participants: 3 engineers, 3 designers and 1 product manager." },
         {
           name: "How we listened",
-          note: "Semi-structured interviews with engineers, designers and a product manager, followed by a short engineer survey focused on the concrete details of day-to-day AI-assisted work."
+          note: "Semi-structured interviews with engineers, designers and a product manager."
         },
         {
           name: "How we analyzed it",
-          note: "Quotes were grouped by hand, the groups were named as themes, and the themes were rolled up into metathemes. Five separate codebooks were merged into one master codebook of 14 themes and 5 metathemes."
+          note: "Quotes were grouped by hand, the groups were named as themes, and the themes were rolled up into metathemes: 237 quotes, 20 groups, 8 themes and 3 metathemes."
         }
       ]
     },
     {
       stage: 2,
       name: "What We Heard",
-      note: "Five metathemes came out of the research. The first two show up for almost every engineer: the job has shifted from writing code to directing and checking it.",
+      note: "Three metathemes came out of 7 interviews: 237 quotes, sorted into 20 groups and 8 themes.",
       children: [
         {
-          name: "Directing, Not Doing",
-          note: "The work is shifting from producing code to defining intent and equipping agents to carry it out.\nRaised by 19 of 20 engineers. Writing specs, gathering context and building personal agent setups are now core parts of the job."
+          name: "Responsibility Outpaces Visibility",
+          note: "Practitioners are still on the hook for AI-assisted work, but their tools don't show what the agent did, why, or from what. Trust, traceability and context all have to be built by hand.",
+          children: [
+            {
+              name: "Accountability Without Authorship",
+              note: "People remain fully answerable for AI-assisted work, but the record of what the AI wrote, why, and from what inputs is thin or missing. Participants either build their own trail back to the source or rely on memory and conventions like co-author tags. (5 participants)",
+              children: [
+                {
+                  name: "Human Accountability",
+                  note: "The person stays answerable for AI-assisted work and has to understand it well enough to stand behind it.",
+                  quote: { text: "You're the one orchestrating those agents. You're the one giving them the instructions. So if they are not meeting expectations, you're responsible at the end of the day.", who: "Engineer" }
+                },
+                {
+                  name: "Authorship",
+                  note: "Telling human-written work from AI-written work, and how ownership feels.",
+                  quote: { text: "There's no way for me to look at the pull request and see, oh, this was my code and this was AI's code. It's all the same, so as you're inputting, you need to review.", who: "Engineer" }
+                },
+                {
+                  name: "AI Provenance",
+                  note: "Tracing AI work back to its inputs, sessions and decisions.",
+                  quote: { text: "For me to have traceability — I can go back and search for the session that worked on this. Let me see the outputs it created. Let me see the inputs it got.", who: "Engineer" }
+                }
+              ]
+            },
+            {
+              name: "Earned Trust",
+              note: "Trust in AI is built gradually through review routines, not granted up front. People adjust how much they hand over based on risk, experience and confidence, and some deliberately stay hands-on. (5 participants)",
+              children: [
+                {
+                  name: "Trust but Verify",
+                  note: "Never accepting AI output without checking it.",
+                  quote: { text: "If Claude writes me something, I'm definitely not going to just cut and paste and use it. Trust but verify.", who: "Product manager" }
+                },
+                {
+                  name: "Autonomy Calibration",
+                  note: "How much independence to give agents, and how that grows with trust.",
+                  quote: { text: "Trust has to be built in that process. These are high-risk tasks, especially in security, so rightly there was wariness to say, hey agent, take this big task and go do it, even though the agents were able to do it.", who: "Designer" }
+                },
+                {
+                  name: "Delegate?",
+                  note: "Choosing what to hand to AI and what to keep doing yourself.",
+                  quote: { text: "I'm not a big fan of long conversations with it. I'd rather have short prompts here and there and then try to figure it out myself. That's the most productive way I can do it.", who: "Engineer" }
+                }
+              ]
+            },
+            {
+              name: "Context or Chaos",
+              note: "Agent output is only as reliable as the context behind it. Without instruction files, knowledge bases and clear requirements, agents assume, drift and hallucinate, and giving them more context costs more. (5 participants)",
+              children: [
+                {
+                  name: "Context First",
+                  note: "Agents are only as good as the context they're given: instruction files, requirements, knowledge bases.",
+                  quote: { text: "Some engineers didn't have the context of the things they were building. Here's the requirements, they just pass it to the AI, and when the AI finished, they say, yeah, it's ready.", who: "Engineer" }
+                },
+                {
+                  name: "Agent Derailment",
+                  note: "How agent output goes wrong: false assumptions, drift, hallucination, sweeping changes.",
+                  quote: { text: "You can start an agent session, give it an instruction and access to the code, and it can go bananas and change as many things as possible. And you can lose track of it.", who: "Engineer" }
+                },
+                {
+                  name: "Cost",
+                  note: "The token and money cost of giving agents more context.",
+                  quote: { text: "The more context the agents need to understand, the more tokens they use, which [means] spending more money.", who: "Engineer" }
+                }
+              ]
+            }
+          ]
         },
         {
-          name: "Checking Is the Job",
-          note: "People stay answerable for agent output, so verification grows into the bulk of the work, while the tools show little of what agents actually did.\nRaised by 19 of 20 engineers. Agents drifting off course is the single most common pain point."
-        },
-        {
-          name: "Judgment Comes From Experience",
-          note: "AI is only as good as the person overseeing it, and that judgment depends on expertise the new workflow may stop building.\nRaised by 15 of 20 engineers."
-        },
-        {
-          name: "Work Moves Between People",
-          note: "AI is redrawing who does what. Handoffs, visibility and the flow of knowledge are being rebuilt around it.\nRaised by 17 of 20 engineers. Much of the knowledge agents lack still lives in people."
+          name: "The Shape of Work Is Being Renegotiated",
+          note: "AI is changing who does what. Individuals shift from making to directing, disciplines cross into each other's work, and the handoffs between them are being rebuilt.",
+          children: [
+            {
+              name: "From Maker to Director",
+              note: "Across every role, the human job is moving from producing the work to directing, prompting and reviewing it. Some build elaborate infrastructure to support that shift, while others see heavy setup as more trouble than it's worth. (7 participants)",
+              children: [
+                {
+                  name: "AI Conductor",
+                  note: "The person's job shifting from making the work to directing, prompting and reviewing AI.",
+                  quote: { text: "If something I'm doing is more procedural and there's already a laid-out pattern in the application, sometimes my job is honestly more AI supervisor than an actual developer.", who: "Engineer" }
+                },
+                {
+                  name: "AI Scaffolding",
+                  note: "Systems, agents and setups people build to make AI useful, and whether that setup is worth it.",
+                  quote: { text: "You need to build confidence in the agent's work so you can delegate more. Now I can run 10 agents in parallel, because the way I set it up, I can quickly get the context when I need it.", who: "Engineer" }
+                }
+              ]
+            },
+            {
+              name: "Roles Without Borders",
+              note: "Designers write code, PMs build prototypes, and engineers make UI. Boundaries between disciplines are blurring, raising questions about how far each role should reach and what each one uniquely contributes. (6 participants)",
+              children: [
+                {
+                  name: "Role Scope",
+                  note: "Disciplines crossing into each other's work, and how far each role should stretch.",
+                  quote: { text: "Just because I can doesn't mean I will.", who: "Designer" }
+                },
+                {
+                  name: "Knowledge Sharing",
+                  note: "How people learn from and teach each other across roles.",
+                  quote: { text: "[Engineers] come to me if they're doing UX or UI work, which I'm finding they're doing more and more on their own to build out features. They'll come to me for feedback.", who: "Designer" }
+                }
+              ]
+            },
+            {
+              name: "The Design–Engineering Seam",
+              note: "Handoff, acceptance and the source of truth are being rebuilt. AI can close the old gap between design and build, but it also lets work move ahead without the right people consulted, and leaves open who decides when something is done. (6 participants)",
+              children: [
+                {
+                  name: "Design - Engineering Gap",
+                  note: "How work moves between design, product and engineering, and where it breaks: handoff, acceptance, source of truth, and who decides.",
+                  quote: { text: "It has happened that they'll do something and be so far along in development that we just can't make changes to it.", who: "Designer" }
+                },
+                {
+                  name: "Team/Process",
+                  note: "Team structures, meetings and tools that shape how decisions get made.",
+                  quote: { text: "That comes with working on a larger team where everyone has an opinion. It sometimes impacts the development cycle negatively.", who: "Engineer" }
+                }
+              ]
+            }
+          ]
         },
         {
           name: "Speed Meets Its Limits",
-          note: "AI speeds up building, but expectations, quality and the parts of the process that need time push back.\nRaised by 10 of 20 engineers. Review and teammates struggle to keep pace with generation."
+          note: "AI speeds up building, but experience quality, research, organizational rules and people's real readiness push back on how far speed alone can go.",
+          children: [
+            {
+              name: "Speed Over Substance",
+              note: "Faster building tempts teams to build everything and treat \"it works\" as done. Scoping, discovery, research and experience quality are what get squeezed. (6 participants)",
+              children: [
+                {
+                  name: "Time",
+                  note: "Speed gains and what they push out: discovery, research, review, care.",
+                  quote: { text: "I definitely can't spend as much time on discovery or divergent thinking — exploring multiple ways of doing the same thing.", who: "Designer" }
+                },
+                {
+                  name: "Product Purpose",
+                  note: "Building more because you can, versus deciding what's worth building and for whom.",
+                  quote: { text: "There's a reaction to building everything just because you can, instead of scoping your work to the least amount we can do to prove it out and deliver a really great experience.", who: "Designer" }
+                },
+                {
+                  name: "Operation vs. Experience",
+                  note: "Working isn't the same as a good experience.",
+                  quote: { text: "Done for them means that it works. It doesn't mean experience.", who: "Designer" }
+                }
+              ]
+            },
+            {
+              name: "Adoption Within Limits",
+              note: "AI use happens inside organizational rules, such as approved tools, access gating and compliance, and alongside uneven readiness. There's no single right way to work with AI, and not everyone will become an expert. (5 participants)",
+              children: [
+                {
+                  name: "Guardrails",
+                  note: "Organizational rules on which AI tools can be used, who can access what, and compliance.",
+                  quote: { text: "We have a very strict policy in-house around AI. We can only use AI-approved tools. No shadow AI.", who: "Product manager" }
+                },
+                {
+                  name: "Rooted in Reality",
+                  note: "Realistic views of adoption: no single answer, and not everyone becomes an expert.",
+                  quote: { text: "We have this mentality as an industry that the whole world is going to become AI experts. If we look at history, the whole world hasn't become computer experts yet.", who: "Designer" }
+                }
+              ]
+            }
+          ]
         },
         {
           name: "Pain Point Map",
@@ -71,9 +215,9 @@ const data = {
           map: {
             src: "maps/pain-points.svg",
             hotspots: {
-              "pp-engineers": { title: "Engineers", note: "Pain peaks in Build, where agents drift and overreach (6 of 10 engineers), and continues into Review and Ship, where work can't be traced to its source (3 of 10). Based on the 10 engineers whose interviews were coded for pain." },
+              "pp-engineers": { title: "Engineers", note: "Pain peaks in Build, where agents drift and overreach, and continues into Review and Ship, where work can't be traced to its source." },
               "pp-designers": { title: "Designers", note: "Designers' pain centers on setting up their own agent workflows and on the handoff to engineering. Across every phase, the collaboration rhythm they relied on is thinning out." },
-              "pp-pms": { title: "Product managers", note: "Only two PMs, so these are signals rather than trends. Both point to collaboration rhythm and to knowledge that lives in people rather than in tools." }
+              "pp-pms": { title: "Product managers", note: "Signals rather than trends. They point to collaboration rhythm and to knowledge that lives in people rather than in tools." }
             }
           }
         }
@@ -86,26 +230,15 @@ const data = {
       children: [
         {
           name: "Stakeholder Map",
-          note: "Everyone who shapes, pressures or depends on the senior engineer's work, in three rings. Click any highlighted item.",
+          note: "Everyone who shapes, pressures or depends on the senior engineer's work, in three rings. Click a ring.",
           map: {
             src: "maps/stakeholder-map.svg",
             hotspots: {
               "sh-senior-engineer": { title: "Senior software engineer", note: "At the center. She directs and audits agent output and answers for what ships, whoever wrote it." },
-              "sh-sets-expectations": { title: "Sets expectations", note: "Outer ring: leadership, regulators, policy and vendors who set the rules, and the pressure to adopt AI." },
-              "sh-shapes-the-ask": { title: "Shapes the ask", note: "Middle ring: clients, product and management, who define what gets built and negotiate its scope." },
-              "sh-produces-output": { title: "Produces output", note: "Inner ring: the agents, tools and engineers whose work she has to verify." },
-              "sh-coding-agent": { title: "Coding agent", note: "Writes code from her direction and context. It can't be held accountable, so responsibility for its output lands on her." },
-              "sh-review-agent": { title: "Review agent", note: "A second agent that pre-reviews the coding agent's work. Engineers use it as an independent check, not a replacement for their own review." },
-              "sh-instruction-files": { title: "Instruction files", note: "Standing rules loaded on every task. They constrain the coding agent, and keeping them current is now part of her job." },
-              "sh-knowledge-base": { title: "Knowledge base", note: "Where approved decisions are recorded so future agents inherit them. Much of the context agents need still lives in people instead." },
-              "sh-code-reviewers": { title: "Code reviewers", note: "Teammates who review her pull requests. They see what changed, but rarely what the agent did or why." },
-              "sh-engineering-manager": { title: "Engineering manager", note: "Assigns the work and signs off on it, and increasingly expects more output because AI exists." },
-              "sh-product-manager": { title: "Product manager", note: "Negotiates requirements and coordinates across teams. Intent can get lost between the original ask and the agent." },
-              "sh-client": { title: "Client", note: "Pushes requirements into the work and holds the engineer to explaining and defending the output." },
-              "sh-cto": { title: "CTO", note: "Sets the organization's AI direction and partners with approved vendors. Leadership expects more output from AI." },
-              "sh-policies": { title: "Policies", note: "Shaped by regulators and industry trends, they decide which AI tools engineers may use and how." },
-              "sh-auditors": { title: "Auditors", note: "Require attribution: who or what wrote a change has to be traceable after the fact." },
-              "sh-ai-vendors": { title: "AI vendors", note: "Supply the approved tools. Which vendor an organization partners with decides which agents engineers can use." }
+              "sh-produces-output": { title: "Produces output", note: "Inner ring: the agents, tools and engineers whose work she has to verify.\nCoding agent: Writes code from her direction and context. It can't be held accountable, so responsibility for its output lands on her.\nInstruction files: Standing rules loaded on every task. They constrain the coding agent, and keeping them current is now part of her job." },
+              "sh-shapes-the-ask": { title: "Shapes the ask", note: "Middle ring: clients, product and management, who define what gets built and negotiate its scope.\nReview agent: A second agent that pre-reviews the coding agent's work. Engineers use it as an independent check, not a replacement for their own review.\nCode reviewers: Teammates who review her pull requests. They see what changed, but rarely what the agent did or why.\nEngineering manager: Assigns the work and signs off on it, and increasingly expects more output because AI exists.\nProduct manager: Negotiates requirements and coordinates across teams. Intent can get lost between the original ask and the agent.\nClient: Pushes requirements into the work and holds the engineer to explaining and defending the output." },
+              "sh-sets-expectations": { title: "Sets expectations", note: "Outer ring: leadership, regulators, policy and vendors who set the rules, and the pressure to adopt AI.\nKnowledge base: Where approved decisions are recorded so future agents inherit them. Much of the context agents need still lives in people instead.\nCTO: Sets the organization's AI direction and partners with approved vendors. Leadership expects more output from AI." },
+              "sh-external": { title: "Regulatory and external influences", note: "Policies: Shaped by regulators and industry trends, they decide which AI tools engineers may use and how.\nAuditors: Require attribution: who or what wrote a change has to be traceable after the fact.\nAI vendors: Supply the approved tools. Which vendor an organization partners with decides which agents engineers can use." }
             }
           }
         },
@@ -116,24 +249,10 @@ const data = {
             src: "maps/ecosystem-map.svg",
             hotspots: {
               "eco-center": { title: "Auditable agentic output and transparency", note: "The need at the center of every phase: agent output the engineer can audit and explain." },
-              "eco-work-intake": { title: "01 Work intake", note: "Work arrives through standups, tickets and design handoff, and context is gathered for the agent." },
-              "eco-executing": { title: "02 Executing", note: "Agents build from the spec while engineers plan, monitor progress and redirect when needed." },
-              "eco-testing-review": { title: "03 Testing and review", note: "Where The Pre-Merge Review sits. Engineers review diffs, run tests and look for second opinions before sign-off." },
-              "eco-deployment": { title: "04 Deployment", note: "Code is merged and released. Authorship and traceability have to survive past the merge, and usually don't." },
-              "eco-requirements-review": { title: "Requirements review", note: "Checking requirements before work starts. Gaps left here become the agent's guesses later." },
-              "eco-context-gathering": { title: "Context gathering", note: "Pulling designs, docs and repos together so the agent has what it needs. Much of the setup time goes here." },
-              "eco-spec-driven-development": { title: "Spec-driven development", note: "Writing a detailed spec first, so the agent builds against something that can be checked." },
-              "eco-plan-review": { title: "Plan review", note: "Reviewing the agent's plan before it writes code: the cheapest point to catch a wrong direction." },
-              "eco-progress-monitoring": { title: "Progress monitoring", note: "Watching the agent work. Tools show little of what it is doing, so this is effort with low visibility." },
-              "eco-mid-task-redirection": { title: "Mid-task redirection", note: "Steering an agent that has drifted without losing the work already done." },
-              "eco-line-by-line-diff-review": { title: "Line-by-line diff review", note: "Today's default: reading every line. Thorough, but it erases the speed agents add." },
-              "eco-cross-model-checking": { title: "Cross-model checking", note: "Running the work past a different model to catch what the first one missed." },
-              "eco-fresh-session-review": { title: "Fresh-session review", note: "Asking a new agent session, with clean context, to review the work." },
-              "eco-pull-request-review": { title: "Pull request review", note: "Teammates review the change. They see the diff, not the agent's reasoning." },
-              "eco-dev-done-sign-off": { title: "Dev-done sign-off", note: "The engineer declares the work done and becomes answerable for it." },
-              "eco-authorship-tagging": { title: "Authorship tagging", note: "Marking which code a person wrote and which an agent wrote. Rarely done today, and lost after merge." },
-              "eco-traceability-audit": { title: "Traceability audit", note: "Reconstructing what happened and why after the fact, for audits or incidents." },
-              "eco-commit-merge": { title: "Commit and merge", note: "Where agent and human work become one history, and attribution usually disappears." }
+              "eco-work-intake": { title: "01 Work intake", note: "Work arrives through standups, tickets and design handoff, and context is gathered for the agent.\nRequirements review: Checking requirements before work starts. Gaps left here become the agent's guesses later.\nContext gathering: Pulling designs, docs and repos together so the agent has what it needs. Much of the setup time goes here." },
+              "eco-executing": { title: "02 Executing", note: "Agents build from the spec while engineers plan, monitor progress and redirect when needed.\nSpec-driven development: Writing a detailed spec first, so the agent builds against something that can be checked.\nPlan review: Reviewing the agent's plan before it writes code: the cheapest point to catch a wrong direction.\nProgress monitoring: Watching the agent work. Tools show little of what it is doing, so this is effort with low visibility.\nMid-task redirection: Steering an agent that has drifted without losing the work already done." },
+              "eco-testing-review": { title: "03 Testing and review", note: "Where The Pre-Merge Review sits. Engineers review diffs, run tests and look for second opinions before sign-off.\nLine-by-line diff review: Today's default: reading every line. Thorough, but it erases the speed agents add.\nCross-model checking: Running the work past a different model to catch what the first one missed.\nFresh-session review: Asking a new agent session, with clean context, to review the work.\nPull request review: Teammates review the change. They see the diff, not the agent's reasoning.\nDev-done sign-off: The engineer declares the work done and becomes answerable for it." },
+              "eco-deployment": { title: "04 Deployment", note: "Code is merged and released. Authorship and traceability have to survive past the merge, and usually don't.\nAuthorship tagging: Marking which code a person wrote and which an agent wrote. Rarely done today, and lost after merge.\nTraceability audit: Reconstructing what happened and why after the fact, for audits or incidents.\nCommit and merge: Where agent and human work become one history, and attribution usually disappears." }
             }
           }
         },
@@ -367,6 +486,7 @@ const data = {
       name: "The Solution: The Pre-Merge Review",
       short: "The solution",
       note: "A constellation, not a chat window: the engineer adds agents and teammates around her, sees disagreements as red lines between them, and verifies the code section by section before it merges.",
+      prototype: { src: "prototype/index.html", title: "The Pre-Merge Review" },
       children: [
         {
           name: "Design Evolution",
@@ -406,12 +526,6 @@ const data = {
               note: "Text meets WCAG AAA contrast. Hierarchy comes from size and weight, not from darker greys."
             }
           ]
-        },
-        {
-          name: "Solution: The Pre-Merge Review",
-          short: "Solution",
-          note: "Open the working prototype.",
-          prototype: { src: "prototype/index.html", title: "The Pre-Merge Review" }
         }
       ]
     },
@@ -473,7 +587,7 @@ const data = {
         },
         {
           name: "Limitations",
-          note: "Four usability sessions, none with a software engineer (a retiree, a chemical engineer, a Marine and an experience design student), so findings about reading and judging code need confirming with the target user. Agents are scripted, not live. Pain-point percentages come from the 10 engineers coded for pain, and only two PMs were interviewed."
+          note: "Four usability sessions, none with a software engineer (a retiree, a chemical engineer, a Marine and an experience design student), so findings about reading and judging code need confirming with the target user. Agents are scripted, not live. The interview analysis covers 7 participants: 3 engineers, 3 designers and 1 product manager."
         }
       ]
     }
