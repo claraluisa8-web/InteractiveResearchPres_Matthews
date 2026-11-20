@@ -48,7 +48,7 @@ const data = {
               ]
             },
             {
-              name: "Product manager",
+              name: "Product managers",
               note: "1 product manager, 27 quotes in the analysis.",
               children: [
                 { name: "Product manager", note: "27 quotes, most often on Design - Engineering Gap, AI Conductor and Role Scope." }
