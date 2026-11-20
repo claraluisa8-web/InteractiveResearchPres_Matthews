@@ -510,3 +510,43 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
 #prototype-close:focus-visible, .prototype-action:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 #prototype-frame { display: flex; }
 #prototype-frame iframe { display: block; border: 0; background: var(--pmr-canvas); }
+
+/* ---------- Guided path (guidedpath.js) ---------- */
+/* Stage numbers before each top-level branch, in the tree and the sidebar. */
+.tree .stage-num { font-family: var(--pmr-mono); font-size: 12px; font-weight: 500; fill: var(--pmr-text-2); }
+#outline .stage-num { margin-right: 8px; font-family: var(--pmr-mono); font-size: 0.75rem; color: var(--muted); }
+
+#guide-entry, #guide-bar { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--pmr-divider); }
+#guide-entry { display: flex; flex-wrap: wrap; gap: 8px; }
+#guide-entry[hidden], #guide-bar[hidden] { display: none; }
+#guide-entry button, #guide-bar .guide-nav button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 10px 1px;
+  font: 500 0.8rem var(--pmr-font);
+  white-space: nowrap;
+  border-radius: var(--pmr-r-input);
+  cursor: pointer;
+}
+#guide-start, #guide-next { color: var(--pmr-text-on-accent); background: var(--pmr-button); border: 0; }
+#guide-start:hover, #guide-next:hover { filter: brightness(1.08); }
+#guide-explore, #guide-prev { color: var(--text); background: var(--pmr-btn-2); border: 1px solid var(--pmr-btn-2-stroke); }
+#guide-explore:hover, #guide-prev:hover:not(:disabled) { border-color: rgba(255, 255, 255, 0.32); }
+#guide-prev:disabled { cursor: default; background: var(--pmr-btn-disabled, transparent); color: var(--muted); }
+#guide-start { flex: 1 1 auto; }
+
+#guide-status { margin: 0 0 10px; font-size: 0.8rem; font-weight: 600; color: var(--text); }
+.guide-nav { display: flex; gap: 8px; }
+.guide-nav button { flex: 1; }
+.guide-dots { display: flex; gap: 2px; margin: 10px 0 0; padding: 0; list-style: none; }
+.guide-dot { display: grid; place-items: center; width: 24px; height: 24px; padding: 0; background: none; border: 0; cursor: pointer; }
+.guide-dot::before { content: ""; width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--pmr-text-2); }
+.guide-dot.is-past::before { background: var(--pmr-text-2); }
+.guide-dot[aria-current="step"]::before { width: 10px; height: 10px; background: var(--pmr-stem-active); border-color: var(--pmr-stem-active); }
+.guide-dot:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; border-radius: 50%; }
+#guide-exit { margin-top: 8px; padding: 2px 0; font: 500 0.8rem var(--pmr-font); color: var(--accent-text); background: none; border: 0; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+#guide-exit:hover { color: var(--text); }
+#guide-entry button:focus-visible, .guide-nav button:focus-visible, #guide-exit:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

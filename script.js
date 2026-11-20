@@ -102,8 +102,12 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
   }
   document.fonts?.ready.then(() => requestAnimationFrame(placeCtas));
 
+  // The guided path moves the view briefly (200 ms), and not at all with reduced motion.
+  const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const guidedDuration = () => (reducedMotion() ? 0 : 200);
+
   function update(event, source) {
-    const duration = event?.altKey ? 2500 : 300; // hold the alt key to slow down the transition
+    const duration = event?.guided ? guidedDuration() : event?.altKey ? 2500 : 300; // hold the alt key to slow down the transition
     const nodes = root.descendants().reverse();
     const links = root.links();
 
@@ -185,7 +189,15 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
         .attr("x", ({d}) => d.data.prototype ? 0 : d._children ? -10 : 10)
         .attr("y", ({i, d}) => d.data.prototype ? protoLabelTop + i * lineHeight : (i - (d.lines.length - 1) / 2) * lineHeight)
         .attr("dy", "0.31em")
-        .text(({line}) => line);
+        .each(function({line, i, d}) {
+          // A guided-path stage shows its number first ("03"), in Red Hat Mono.
+          if (i === 0 && d.depth === 1 && d.data.stage) {
+            d3.select(this).append("tspan").attr("class", "stage-num").text(`${String(d.data.stage).padStart(2, "0")}  `);
+            d3.select(this).append("tspan").text(line);
+          } else {
+            this.textContent = line;
+          }
+        });
 
     // Topics with a map get a small ✱ after their label that opens it.
     text.filter(d => d.data.map)
@@ -327,7 +339,7 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
   // in frame for context (but not its label, which can be long). An end topic is framed
   // with its siblings. Focusing the root fits the whole visible tree.
   function focus(d, event) {
-    const duration = event === undefined ? 0 : event?.altKey ? 2500 : 750;
+    const duration = event === undefined ? 0 : event?.guided ? guidedDuration() : event?.altKey ? 2500 : 750;
     const group = d.children || !d.parent ? d.descendants() : d.parent.children;
 
     // Measure each node with its label at its new position. Layout x is vertical and y is
@@ -436,6 +448,17 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
   svg.node().openAll = openAll;
   svg.node().toggle = toggle;
 
+  // Guided path: close the branch being left (if any), open the target stage's branch (none for
+  // the root), then select the target so the view frames it. A short move, only on request.
+  svg.node().guideTo = (target, leaving) => {
+    const event = {guided: true};
+    if (leaving && leaving !== target && leaving !== root) collapse(leaving);
+    if (target !== root && target._children) target.children = target._children;
+    update(event, target);
+    select(target, event);
+  };
+  svg.node().root = root;
+
   // Selects the root and fits the whole tree. Used for the "Show all" button, and once the
   // chart is on the page (labels can't be measured before then).
   svg.node().reset = event => {
@@ -485,6 +508,7 @@ function showHotspot(d, info) {
 
 let sidebar;
 let selected;
+let guide;
 
 // While a map is open, the notes card says how to use it and offers "Show hotspots".
 function setMapHint(on) {
@@ -514,6 +538,7 @@ const chart = createTree(data, {
     if (!d.data.prototype) prototypeViewer.close({restoreFocus: false});
     showDetails(d);
     sidebar?.setCurrent(d);
+    guide?.onSelect(d);
   },
   onOpenMap: d => {
     prototypeViewer.close();
@@ -531,7 +556,9 @@ const chart = createTree(data, {
 // First in the stage, so the buttons, map viewer and notes card sit on top of it.
 stage.prepend(chart);
 sidebar = createSidebar(chart);
+guide = createGuidedPath({chart, isBlocked: () => prototypeViewer.isOpen()});
 chart.reset();
+guide.start();
 
 document.getElementById("detail-map").addEventListener("click", () => mapViewer.open(selected));
 document.getElementById("detail-show-hotspots").addEventListener("click", () => mapViewer.flashHotspots());

@@ -81,6 +81,21 @@
       </div>
       <p id="detail-map-hint" hidden>Click a highlighted area to read about it.</p>
       <button id="detail-show-hotspots" type="button" hidden>Show hotspots</button>
+
+      <!-- Guided path (guidedpath.js): the entry choice on the problem, then the stage bar. -->
+      <div id="guide-entry" hidden>
+        <button id="guide-start" type="button">Take the guided path</button>
+        <button id="guide-explore" type="button">Explore freely</button>
+      </div>
+      <nav id="guide-bar" aria-label="Guided path" hidden>
+        <p id="guide-status" aria-live="polite"></p>
+        <div class="guide-nav">
+          <button id="guide-prev" type="button"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M5.928 7.976l4.357 4.357-.618.62L5 8.284v-.618L9.667 3l.618.619-4.357 4.357z"/></svg><span>Previous stage</span></button>
+          <button id="guide-next" type="button"><span>Next stage</span><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.072 8.024L5.715 3.667l.618-.62L11 7.716v.618L6.333 13l-.618-.619 4.357-4.357z"/></svg></button>
+        </div>
+        <ol id="guide-dots" class="guide-dots"></ol>
+        <button id="guide-exit" type="button">Exit guided path</button>
+      </nav>
     </aside>
   </main>
 
@@ -89,6 +104,7 @@
   <script src="sidebar.js"></script>
   <script src="mapviewer.js"></script>
   <script src="prototypeviewer.js"></script>
+  <script src="guidedpath.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

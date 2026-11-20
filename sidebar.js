@@ -41,7 +41,15 @@ function createSidebar(chart) {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "label";
-    button.textContent = d.data.short || d.data.name;
+    // Guided-path stages show their number first, in Red Hat Mono.
+    if (d.depth === 1 && d.data.stage) {
+      const num = document.createElement("span");
+      num.className = "stage-num";
+      num.textContent = String(d.data.stage).padStart(2, "0");
+      button.append(num, d.data.short || d.data.name);
+    } else {
+      button.textContent = d.data.short || d.data.name;
+    }
     button.title = d.data.name;
     if (d.data.response) button.classList.add("response");
     button.addEventListener("click", event => chart.goTo(d, event));
