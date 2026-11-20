@@ -25,22 +25,50 @@ const data = {
     {
       stage: 1,
       name: "Research Approach",
-      note: "Who we heard from and how the research was analyzed, before any mapping or design.",
+      note: "Who I talked to and how I analyzed what I heard, before any mapping or design.",
       children: [
-        { name: "Who we heard from", note: "7 participants: 3 engineers, 3 designers and 1 product manager." },
+        { name: "Who I talked to", note: "7 participants: 3 engineers, 3 designers and 1 product manager.",
+          children: [
+            {
+              name: "Engineers",
+              note: "3 engineers, 102 quotes in the analysis.",
+              children: [
+                { name: "Engineer 1", note: "35 quotes, most often on Human Accountability, AI Conductor and AI Scaffolding." },
+                { name: "Engineer 2", note: "35 quotes, most often on AI Conductor, Delegate? and Agent Derailment." },
+                { name: "Engineer 3", note: "32 quotes, most often on Human Accountability, AI Conductor, AI Scaffolding and Authorship." }
+              ]
+            },
+            {
+              name: "Designers",
+              note: "3 designers, 108 quotes in the analysis.",
+              children: [
+                { name: "Designer 1", note: "32 quotes, most often on Design - Engineering Gap, Product Purpose and Role Scope." },
+                { name: "Designer 2", note: "37 quotes, most often on AI Conductor, Product Purpose and Design - Engineering Gap." },
+                { name: "Designer 3", note: "39 quotes, most often on Design - Engineering Gap, Role Scope and Team/Process." }
+              ]
+            },
+            {
+              name: "Product manager",
+              note: "1 product manager, 27 quotes in the analysis.",
+              children: [
+                { name: "Product manager", note: "27 quotes, most often on Design - Engineering Gap, AI Conductor and Role Scope." }
+              ]
+            }
+          ]
+        },
         {
-          name: "How we listened",
+          name: "How I listened",
           note: "Semi-structured interviews with engineers, designers and a product manager."
         },
         {
-          name: "How we analyzed it",
+          name: "How I analyzed it",
           note: "Quotes were grouped by hand, the groups were named as themes, and the themes were rolled up into metathemes: 237 quotes, 20 groups, 8 themes and 3 metathemes."
         }
       ]
     },
     {
       stage: 2,
-      name: "What We Heard",
+      name: "What I Heard",
       note: "Three metathemes came out of 7 interviews: 237 quotes, sorted into 20 groups and 8 themes.",
       children: [
         {
@@ -564,7 +592,7 @@ const data = {
           note: "Clear next steps on every card, the reviewer's fix moved where people look, a toast when an issue appears, a teammate suggested for the pull request, a labeled Save button, an explicit Merge button, and settings that match each agent's role."
         },
         {
-          name: "What we learned",
+          name: "What I learned",
           note: "As the flow got easier, review got shallower. Every participant verified the remaining sections in bulk, and three answered the teammate's question with a single word. The next design problem is making verification meaningful, not just possible."
         }
       ]
