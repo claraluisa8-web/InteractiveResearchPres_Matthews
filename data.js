@@ -214,18 +214,6 @@ const data = {
               ]
             }
           ]
-        },
-        {
-          name: "Pain Point Map",
-          note: "Where each role feels the pain, by workflow phase. Click a chart to read it.",
-          map: {
-            src: "maps/pain-points.svg",
-            hotspots: {
-              "pp-engineers": { title: "Engineers", note: "Pain peaks in Build, where agents drift and overreach, and continues into Review and Ship, where work can't be traced to its source." },
-              "pp-designers": { title: "Designers", note: "Designers' pain centers on setting up their own agent workflows and on the handoff to engineering. Across every phase, the collaboration rhythm they relied on is thinning out." },
-              "pp-pms": { title: "Product managers", note: "Signals rather than trends. They point to collaboration rhythm and to knowledge that lives in people rather than in tools." }
-            }
-          }
         }
       ]
     },
@@ -274,6 +262,18 @@ const data = {
               "jm-integration": { title: "Integration", note: "She commits the code. Her work and the agent's become indistinguishable, and overlooked mistakes get buried." },
               "jm-realization": { title: "Realization", note: "She finds the agent took a wrong path that review missed. Trust in the agent, and in herself, drops. The low point of the journey." },
               "jm-revision": { title: "Revision", note: "She fixes the context or prompt and reruns. Repetitive and tiring, but each fix can make the next run better." }
+            }
+          }
+        },
+        {
+          name: "Pain Point Map",
+          note: "Where each role feels the pain, by workflow phase. Click a chart to read it.",
+          map: {
+            src: "maps/pain-points.svg",
+            hotspots: {
+              "pp-engineers": { title: "Engineers", note: "Pain peaks in Build, where agents drift and overreach, and continues into Review and Ship, where work can't be traced to its source." },
+              "pp-designers": { title: "Designers", note: "Designers' pain centers on setting up their own agent workflows and on the handoff to engineering. Across every phase, the collaboration rhythm they relied on is thinning out." },
+              "pp-pms": { title: "Product managers", note: "Signals rather than trends. They point to collaboration rhythm and to knowledge that lives in people rather than in tools." }
             }
           }
         },
