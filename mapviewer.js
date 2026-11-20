@@ -10,7 +10,7 @@ function createMapViewer({onHotspot, onClose}) {
 
   // Drag to pan and scroll to zoom. The map is moved with a CSS transform.
   const zoom = d3.zoom()
-      .scaleExtent([0.5, 6])
+      .scaleExtent([0.5, 4]) // the big maps (stakeholder, ecosystem, journey) need about 4x to read
       .on("zoom", ({transform}) => {
         const svg = canvas.firstElementChild;
         if (svg) svg.style.transform = `translate(${transform.x}px, ${transform.y}px) scale(${transform.k})`;
@@ -46,10 +46,21 @@ function createMapViewer({onHotspot, onClose}) {
     if (current !== d) return; // another map was opened while this one loaded
 
     const svg = new DOMParser().parseFromString(text, "image/svg+xml").documentElement;
-    // Drop anything executable from the file before putting it on the page.
-    svg.querySelectorAll("script, foreignObject").forEach(el => el.remove());
+    // Drop anything executable from the file before putting it on the page. <image> stays (the
+    // maps are raster exports of Figma frames), but only with a relative path; <use> only with an
+    // in-file #reference.
+    svg.querySelectorAll("script, foreignObject, iframe, a").forEach(el => el.remove());
     svg.querySelectorAll("*").forEach(el => {
-      for (const attr of [...el.attributes]) if (attr.name.startsWith("on")) el.removeAttribute(attr.name);
+      for (const attr of [...el.attributes]) {
+        const name = attr.name.toLowerCase();
+        if (name.startsWith("on")) el.removeAttribute(attr.name);
+        else if (name === "href" || name === "xlink:href") {
+          const value = attr.value.trim();
+          const relative = !/^[a-z][a-z0-9+.-]*:/i.test(value) && !value.startsWith("//");
+          const ok = (el.localName === "image" && relative) || (el.localName === "use" && value.startsWith("#"));
+          if (!ok) el.removeAttribute(attr.name);
+        }
+      }
     });
     svg.removeAttribute("width");
     svg.removeAttribute("height");

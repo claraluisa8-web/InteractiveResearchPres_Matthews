@@ -10,7 +10,7 @@ rm -rf _site
 mkdir -p _site
 rsync -a \
   --exclude '.git*' --exclude '.github' --exclude '.claude' --exclude 'prototype-src' \
-  --exclude 'handoff' --exclude 'scripts' --exclude '_site' --exclude 'node_modules' \
+  --exclude 'handoff' --exclude 'handoff-research' --exclude 'scripts' --exclude '_site' --exclude 'node_modules' \
   --exclude 'package.json' --exclude 'OFFLINE.md' --exclude 'CLAUDE.md' \
   ./ _site/
 mkdir -p _site/prototype

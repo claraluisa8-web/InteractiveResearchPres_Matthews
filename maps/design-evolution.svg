@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 7920 1263">
+  <rect x="0" y="0" width="7920" height="1263" fill="#FDFAF7"/>
+  <text x="120" y="120" font-family="Red Hat Text, Inter, system-ui, sans-serif" font-size="44" font-weight="700" fill="#171C20">01  Round 1 low-fi</text>
+  <text x="120" y="180" font-family="Red Hat Text, Inter, system-ui, sans-serif" font-size="36" fill="#4A5058">Review sidebar in VS Code</text>
+  <text x="1680" y="120" font-family="Red Hat Text, Inter, system-ui, sans-serif" font-size="44" font-weight="700" fill="#171C20">02  Round 1 hi-fi</text>
+  <text x="1680" y="180" font-family="Red Hat Text, Inter, system-ui, sans-serif" font-size="36" fill="#4A5058">Section review beside the code</text>
+  <text x="3240" y="120" font-family="Red Hat Text, Inter, system-ui, sans-serif" font-size="44" font-weight="700" fill="#171C20">03  Round 2 low-fi</text>
+  <text x="3240" y="180" font-family="Red Hat Text, Inter, system-ui, sans-serif" font-size="36" fill="#4A5058">The engineer as one dot in a team</text>
+  <text x="4800" y="120" font-family="Red Hat Text, Inter, system-ui, sans-serif" font-size="44" font-weight="700" fill="#171C20">04  Round 2 hi-fi</text>
+  <text x="4800" y="180" font-family="Red Hat Text, Inter, system-ui, sans-serif" font-size="36" fill="#4A5058">Sections bridge the line and the code</text>
+  <text x="6360" y="120" font-family="Red Hat Text, Inter, system-ui, sans-serif" font-size="44" font-weight="700" fill="#171C20">05  Round 2 hi-fi</text>
+  <text x="6360" y="180" font-family="Red Hat Text, Inter, system-ui, sans-serif" font-size="36" fill="#4A5058">Section-scoped code, both agents, the spec</text>
+  <image href="maps/img/evo-1-v1-lowfi.png" xlink:href="maps/img/evo-1-v1-lowfi.png" x="120" y="220" width="1440" height="900" preserveAspectRatio="xMidYMin meet"/>
+  <image href="maps/img/evo-2-v1-hifi.png" xlink:href="maps/img/evo-2-v1-hifi.png" x="1680" y="220" width="1440" height="923" preserveAspectRatio="xMidYMin meet"/>
+  <image href="maps/img/evo-3-v2-lowfi.png" xlink:href="maps/img/evo-3-v2-lowfi.png" x="3240" y="220" width="1440" height="900" preserveAspectRatio="xMidYMin meet"/>
+  <image href="maps/img/evo-4-v2-sections.png" xlink:href="maps/img/evo-4-v2-sections.png" x="4800" y="220" width="1440" height="900" preserveAspectRatio="xMidYMin meet"/>
+  <image href="maps/img/evo-5-v2-code.png" xlink:href="maps/img/evo-5-v2-code.png" x="6360" y="220" width="1440" height="900" preserveAspectRatio="xMidYMin meet"/>
+  <g id="evo-1" class="pmr-hotspot"><rect x="120" y="220" width="1440" height="900" rx="12" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="evo-2" class="pmr-hotspot"><rect x="1680" y="220" width="1440" height="923" rx="12" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="evo-3" class="pmr-hotspot"><rect x="3240" y="220" width="1440" height="900" rx="12" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="evo-4" class="pmr-hotspot"><rect x="4800" y="220" width="1440" height="900" rx="12" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="evo-5" class="pmr-hotspot"><rect x="6360" y="220" width="1440" height="900" rx="12" fill="#000" fill-opacity="0" stroke="none"/></g>
+</svg>

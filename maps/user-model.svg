@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 2700 1915">
+  <!-- user-model.svg: raster export of Clara's Figma frame with clickable hotspot groups. Image paths are relative to index.html. -->
+  <image href="maps/img/user-model.png" xlink:href="maps/img/user-model.png" x="0" y="0" width="2700" height="1915" preserveAspectRatio="none"/>
+  <g id="um-who" class="pmr-hotspot"><rect x="110" y="300" width="580" height="1430" rx="16" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="um-workflow" class="pmr-hotspot"><rect x="742" y="300" width="580" height="1430" rx="16" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="um-goal" class="pmr-hotspot"><rect x="1374" y="300" width="580" height="1430" rx="16" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="um-mental-model" class="pmr-hotspot"><rect x="2006" y="300" width="580" height="1430" rx="16" fill="#000" fill-opacity="0" stroke="none"/></g>
+</svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 2882 2917">
+  <!-- pain-points.svg: raster export of Clara's Figma frame with clickable hotspot groups. Image paths are relative to index.html. -->
+  <image href="maps/img/pain-points-engineers.png" xlink:href="maps/img/pain-points-engineers.png" x="0" y="0" width="2882" height="899" preserveAspectRatio="none"/>
+  <image href="maps/img/pain-points-designers.png" xlink:href="maps/img/pain-points-designers.png" x="0" y="979" width="2882" height="959" preserveAspectRatio="none"/>
+  <image href="maps/img/pain-points-pms.png" xlink:href="maps/img/pain-points-pms.png" x="0" y="2018" width="2882" height="899" preserveAspectRatio="none"/>
+  <g id="pp-engineers" class="pmr-hotspot"><rect x="0" y="0" width="2882" height="899" rx="8" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="pp-designers" class="pmr-hotspot"><rect x="0" y="979" width="2882" height="959" rx="8" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="pp-pms" class="pmr-hotspot"><rect x="0" y="2018" width="2882" height="899" rx="8" fill="#000" fill-opacity="0" stroke="none"/></g>
+</svg>
