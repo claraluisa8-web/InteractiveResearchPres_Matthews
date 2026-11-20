@@ -27,33 +27,11 @@ const data = {
       name: "Research Approach",
       note: "Who I talked to and how I analyzed what I heard, before any mapping or design.",
       children: [
-        { name: "Who I talked to", note: "7 participants: 3 engineers, 3 designers and 1 product manager.",
+        { name: "Who I talked to", note: "7 participants: 3 engineers, 3 product designers and 1 product manager.",
           children: [
-            {
-              name: "Engineers",
-              note: "3 engineers, 102 quotes in the analysis.",
-              children: [
-                { name: "Engineer 1", note: "35 quotes, most often on Human Accountability, AI Conductor and AI Scaffolding." },
-                { name: "Engineer 2", note: "35 quotes, most often on AI Conductor, Delegate? and Agent Derailment." },
-                { name: "Engineer 3", note: "32 quotes, most often on Human Accountability, AI Conductor, AI Scaffolding and Authorship." }
-              ]
-            },
-            {
-              name: "Designers",
-              note: "3 designers, 108 quotes in the analysis.",
-              children: [
-                { name: "Designer 1", note: "32 quotes, most often on Design - Engineering Gap, Product Purpose and Role Scope." },
-                { name: "Designer 2", note: "37 quotes, most often on AI Conductor, Product Purpose and Design - Engineering Gap." },
-                { name: "Designer 3", note: "39 quotes, most often on Design - Engineering Gap, Role Scope and Team/Process." }
-              ]
-            },
-            {
-              name: "Product managers",
-              note: "1 product manager, 27 quotes in the analysis.",
-              children: [
-                { name: "Product manager", note: "27 quotes, most often on Design - Engineering Gap, AI Conductor and Role Scope." }
-              ]
-            }
+            { name: "3 Engineers", note: "102 quotes in the analysis." },
+            { name: "3 Product Designers", note: "108 quotes in the analysis." },
+            { name: "1 Product Manager", note: "27 quotes in the analysis." }
           ]
         },
         {
