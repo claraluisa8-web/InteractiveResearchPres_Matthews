@@ -277,10 +277,13 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
   paint-order: stroke;
 }
 
-/* Map marker (✱) and viewer */
+/* Map marker (the Codicon map icon) and viewer */
 .map-mark { color: var(--accent-text); font-weight: 700; }
-.tree .map-badge { fill: var(--accent-text); font-weight: 700; font-size: 15px; cursor: zoom-in; }
-.tree .map-badge:hover { fill: var(--text); }
+.tree .map-badge { cursor: zoom-in; }
+.tree .map-badge rect { fill: transparent; }
+.tree .map-badge path { fill: var(--accent-text); stroke: none; }
+.tree .map-badge:hover path { fill: var(--text); }
+.map-icon { display: inline-block; vertical-align: -2px; }
 
 /* The map viewer covers the stage up to the notes card, which stays visible for hotspot notes.
    The research maps stay light: each sits on an off-white card on the dark overlay. */

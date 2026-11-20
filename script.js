@@ -89,6 +89,14 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
   svg.call(zoom).on("dblclick.zoom", null);
 
   function placeCtas() {
+    // Map icons sit 6px after the label's last line.
+    svg.selectAll(".map-badge").each(function(d) {
+      const label = this.parentNode.querySelector(":scope > text");
+      const box = label.getBBox();
+      const right = box.width ? box.x + box.width : 10 + d3.max(d.lines, l => l.length) * 7;
+      const lastLine = ((d.lines.length - 1) / 2) * lineHeight;
+      d3.select(this).attr("transform", `translate(${right + 6},${lastLine - 8})`);
+    });
     svg.selectAll(".prototype-cta").each(function(d) {
       const words = this.querySelector("text");
       // The SVG is built before it's on the page, where text measures 0: estimate until it can be measured.
@@ -199,19 +207,19 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
           }
         });
 
-    // Topics with a map get a small ✱ after their label that opens it.
-    text.filter(d => d.data.map)
-      .select("tspan:last-child")
-      .append("tspan")
+    // Topics with a map get a small map icon (the Codicon) after their label that opens it.
+    // It's placed after the label once the label can be measured (placeCtas).
+    const mapBadge = nodeEnter.filter(d => d.data.map).append("g")
         .attr("class", "map-badge")
-        .text(" ✱")
+        .attr("aria-hidden", "true")
         .on("click", (event, d) => {
           event.stopPropagation();
           goTo(d, event);
           onOpenMap(d);
-        })
-      .append("title")
-        .text("View map");
+        });
+    mapBadge.append("rect").attr("width", 20).attr("height", 20).attr("x", -2).attr("y", -2);
+    mapBadge.append("path").attr("d", "M2.5 5.77705V12.0978L5.5 10.2228V3.90205L2.5 5.77705ZM6.5 3.90205V10.2228L9.5 12.0978V5.77705L6.5 3.90205ZM6 11.0896L2.265 13.4239L1.5 12.9999V5.49993L1.735 5.07593L5.735 2.57593H6.265L10 4.9103L13.735 2.57593L14.5 2.99993V10.4999L14.265 10.9239L10.265 13.4239H9.735L6 11.0896ZM10.5 5.77705V12.0978L13.5 10.2228V3.90205L10.5 5.77705Z");
+    mapBadge.append("title").text("View map");
 
     // The root (the problem statement) gets a small eyebrow label above its text, so the long
     // statement reads as what it is. It uses the topic's short name.
@@ -499,7 +507,7 @@ function setNote(note) {
 
 // Show a map hotspot's note in the side panel, under the map's topic.
 function showHotspot(d, info) {
-  document.getElementById("detail-path").textContent = `${d.data.name} ✱`;
+  document.getElementById("detail-path").textContent = d.data.name;
   document.getElementById("detail-title").textContent = info.title;
   setNote(info.note);
   document.getElementById("detail-map").hidden = true;

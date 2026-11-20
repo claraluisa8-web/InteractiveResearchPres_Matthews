@@ -80,6 +80,8 @@ function createGuidedPath({chart, isBlocked = () => false}) {
   function exit() {
     on = false;
     explored = true;
+    // Clear #stage-n so a reload doesn't restart the path.
+    if (location.hash) history.replaceState(null, "", location.pathname + location.search);
     render();
   }
 

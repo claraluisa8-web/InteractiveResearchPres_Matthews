@@ -2,7 +2,7 @@
 // Each item needs a "name". Add "children" to make it a category that opens and closes,
 // or a "note" to show text in the side panel when it's clicked. Add "short" for a shorter
 // label in the sidebar outline (the tree and notes panel still show the full name).
-// Add "map" to attach an SVG that opens over the chart (marked with ✱). Any element in the
+// Add "map" to attach an SVG that opens over the chart (marked with a map icon). Any element in the
 // SVG whose id is listed under "hotspots" becomes clickable and shows its note. Figma and
 // Illustrator use layer names as ids when exporting SVG.
 // Add "prototype" ({ src, title }) to make the topic the pearl orb that opens a live prototype
