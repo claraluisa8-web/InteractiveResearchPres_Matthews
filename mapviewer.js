@@ -1,6 +1,6 @@
 // Map viewer: opens a topic's SVG map over the chart, with pan/zoom and clickable hotspots.
 
-function createMapViewer({onHotspot, onClose}) {
+function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
   const viewer = document.getElementById("map-viewer");
   const title = document.getElementById("map-title");
   const canvas = document.getElementById("map-canvas");
@@ -66,16 +66,38 @@ function createMapViewer({onHotspot, onClose}) {
     svg.removeAttribute("height");
     canvas.append(svg);
 
+    // Each hotspot is a button: focusable, named from its title, opened by click, Enter or Space.
     for (const [id, info] of Object.entries(map.hotspots || {})) {
       const el = svg.querySelector(`#${CSS.escape(id)}`);
       if (!el) continue;
       el.classList.add("hotspot");
-      el.addEventListener("click", () => {
+      el.setAttribute("tabindex", "0");
+      el.setAttribute("role", "button");
+      el.setAttribute("aria-label", info.title);
+      const activate = () => {
         svg.querySelectorAll(".hotspot.active").forEach(h => h.classList.remove("active"));
         el.classList.add("active");
         onHotspot(d, info);
+      };
+      el.addEventListener("click", activate);
+      el.addEventListener("keydown", event => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        event.stopPropagation();
+        activate();
       });
     }
+    onOpen(d);
+  }
+
+  // "Show hotspots": outline every hotspot for a moment.
+  let flashTimer;
+  function flashHotspots() {
+    const svg = canvas.querySelector("svg");
+    if (!svg) return;
+    clearTimeout(flashTimer);
+    svg.classList.add("show-hotspots");
+    flashTimer = setTimeout(() => svg.classList.remove("show-hotspots"), 2000);
   }
 
   function close() {
@@ -96,5 +118,5 @@ function createMapViewer({onHotspot, onClose}) {
     }
   }, true);
 
-  return {open, close, isOpen: () => current !== null};
+  return {open, close, flashHotspots, isOpen: () => current !== null};
 }

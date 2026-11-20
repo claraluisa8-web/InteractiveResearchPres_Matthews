@@ -111,7 +111,7 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
 
 /* Secondary buttons (tokens.css .pmr-button--secondary) */
 .stepper { display: flex; gap: 8px; margin-top: 12px; }
-.stepper button, #reset, #detail-map, #detail-open-all, #map-close {
+.stepper button, #reset, #detail-map, #detail-open-all, #detail-show-hotspots, #map-close {
   font: inherit;
   color: var(--text);
   background: var(--pmr-btn-2);
@@ -120,7 +120,7 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
   cursor: pointer;
   transition: background var(--pmr-t-hover) var(--pmr-ease), border-color var(--pmr-t-hover) var(--pmr-ease);
 }
-.stepper button:hover:not(:disabled), #reset:hover, #detail-map:hover, #detail-open-all:hover, #map-close:hover {
+.stepper button:hover:not(:disabled), #reset:hover, #detail-map:hover, #detail-open-all:hover, #detail-show-hotspots:hover, #map-close:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.32);
 }
@@ -337,9 +337,32 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
 }
 
 /* Hotspots: hovering one fades the others; the clicked one stays outlined in lavender. */
-#map-canvas .hotspot { cursor: pointer; transition: opacity 0.2s ease; }
-#map-canvas svg:has(.hotspot:hover) .hotspot:not(:hover) { opacity: 0.45; }
-#map-canvas .hotspot.active > :first-child { stroke: var(--accent); stroke-width: 3; }
+/* Hotspots are invisible rectangles over the map image, so hover, focus and the clicked one get a
+   3px accent outline (screen pixels, whatever the zoom) and a light tint, rounded like the rect.
+   "Show hotspots" outlines all of them for a moment. */
+#map-canvas .hotspot { cursor: pointer; outline: none; }
+#map-canvas .hotspot > :first-child { vector-effect: non-scaling-stroke; transition: fill-opacity 0.15s ease, stroke-opacity 0.15s ease; }
+#map-canvas .hotspot:hover > :first-child,
+#map-canvas .hotspot:focus-visible > :first-child,
+#map-canvas .hotspot.active > :first-child,
+#map-canvas svg.show-hotspots .hotspot > :first-child {
+  fill: var(--accent);
+  fill-opacity: 0.14;
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) { #map-canvas .hotspot > :first-child { transition: none; } }
+
+#detail-map-hint { margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--pmr-divider); color: var(--muted); font-size: 0.8rem; line-height: 1.4; }
+#detail-map-hint[hidden] { display: none; }
+#detail-show-hotspots {
+  margin-top: 8px;
+  padding: 6px 10px 7px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+#detail-show-hotspots[hidden] { display: none; }
 
 .detail-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 .detail-actions:not(:has(button:not([hidden]))) { display: none; }

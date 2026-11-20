@@ -476,9 +476,16 @@ function showHotspot(d, info) {
 let sidebar;
 let selected;
 
+// While a map is open, the notes card says how to use it and offers "Show hotspots".
+function setMapHint(on) {
+  document.getElementById("detail-map-hint").hidden = !on;
+  document.getElementById("detail-show-hotspots").hidden = !on;
+}
+
 const mapViewer = createMapViewer({
   onHotspot: showHotspot,
-  onClose: () => showDetails(selected)
+  onOpen: () => setMapHint(true),
+  onClose: () => { setMapHint(false); showDetails(selected); }
 });
 
 // Opening the prototype closes any open map; closing it returns focus to the orb.
@@ -517,5 +524,6 @@ sidebar = createSidebar(chart);
 chart.reset();
 
 document.getElementById("detail-map").addEventListener("click", () => mapViewer.open(selected));
+document.getElementById("detail-show-hotspots").addEventListener("click", () => mapViewer.flashHotspots());
 document.getElementById("detail-open-all").addEventListener("click", event => chart.openAll(selected, event));
 document.getElementById("reset").addEventListener("click", event => chart.reset(event));
