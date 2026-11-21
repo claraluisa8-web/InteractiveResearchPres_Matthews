@@ -536,6 +536,8 @@ function showDetails(d) {
   setNote(d.data.note, d.data.quote);
   document.getElementById("detail-map").hidden = !d.data.map;
   document.getElementById("detail-open-all").hidden = !d._children;
+  // The local editor (editmode.js) listens for what the panel is showing.
+  document.dispatchEvent(new CustomEvent("details:shown", {detail: {d}}));
 }
 
 // A note can hold several paragraphs, separated by "\n": each becomes its own <p>.
@@ -566,6 +568,7 @@ function showHotspot(d, info) {
   setNote(info.note);
   document.getElementById("detail-map").hidden = true;
   document.getElementById("detail-open-all").hidden = true;
+  document.dispatchEvent(new CustomEvent("details:shown", {detail: {d, info}}));
 }
 
 let sidebar;
