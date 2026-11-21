@@ -621,3 +621,13 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
 /* No word left alone on a last line. */
 .map-hint, .enlarged-hint, #detail-map-hint { text-wrap: balance; }
 #detail-note p, .enlarged-note p, .enlarged-aside h2, #detail-title { text-wrap: pretty; }
+/* Previous / Next ring or segment in the zoomed view: the count on its own line, then the
+   two buttons sharing the panel's width. */
+.enlarged-steps { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+.enlarged-steps[hidden] { display: none; }
+.enlarged-count { grid-column: 1 / -1; grid-row: 1; font-size: 0.75rem; color: var(--muted); }
+.enlarged-steps button { grid-row: 2; display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 0; height: 32px; padding: 0 6px 1px; font: 500 0.8rem var(--pmr-font); white-space: nowrap; color: var(--text); background: var(--pmr-btn-2); border: 1px solid var(--pmr-btn-2-stroke); border-radius: var(--pmr-r-input); cursor: pointer; }
+.enlarged-steps button[data-step="1"] { color: var(--pmr-text-on-accent); background: var(--pmr-button); border-color: transparent; }
+.enlarged-steps button:hover:not(:disabled) { filter: brightness(1.08); }
+.enlarged-steps button:disabled { cursor: default; color: var(--muted); background: var(--pmr-btn-disabled); border-color: var(--pmr-stroke); }
+.enlarged-steps button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

@@ -238,6 +238,7 @@ const data = {
           note: "Everyone who shapes, pressures or depends on the senior engineer's work, in three rings. Click a ring.",
           map: {
             src: "maps/stakeholder-map.svg",
+            step: "ring",
             hotspots: {
               "sh-senior-engineer": { title: "Senior software engineer", note: "At the center. She directs and audits agent output and answers for what ships, whoever wrote it." },
               "sh-produces-output": { title: "Produces output", note: "Inner ring: the agents, tools and engineers whose work she has to verify." },
@@ -252,6 +253,7 @@ const data = {
           note: "The needs, interactions and touchpoints around one goal: auditable, transparent agent output. Four phases, read clockwise from Work Intake.",
           map: {
             src: "maps/ecosystem-map.svg",
+            step: "segment",
             hotspots: {
               "eco-center": { title: "Auditable agentic output and transparency", note: "The need at the center of every phase: agent output the engineer can audit and explain." },
               "eco-work-intake": { title: "01 Work intake", note: "Work arrives through standups, tickets and design handoff, and context is gathered for the agent." },

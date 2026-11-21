@@ -91,6 +91,8 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
     fitCard();
 
     // Each hotspot is a button: focusable, named from its title, opened by click, Enter or Space.
+    sections = [];
+    stepWord = map.step || null;
     for (const [id, info] of Object.entries(map.hotspots || {})) {
       const el = svg.querySelector(`#${CSS.escape(id)}`);
       if (!el) continue;
@@ -103,8 +105,9 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
         el.classList.add("active");
         onHotspot(d, info);
         // Some maps (the Journey Map's very long phases) don't open a zoomed view; the note is enough.
-        if (map.enlarge !== false) enlarge(svg, el, info);
+        if (map.enlarge !== false) return enlarge(svg, el, info);
       };
+      sections.push({el, activate});
       el.addEventListener("click", activate);
       el.addEventListener("keydown", event => {
         if (event.key !== "Enter" && event.key !== " ") return;
@@ -140,6 +143,11 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
         </div>
         <h2 id="map-enlarged-title"></h2>
         <div class="enlarged-note"></div>
+        <div class="enlarged-steps" hidden>
+          <button type="button" data-step="-1"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M5.928 7.976l4.357 4.357-.618.62L5 8.284v-.618L9.667 3l.618.619-4.357 4.357z"/></svg><span></span></button>
+          <span class="enlarged-count" aria-live="polite"></span>
+          <button type="button" data-step="1"><span></span><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.072 8.024L5.715 3.667l.618-.62L11 7.716v.618L6.333 13l-.618-.619 4.357-4.357z"/></svg></button>
+        </div>
         <p class="enlarged-hint">Drag to move. Pinch, Ctrl + scroll or the buttons to zoom.</p>
       </div>
     </div>`;
@@ -147,6 +155,41 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
   const card = box.querySelector(".enlarged-card");
   const figure = box.querySelector(".enlarged-figure");
   let returnFocus = null;
+  // Stepping through a map's sections from the zoomed view ("Next ring", "Next segment"), so
+  // nobody has to close it to see the next part. Order is the order the sections are listed in.
+  let sections = [];
+  let stepWord = null;
+  const steps = box.querySelector(".enlarged-steps");
+  function showSteps(el) {
+    const i = sections.findIndex(s => s.el === el);
+    steps.hidden = !stepWord || i < 0;
+    if (steps.hidden) return;
+    const [prev, next] = steps.querySelectorAll("button");
+    prev.querySelector("span").textContent = `Previous ${stepWord}`;
+    next.querySelector("span").textContent = `Next ${stepWord}`;
+    prev.disabled = i === 0;
+    next.disabled = i === sections.length - 1;
+    steps.querySelector(".enlarged-count").textContent = `${i + 1} of ${sections.length}`;
+  }
+  async function step(delta) {
+    const i = sections.findIndex(s => s.el === returnFocus);
+    const target = sections[i + delta];
+    if (!target) return;
+    await target.activate();
+    const button = steps.querySelector(`[data-step="${delta}"]`);
+    (button.disabled ? steps.querySelector(`[data-step="${-delta}"]`) : button).focus();
+  }
+  steps.addEventListener("click", event => {
+    const b = event.target.closest("button[data-step]");
+    if (b && !b.disabled) step(Number(b.dataset.step));
+  });
+  // Left and right arrows step too while the zoomed view is open (before the tree's own arrow keys).
+  window.addEventListener("keydown", event => {
+    if (box.hidden || !stepWord || (event.key !== "ArrowLeft" && event.key !== "ArrowRight")) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    step(event.key === "ArrowRight" ? 1 : -1);
+  }, true);
   let fitTransform = d3.zoomIdentity;
 
   // Pan and zoom inside the enlarged view. The wheel scrolls (a tall section reads top to bottom);
@@ -277,6 +320,7 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
         .extent([[0, 0], [figW, figH]])
         .translateExtent([[0, 0], [w, Math.max(h, figH)]]);
     d3.select(figure).call(bigZoom.transform, fitTransform);
+    showSteps(el);
     box.querySelector(".enlarged-close").focus();
   }
   function closeEnlarged() {
