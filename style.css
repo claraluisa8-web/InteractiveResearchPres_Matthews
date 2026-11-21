@@ -573,7 +573,7 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
 #map-enlarged[hidden] { display: none; }
 @keyframes enlarged-in { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { #map-enlarged { animation: none; } }
-.enlarged-card { display: flex; flex-direction: column; width: min(1400px, 100%); max-height: 100%; overflow: hidden; background: linear-gradient(var(--pmr-glass-tint), var(--pmr-glass-tint)), var(--pmr-glass); border: 1px solid var(--pmr-stroke); border-radius: var(--pmr-r-panel); box-shadow: var(--pmr-shadow); }
+.enlarged-card { display: flex; flex-direction: column; width: min(1400px, 100%); max-width: 100%; max-height: 100%; overflow: hidden; background: linear-gradient(var(--pmr-glass-tint), var(--pmr-glass-tint)), var(--pmr-glass); border: 1px solid var(--pmr-stroke); border-radius: var(--pmr-r-panel); box-shadow: var(--pmr-shadow); }
 .enlarged-header { display: flex; align-items: flex-start; gap: 16px; padding: 16px 16px 12px 20px; }
 .enlarged-text { flex: 1; min-width: 0; }
 .enlarged-header h2 { margin: 0 0 6px; font-size: 18px; font-weight: 600; line-height: 24px; color: var(--text); }
@@ -583,5 +583,8 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
 .enlarged-close { flex: none; display: grid; place-items: center; width: 32px; height: 32px; padding: 0; color: var(--muted); background: var(--pmr-btn-2); border: 1px solid var(--pmr-btn-2-stroke); border-radius: var(--pmr-r-input); cursor: pointer; }
 .enlarged-close:hover { color: var(--text); border-color: rgba(255, 255, 255, 0.32); }
 .enlarged-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.enlarged-figure { flex: 1; min-height: 0; margin: 0 16px 16px; padding: 12px; background: #F5F5FA; border-radius: 12px; display: flex; }
-.enlarged-figure svg { display: block; width: 100%; height: auto; max-height: calc(100vh - 220px); }
+.enlarged-figure { position: relative; flex: none; margin: 0 16px 16px; overflow: hidden; background: #F5F5FA; border-radius: 12px; cursor: grab; touch-action: none; }
+.enlarged-figure:active { cursor: grabbing; }
+.enlarged-figure svg { display: block; transform-origin: 0 0; }
+.enlarged-header .enlarged-zoom { flex: none; align-self: flex-start; }
+.enlarged-hint { margin: -4px 20px 10px; font-size: 0.75rem; line-height: 1.4; color: var(--muted); }

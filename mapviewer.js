@@ -101,40 +101,129 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
   box.setAttribute("aria-modal", "true");
   box.setAttribute("aria-labelledby", "map-enlarged-title");
   box.hidden = true;
+  // The zoom buttons reuse the map header's icons.
+  const icon = id => document.querySelector(`#${id} svg`)?.outerHTML ?? "";
   box.innerHTML = `<div class="enlarged-card">
       <div class="enlarged-header">
         <div class="enlarged-text"><h2 id="map-enlarged-title"></h2><div class="enlarged-note"></div></div>
+        <div class="map-zoom enlarged-zoom" role="group" aria-label="Zoom">
+          <button type="button" data-zoom="out" aria-label="Zoom out" title="Zoom out">${icon("map-zoom-out")}</button>
+          <button type="button" data-zoom="in" aria-label="Zoom in" title="Zoom in">${icon("map-zoom-in")}</button>
+          <button type="button" data-zoom="fit" aria-label="Fit" title="Fit">${icon("map-fit")}<span>Fit</span></button>
+        </div>
         <button type="button" class="enlarged-close" aria-label="Close enlarged view (Esc)">${CLOSE_ICON}</button>
       </div>
+      <p class="enlarged-hint">Drag or scroll to move. Pinch, Ctrl + scroll or the buttons to zoom.</p>
       <div class="enlarged-figure"></div>
     </div>`;
   document.body.append(box);
+  const card = box.querySelector(".enlarged-card");
+  const figure = box.querySelector(".enlarged-figure");
   let returnFocus = null;
-  function enlarge(svg, el, info) {
-    const b = el.getBBox();
-    const pad = Math.min(b.width, b.height) * 0.04;
-    const copy = svg.cloneNode(true);
-    copy.querySelectorAll(".hotspot").forEach(h => h.remove());
-    copy.removeAttribute("style");
-    copy.removeAttribute("class");
-    copy.setAttribute("viewBox", `${b.x - pad} ${b.y - pad} ${b.width + 2 * pad} ${b.height + 2 * pad}`);
+  let fitTransform = d3.zoomIdentity;
+
+  // Pan and zoom inside the enlarged view. The wheel scrolls (a tall section reads top to bottom);
+  // Ctrl + wheel or a pinch zooms; dragging pans. Zoom goes from the whole section to 4x its fit.
+  const bigZoom = d3.zoom()
+      .filter(event => (event.type === "wheel" ? event.ctrlKey : !event.button))
+      .on("zoom", ({transform}) => {
+        const svg = figure.firstElementChild;
+        if (svg) svg.style.transform = `translate(${transform.x}px, ${transform.y}px) scale(${transform.k})`;
+      });
+  d3.select(figure).call(bigZoom).on("dblclick.zoom", null);
+  figure.addEventListener("wheel", event => {
+    if (event.ctrlKey) return;
+    event.preventDefault();
+    const t = d3.zoomTransform(figure);
+    bigZoom.translateBy(d3.select(figure), -event.deltaX / t.k, -event.deltaY / t.k);
+  }, {passive: false});
+  box.querySelector(".enlarged-zoom").addEventListener("click", event => {
+    const which = event.target.closest("button")?.dataset.zoom;
+    const sel = d3.select(figure).transition().duration(quick());
+    if (which === "in") sel.call(bigZoom.scaleBy, 1.5);
+    else if (which === "out") sel.call(bigZoom.scaleBy, 1 / 1.5);
+    else if (which === "fit") sel.call(bigZoom.transform, fitTransform);
+  });
+
+  // Clicking a section opens it enlarged, shaped like the section: a tall one (a journey phase)
+  // gets a portrait card, fitted to a readable width and starting at the top; a wide one is fitted
+  // whole. Esc, the close button or a click outside closes it and returns focus to the section.
+  async function enlarge(svg, el, info) {
+    let copy, vb;
+    if (info.zoom) {
+      // This section has its own export from Figma: show that instead of a crop of the map.
+      const img = new Image();
+      img.src = info.zoom;
+      try { await img.decode(); } catch { return; }
+      const m = Math.round(img.naturalWidth * 0.04);
+      vb = {x: -m, y: -m, w: img.naturalWidth + 2 * m, h: img.naturalHeight + 2 * m};
+      copy = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      const image = document.createElementNS("http://www.w3.org/2000/svg", "image");
+      image.setAttribute("href", info.zoom);
+      image.setAttribute("width", img.naturalWidth);
+      image.setAttribute("height", img.naturalHeight);
+      copy.append(image);
+    } else {
+      const b = el.getBBox();
+      const pad = Math.min(b.width, b.height) * 0.04;
+      vb = {x: b.x - pad, y: b.y - pad, w: b.width + 2 * pad, h: b.height + 2 * pad};
+      copy = svg.cloneNode(true);
+      copy.querySelectorAll(".hotspot").forEach(h => h.remove());
+      copy.removeAttribute("style");
+      copy.removeAttribute("class");
+    }
+    const aspect = vb.w / vb.h;
+    copy.setAttribute("viewBox", `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
     copy.setAttribute("aria-hidden", "true");
+
     box.querySelector("#map-enlarged-title").textContent = info.title;
-    const note = box.querySelector(".enlarged-note");
-    note.replaceChildren(...(info.note || "").split("\n").filter(l => l.trim()).map(line => {
+    box.querySelector(".enlarged-note").replaceChildren(...(info.note || "").split("\n").filter(l => l.trim()).map(line => {
       const p = document.createElement("p");
       p.textContent = line;
       return p;
     }));
-    box.querySelector(".enlarged-figure").replaceChildren(copy);
+    figure.replaceChildren(copy);
     returnFocus = el;
     box.hidden = false;
+
+    // Size the card to the section's shape, within the window, so there are never wide empty sides:
+    // a tall section starts at a readable width (it scrolls); anything else is fitted whole.
+    const portrait = aspect < 0.8;
+    const roomW = window.innerWidth - 48 - 32;
+    const minW = Math.min(roomW, 480);
+    card.style.width = `${minW + 32}px`; // provisional, to measure the header at a narrow width
+    figure.style.height = "0px"; // measure the card without the figure
+    let roomH = Math.max(240, window.innerHeight - 48 - (card.offsetHeight - figure.offsetHeight) - 16);
+    let w, h;
+    if (portrait) {
+      w = minW;
+      h = w / aspect;
+    } else {
+      w = Math.min(roomW, 1400 - 32);
+      h = w / aspect;
+      if (h > roomH) { h = roomH; w = h * aspect; }
+      w = Math.max(w, minW);
+      h = w / aspect;
+    }
+    const figW = w;
+    card.style.width = `${figW + 32}px`;
+    const figH = portrait ? roomH : Math.min(h, roomH);
+    figure.style.height = `${figH}px`;
+    copy.setAttribute("width", w);
+    copy.setAttribute("height", h);
+    fitTransform = d3.zoomIdentity;
+    bigZoom
+        .scaleExtent([Math.min(1, figH / h), 4])
+        .extent([[0, 0], [figW, figH]])
+        .translateExtent([[0, 0], [w, Math.max(h, figH)]]);
+    d3.select(figure).call(bigZoom.transform, fitTransform);
     box.querySelector(".enlarged-close").focus();
   }
   function closeEnlarged() {
     if (box.hidden) return false;
     box.hidden = true;
-    box.querySelector(".enlarged-figure").replaceChildren();
+    figure.replaceChildren();
+    card.style.width = "";
     returnFocus?.focus();
     return true;
   }

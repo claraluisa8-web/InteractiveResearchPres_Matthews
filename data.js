@@ -451,10 +451,10 @@ const data = {
           map: {
             src: "maps/user-model.svg",
             hotspots: {
-              "um-who": { title: "Who", note: "A senior to principal engineer in a large, often regulated enterprise. She still codes, but spends more of her day directing and checking agents than writing." },
-              "um-workflow": { title: "Current workflow", note: "Define, set up and plan, build, verify, hand off and ship. Agents speed up building; review is where the time goes." },
-              "um-goal": { title: "Goal", note: "Catch agent mistakes before merge, avoid costly rework, and keep a consistent, trustworthy workflow." },
-              "um-mental-model": { title: "Mental model", note: "She directs, the agents execute, and she answers for the result. Agent output is fast and capable, and wrong until proven right." }
+              "um-who": { title: "Who", note: "A senior to principal engineer in a large, often regulated enterprise. She still codes, but spends more of her day directing and checking agents than writing.", zoom: "maps/img/user-model-who.png" },
+              "um-workflow": { title: "Current workflow", note: "Define, set up and plan, build, verify, hand off and ship. Agents speed up building; review is where the time goes.", zoom: "maps/img/user-model-workflow.png" },
+              "um-goal": { title: "Goal", note: "Catch agent mistakes before merge, avoid costly rework, and keep a consistent, trustworthy workflow.", zoom: "maps/img/user-model-goal.png" },
+              "um-mental-model": { title: "Mental model", note: "She directs, the agents execute, and she answers for the result. Agent output is fast and capable, and wrong until proven right.", zoom: "maps/img/user-model-mental-model.png" }
             }
           }
         }

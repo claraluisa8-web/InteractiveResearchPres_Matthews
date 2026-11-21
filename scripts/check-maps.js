@@ -9,7 +9,7 @@ const data = new Function(fs.readFileSync(path.join(root, "data.js"), "utf8") + 
 
 const maps = [];
 (function walk(n) {
-  if (n.map) maps.push({topic: n.name, src: n.map.src, ids: Object.keys(n.map.hotspots || {})});
+  if (n.map) maps.push({topic: n.name, src: n.map.src, ids: Object.keys(n.map.hotspots || {}), hotspots: n.map.hotspots || {}});
   (n.children || []).forEach(walk);
 })(data);
 
@@ -25,6 +25,11 @@ for (const m of maps) {
   const allIds = new Set([...svg.matchAll(/\bid="([^"]+)"/g)].map(x => x[1]));
   for (const id of m.ids) if (!allIds.has(id)) report(`in data.js, not in the SVG: ${id}`);
   for (const id of groups) if (!m.ids.includes(id)) report(`hotspot in the SVG, no note in data.js: ${id}`);
+  // A hotspot's own enlarged-view image (exported from Figma).
+  const node = maps.find(x => x.src === m.src);
+  for (const [id, h] of Object.entries(node.hotspots)) {
+    if (h.zoom && !fs.existsSync(path.join(root, h.zoom))) report(`${id}: zoom image not found: ${h.zoom}`);
+  }
   for (const [, href] of svg.matchAll(/<image\b[^>]*\shref="([^"]+)"/g)) {
     if (!fs.existsSync(path.join(root, href))) report(`image not found: ${href}`);
   }
