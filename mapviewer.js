@@ -104,17 +104,20 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
   // The zoom buttons reuse the map header's icons.
   const icon = id => document.querySelector(`#${id} svg`)?.outerHTML ?? "";
   box.innerHTML = `<div class="enlarged-card">
-      <div class="enlarged-header">
-        <div class="enlarged-text"><h2 id="map-enlarged-title"></h2><div class="enlarged-note"></div></div>
-        <div class="map-zoom enlarged-zoom" role="group" aria-label="Zoom">
-          <button type="button" data-zoom="out" aria-label="Zoom out" title="Zoom out">${icon("map-zoom-out")}</button>
-          <button type="button" data-zoom="in" aria-label="Zoom in" title="Zoom in">${icon("map-zoom-in")}</button>
-          <button type="button" data-zoom="fit" aria-label="Fit" title="Fit">${icon("map-fit")}<span>Fit</span></button>
-        </div>
-        <button type="button" class="enlarged-close" aria-label="Close enlarged view (Esc)">${CLOSE_ICON}</button>
-      </div>
-      <p class="enlarged-hint">Drag or scroll to move. Pinch, Ctrl + scroll or the buttons to zoom.</p>
       <div class="enlarged-figure"></div>
+      <div class="enlarged-aside">
+        <div class="enlarged-tools">
+          <div class="map-zoom enlarged-zoom" role="group" aria-label="Zoom">
+            <button type="button" data-zoom="out" aria-label="Zoom out" title="Zoom out">${icon("map-zoom-out")}</button>
+            <button type="button" data-zoom="in" aria-label="Zoom in" title="Zoom in">${icon("map-zoom-in")}</button>
+            <button type="button" data-zoom="fit" aria-label="Fit" title="Fit">${icon("map-fit")}<span>Fit</span></button>
+          </div>
+          <button type="button" class="enlarged-close" aria-label="Close enlarged view (Esc)">${CLOSE_ICON}</button>
+        </div>
+        <h2 id="map-enlarged-title"></h2>
+        <div class="enlarged-note"></div>
+        <p class="enlarged-hint">Drag to move. Pinch, Ctrl + scroll or the buttons to zoom.</p>
+      </div>
     </div>`;
   document.body.append(box);
   const card = box.querySelector(".enlarged-card");
@@ -145,9 +148,8 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
     else if (which === "fit") sel.call(bigZoom.transform, fitTransform);
   });
 
-  // Clicking a section opens it enlarged, shaped like the section: a tall one (a journey phase)
-  // gets a portrait card, fitted to a readable width and starting at the top; a wide one is fitted
-  // whole. Esc, the close button or a click outside closes it and returns focus to the section.
+  // Clicking a section opens it enlarged, whole, with its title and note beside it (above it for
+  // very wide sections). Esc, the close button or a click outside closes it and returns focus.
   async function enlarge(svg, el, info) {
     let copy, vb;
     if (info.zoom) {
@@ -204,30 +206,47 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
     returnFocus = el;
     box.hidden = false;
 
-    // Size the card to the section's shape, within the window, so there are never wide empty sides:
-    // a tall section starts at a readable width (it scrolls); anything else is fitted whole.
-    const portrait = aspect < 0.8;
-    const roomW = window.innerWidth - 48 - 32;
-    const minW = Math.min(roomW, 480);
-    card.style.width = `${minW + 32}px`; // provisional, to measure the header at a narrow width
-    figure.style.height = "0px"; // measure the card without the figure
-    let roomH = Math.max(240, window.innerHeight - 48 - (card.offsetHeight - figure.offsetHeight) - 16);
-    let w, h;
-    if (portrait) {
-      w = minW;
+    // Layout. The whole section shows, as large as the window allows (at most 1240px wide):
+    // - most sections sit beside a 300px text panel, so the image gets the full height;
+    // - very wide ones (aspect over 1.6, like the pain point charts) have the text above them;
+    // - a strip too narrow to read whole (a journey phase) shows at a readable width from the top.
+    const PAD = 16, GAP = 16, ASIDE = 300;
+    const maxW = Math.min(window.innerWidth - 48, 1240);
+    const maxH = window.innerHeight - 48;
+    const stacked = aspect > 1.6;
+    card.classList.toggle("is-stacked", stacked);
+    const aside = box.querySelector(".enlarged-aside");
+    let w, h, figH;
+    if (!stacked) {
+      card.style.width = "";
+      const availW = maxW - 2 * PAD - GAP - ASIDE;
+      const availH = maxH - 2 * PAD;
+      w = Math.min(availW, availH * aspect);
       h = w / aspect;
+      figH = h;
+      if (w < 300) {
+        w = Math.min(480, availW);
+        h = w / aspect;
+        figH = Math.min(h, availH);
+      }
     } else {
-      // Wide or square: fill the window's width so the map's labels are legible; a taller
-      // section scrolls (and zooming out shows all of it).
-      w = Math.min(roomW, 1400 - 32);
+      const availW = maxW - 2 * PAD;
+      w = availW;
+      for (let pass = 0; pass < 2; pass++) {
+        card.style.width = `${w + 2 * PAD}px`;
+        figure.style.height = "0px";
+        const availH = maxH - 2 * PAD - GAP - aside.offsetHeight;
+        w = Math.min(availW, availH * aspect);
+      }
       h = w / aspect;
+      figH = h;
+      card.style.width = `${w + 2 * PAD}px`;
     }
-    const figW = w;
-    card.style.width = `${figW + 32}px`;
-    const figH = portrait ? roomH : Math.min(h, roomH);
+    figure.style.width = `${w}px`;
     figure.style.height = `${figH}px`;
     copy.setAttribute("width", w);
     copy.setAttribute("height", h);
+    const figW = w;
     fitTransform = d3.zoomIdentity;
     bigZoom
         .scaleExtent([Math.min(1, figH / h), 4])
@@ -241,6 +260,7 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
     box.hidden = true;
     figure.replaceChildren();
     card.style.width = "";
+    card.classList.remove("is-stacked");
     returnFocus?.focus();
     return true;
   }

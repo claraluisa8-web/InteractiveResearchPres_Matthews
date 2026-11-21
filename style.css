@@ -567,27 +567,32 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
 #detail-note .detail-quote p { font-size: 13px; line-height: 20px; }
 #detail-note .detail-quote footer { margin-top: 6px; font-size: 0.75rem; font-weight: 600; color: var(--muted); }
 
-/* Enlarged view of one map section (mapviewer.js): the section on a light card, as large as the
-   window allows, with its title and note above it. */
+/* Enlarged view of one map section (mapviewer.js): the whole section on a light card, with its
+   title and note in a 300px panel beside it (above it for very wide sections). */
 #map-enlarged { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 24px; background: var(--pmr-scrim); backdrop-filter: blur(2px); animation: enlarged-in 0.15s ease; }
 #map-enlarged[hidden] { display: none; }
 @keyframes enlarged-in { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { #map-enlarged { animation: none; } }
-.enlarged-card { display: flex; flex-direction: column; width: min(1400px, 100%); max-width: 100%; max-height: 100%; overflow: hidden; background: linear-gradient(var(--pmr-glass-tint), var(--pmr-glass-tint)), var(--pmr-glass); border: 1px solid var(--pmr-stroke); border-radius: var(--pmr-r-panel); box-shadow: var(--pmr-shadow); }
-.enlarged-header { display: flex; align-items: flex-start; gap: 16px; padding: 16px 16px 12px 20px; }
-.enlarged-text { flex: 1; min-width: 0; }
-.enlarged-header h2 { margin: 0 0 6px; font-size: 18px; font-weight: 600; line-height: 24px; color: var(--text); }
-.enlarged-note { font-size: 13px; line-height: 20px; color: var(--text); }
+.enlarged-card { display: grid; grid-template-columns: auto 300px; gap: 16px; align-items: start; padding: 16px; max-width: 100%; max-height: 100%; box-sizing: border-box; overflow: hidden; background: linear-gradient(var(--pmr-glass-tint), var(--pmr-glass-tint)), var(--pmr-glass); border: 1px solid var(--pmr-stroke); border-radius: var(--pmr-r-panel); box-shadow: var(--pmr-shadow); }
+.enlarged-card.is-stacked { grid-template-columns: auto; }
+.enlarged-figure { position: relative; overflow: hidden; background: #F5F5FA; border-radius: 12px; cursor: grab; touch-action: none; }
+.enlarged-figure:active { cursor: grabbing; }
+.enlarged-figure svg { display: block; transform-origin: 0 0; }
+.enlarged-aside { display: flex; flex-direction: column; min-width: 0; padding: 2px 4px 4px; }
+.enlarged-tools { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 14px; }
+.enlarged-aside h2 { margin: 0 0 8px; font-size: 20px; font-weight: 600; line-height: 26px; color: var(--text); }
+.enlarged-note { font-size: 14px; line-height: 22px; color: var(--text); }
 .enlarged-note p { margin: 0; }
-.enlarged-note p + p { margin-top: 6px; }
+.enlarged-note p + p { margin-top: 8px; }
+.enlarged-hint { margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--pmr-divider); font-size: 0.75rem; line-height: 1.45; color: var(--muted); }
+/* Very wide sections: text across the top (a readable line length), tools at its right. */
+.enlarged-card.is-stacked .enlarged-aside { order: -1; display: grid; grid-template-columns: minmax(0, 68ch) 1fr auto; column-gap: 16px; padding: 0 0 0 4px; }
+.enlarged-card.is-stacked .enlarged-tools { grid-column: 3; grid-row: 1 / span 3; margin: 0; align-self: start; }
+.enlarged-card.is-stacked h2, .enlarged-card.is-stacked .enlarged-note, .enlarged-card.is-stacked .enlarged-hint { grid-column: 1; }
+.enlarged-card.is-stacked .enlarged-hint { border-top: 0; padding-top: 0; margin-top: 8px; }
 .enlarged-close { flex: none; display: grid; place-items: center; width: 32px; height: 32px; padding: 0; color: var(--muted); background: var(--pmr-btn-2); border: 1px solid var(--pmr-btn-2-stroke); border-radius: var(--pmr-r-input); cursor: pointer; }
 .enlarged-close:hover { color: var(--text); border-color: rgba(255, 255, 255, 0.32); }
 .enlarged-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.enlarged-figure { position: relative; flex: none; margin: 0 16px 16px; overflow: hidden; background: #F5F5FA; border-radius: 12px; cursor: grab; touch-action: none; }
-.enlarged-figure:active { cursor: grabbing; }
-.enlarged-figure svg { display: block; transform-origin: 0 0; }
-.enlarged-header .enlarged-zoom { flex: none; align-self: flex-start; }
-.enlarged-hint { margin: -4px 20px 10px; font-size: 0.75rem; line-height: 1.4; color: var(--muted); }
 
 /* ---------- Local wording editor (editmode.js, only with scripts/edit-server.js) ---------- */
 .edit-badge { position: fixed; left: 50%; bottom: 12px; z-index: 30; margin: 0; padding: 6px 12px 7px; transform: translateX(-50%); font-size: 0.75rem; font-weight: 600; color: var(--pmr-text-on-accent); background: var(--pmr-button); border-radius: var(--pmr-r-pill); pointer-events: none; }
