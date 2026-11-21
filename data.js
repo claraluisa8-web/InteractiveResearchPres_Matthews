@@ -213,6 +213,18 @@ const data = {
               ]
             }
           ]
+        },
+        {
+          name: "Pain Point Map",
+          note: "Where each role feels the pain, by workflow phase. Click a chart to read it.",
+          map: {
+            src: "maps/pain-points.svg",
+            hotspots: {
+              "pp-engineers": { title: "Engineers", note: "Pain peaks in Build, where agents drift and overreach, and continues into Review and Ship, where work can't be traced to its source." },
+              "pp-designers": { title: "Designers", note: "Designers' pain centers on setting up their own agent workflows and on the handoff to engineering. Across every phase, the collaboration rhythm they relied on is thinning out." },
+              "pp-pms": { title: "Product managers", note: "Signals rather than trends. They point to collaboration rhythm and to knowledge that lives in people rather than in tools." }
+            }
+          }
         }
       ]
     },
@@ -228,10 +240,10 @@ const data = {
             src: "maps/stakeholder-map.svg",
             hotspots: {
               "sh-senior-engineer": { title: "Senior software engineer", note: "At the center. She directs and audits agent output and answers for what ships, whoever wrote it." },
-              "sh-produces-output": { title: "Produces output", note: "Inner ring: the agents, tools and engineers whose work she has to verify.\nCoding agent: Writes code from her direction and context. It can't be held accountable, so responsibility for its output lands on her.\nInstruction files: Standing rules loaded on every task. They constrain the coding agent, and keeping them current is now part of her job." },
-              "sh-shapes-the-ask": { title: "Shapes the ask", note: "Middle ring: clients, product and management, who define what gets built and negotiate its scope.\nReview agent: A second agent that pre-reviews the coding agent's work. Engineers use it as an independent check, not a replacement for their own review.\nCode reviewers: Teammates who review her pull requests. They see what changed, but rarely what the agent did or why.\nEngineering manager: Assigns the work and signs off on it, and increasingly expects more output because AI exists.\nProduct manager: Negotiates requirements and coordinates across teams. Intent can get lost between the original ask and the agent.\nClient: Pushes requirements into the work and holds the engineer to explaining and defending the output." },
-              "sh-sets-expectations": { title: "Sets expectations", note: "Outer ring: leadership, regulators, policy and vendors who set the rules, and the pressure to adopt AI.\nKnowledge base: Where approved decisions are recorded so future agents inherit them. Much of the context agents need still lives in people instead.\nCTO: Sets the organization's AI direction and partners with approved vendors. Leadership expects more output from AI." },
-              "sh-external": { title: "Regulatory and external influences", note: "Policies: Shaped by regulators and industry trends, they decide which AI tools engineers may use and how.\nAuditors: Require attribution: who or what wrote a change has to be traceable after the fact.\nAI vendors: Supply the approved tools. Which vendor an organization partners with decides which agents engineers can use." }
+              "sh-produces-output": { title: "Produces output", note: "Inner ring: the agents, tools and engineers whose work she has to verify." },
+              "sh-shapes-the-ask": { title: "Shapes the ask", note: "Middle ring: clients, product and management, who define what gets built and negotiate its scope." },
+              "sh-sets-expectations": { title: "Sets expectations", note: "Outer ring: leadership, regulators, policy and vendors who set the rules, and the pressure to adopt AI." },
+              "sh-external": { title: "Regulatory and external influences", note: "" }
             }
           }
         },
@@ -242,10 +254,10 @@ const data = {
             src: "maps/ecosystem-map.svg",
             hotspots: {
               "eco-center": { title: "Auditable agentic output and transparency", note: "The need at the center of every phase: agent output the engineer can audit and explain." },
-              "eco-work-intake": { title: "01 Work intake", note: "Work arrives through standups, tickets and design handoff, and context is gathered for the agent.\nRequirements review: Checking requirements before work starts. Gaps left here become the agent's guesses later.\nContext gathering: Pulling designs, docs and repos together so the agent has what it needs. Much of the setup time goes here." },
-              "eco-executing": { title: "02 Executing", note: "Agents build from the spec while engineers plan, monitor progress and redirect when needed.\nSpec-driven development: Writing a detailed spec first, so the agent builds against something that can be checked.\nPlan review: Reviewing the agent's plan before it writes code: the cheapest point to catch a wrong direction.\nProgress monitoring: Watching the agent work. Tools show little of what it is doing, so this is effort with low visibility.\nMid-task redirection: Steering an agent that has drifted without losing the work already done." },
-              "eco-testing-review": { title: "03 Testing and review", note: "Where The Pre-Merge Review sits. Engineers review diffs, run tests and look for second opinions before sign-off.\nLine-by-line diff review: Today's default: reading every line. Thorough, but it erases the speed agents add.\nCross-model checking: Running the work past a different model to catch what the first one missed.\nFresh-session review: Asking a new agent session, with clean context, to review the work.\nPull request review: Teammates review the change. They see the diff, not the agent's reasoning.\nDev-done sign-off: The engineer declares the work done and becomes answerable for it." },
-              "eco-deployment": { title: "04 Deployment", note: "Code is merged and released. Authorship and traceability have to survive past the merge, and usually don't.\nAuthorship tagging: Marking which code a person wrote and which an agent wrote. Rarely done today, and lost after merge.\nTraceability audit: Reconstructing what happened and why after the fact, for audits or incidents.\nCommit and merge: Where agent and human work become one history, and attribution usually disappears." }
+              "eco-work-intake": { title: "01 Work intake", note: "Work arrives through standups, tickets and design handoff, and context is gathered for the agent." },
+              "eco-executing": { title: "02 Executing", note: "Agents build from the spec while engineers plan, monitor progress and redirect when needed." },
+              "eco-testing-review": { title: "03 Testing and review", note: "Where The Pre-Merge Review sits. Engineers review diffs, run tests and look for second opinions before sign-off." },
+              "eco-deployment": { title: "04 Deployment", note: "Code is merged and released. Authorship and traceability have to survive past the merge, and usually don't." }
             }
           }
         },
@@ -261,18 +273,6 @@ const data = {
               "jm-integration": { title: "Integration", note: "She commits the code. Her work and the agent's become indistinguishable, and overlooked mistakes get buried." },
               "jm-realization": { title: "Realization", note: "She finds the agent took a wrong path that review missed. Trust in the agent, and in herself, drops. The low point of the journey." },
               "jm-revision": { title: "Revision", note: "She fixes the context or prompt and reruns. Repetitive and tiring, but each fix can make the next run better." }
-            }
-          }
-        },
-        {
-          name: "Pain Point Map",
-          note: "Where each role feels the pain, by workflow phase. Click a chart to read it.",
-          map: {
-            src: "maps/pain-points.svg",
-            hotspots: {
-              "pp-engineers": { title: "Engineers", note: "Pain peaks in Build, where agents drift and overreach, and continues into Review and Ship, where work can't be traced to its source." },
-              "pp-designers": { title: "Designers", note: "Designers' pain centers on setting up their own agent workflows and on the handoff to engineering. Across every phase, the collaboration rhythm they relied on is thinning out." },
-              "pp-pms": { title: "Product managers", note: "Signals rather than trends. They point to collaboration rhythm and to knowledge that lives in people rather than in tools." }
             }
           }
         },

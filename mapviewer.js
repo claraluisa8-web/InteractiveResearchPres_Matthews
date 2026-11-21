@@ -171,6 +171,24 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
       copy.querySelectorAll(".hotspot").forEach(h => h.remove());
       copy.removeAttribute("style");
       copy.removeAttribute("class");
+      // A ring, quadrant or circle isn't a rectangle, so the crop still shows its neighbours:
+      // dim everything outside the section and outline it.
+      const shape = el.firstElementChild;
+      if (shape?.localName === "path") {
+        const ns = "http://www.w3.org/2000/svg";
+        const dim = document.createElementNS(ns, "path");
+        dim.setAttribute("d", `M${vb.x},${vb.y}h${vb.w}v${vb.h}h${-vb.w}Z ${shape.getAttribute("d")}`);
+        dim.setAttribute("fill-rule", "evenodd");
+        dim.setAttribute("fill", "#F5F5FA");
+        dim.setAttribute("fill-opacity", "0.82");
+        const edge = document.createElementNS(ns, "path");
+        edge.setAttribute("d", shape.getAttribute("d"));
+        edge.setAttribute("fill", "none");
+        edge.style.stroke = "var(--pmr-lavender)";
+        edge.setAttribute("stroke-width", "2");
+        edge.setAttribute("vector-effect", "non-scaling-stroke");
+        copy.append(dim, edge);
+      }
     }
     const aspect = vb.w / vb.h;
     copy.setAttribute("viewBox", `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
@@ -199,10 +217,9 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
       w = minW;
       h = w / aspect;
     } else {
+      // Wide or square: fill the window's width so the map's labels are legible; a taller
+      // section scrolls (and zooming out shows all of it).
       w = Math.min(roomW, 1400 - 32);
-      h = w / aspect;
-      if (h > roomH) { h = roomH; w = h * aspect; }
-      w = Math.max(w, minW);
       h = w / aspect;
     }
     const figW = w;

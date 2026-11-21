@@ -577,7 +577,7 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
 .enlarged-header { display: flex; align-items: flex-start; gap: 16px; padding: 16px 16px 12px 20px; }
 .enlarged-text { flex: 1; min-width: 0; }
 .enlarged-header h2 { margin: 0 0 6px; font-size: 18px; font-weight: 600; line-height: 24px; color: var(--text); }
-.enlarged-note { max-height: 7.5em; overflow-y: auto; font-size: 13px; line-height: 20px; color: var(--text); }
+.enlarged-note { font-size: 13px; line-height: 20px; color: var(--text); }
 .enlarged-note p { margin: 0; }
 .enlarged-note p + p { margin-top: 6px; }
 .enlarged-close { flex: none; display: grid; place-items: center; width: 32px; height: 32px; padding: 0; color: var(--muted); background: var(--pmr-btn-2); border: 1px solid var(--pmr-btn-2-stroke); border-radius: var(--pmr-r-input); cursor: pointer; }
