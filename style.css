@@ -580,7 +580,7 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
 @media (prefers-reduced-motion: reduce) { #map-enlarged { animation: none; } }
 .enlarged-card { display: grid; grid-template-columns: auto 300px; gap: 16px; align-items: start; padding: 16px; max-width: 100%; max-height: 100%; box-sizing: border-box; overflow: hidden; background: linear-gradient(var(--pmr-glass-tint), var(--pmr-glass-tint)), var(--pmr-glass); border: 1px solid var(--pmr-stroke); border-radius: var(--pmr-r-panel); box-shadow: var(--pmr-shadow); }
 .enlarged-card.is-stacked { grid-template-columns: auto; }
-.enlarged-figure { position: relative; overflow: hidden; background: #F5F5FA; border-radius: 12px; cursor: grab; touch-action: none; }
+.enlarged-figure { position: relative; overflow: hidden; background: #FFFFFF; /* the User Model's white */ border-radius: 12px; cursor: grab; touch-action: none; }
 .enlarged-figure:active { cursor: grabbing; }
 .enlarged-figure svg { display: block; transform-origin: 0 0; }
 .enlarged-aside { display: flex; flex-direction: column; min-width: 0; padding: 2px 4px 4px; }

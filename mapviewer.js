@@ -181,7 +181,7 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
       const img = new Image();
       img.src = info.zoom;
       try { await img.decode(); } catch { return; }
-      const m = Math.round(img.naturalWidth * 0.04);
+      const m = Math.round(Math.min(img.naturalWidth, img.naturalHeight) * 0.08);
       vb = {x: -m, y: -m, w: img.naturalWidth + 2 * m, h: img.naturalHeight + 2 * m};
       copy = document.createElementNS("http://www.w3.org/2000/svg", "svg");
       const image = document.createElementNS("http://www.w3.org/2000/svg", "image");
@@ -191,7 +191,7 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
       copy.append(image);
     } else {
       const b = el.getBBox();
-      const pad = Math.min(b.width, b.height) * 0.04;
+      const pad = Math.min(b.width, b.height) * 0.08;
       vb = {x: b.x - pad, y: b.y - pad, w: b.width + 2 * pad, h: b.height + 2 * pad};
       copy = svg.cloneNode(true);
       copy.querySelectorAll(".hotspot").forEach(h => h.remove());
@@ -205,7 +205,7 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
         const dim = document.createElementNS(ns, "path");
         dim.setAttribute("d", `M${vb.x},${vb.y}h${vb.w}v${vb.h}h${-vb.w}Z ${shape.getAttribute("d")}`);
         dim.setAttribute("fill-rule", "evenodd");
-        dim.setAttribute("fill", "#F5F5FA");
+        dim.setAttribute("fill", "#FFFFFF");
         dim.setAttribute("fill-opacity", "0.82");
         const edge = document.createElementNS(ns, "path");
         edge.setAttribute("d", shape.getAttribute("d"));
