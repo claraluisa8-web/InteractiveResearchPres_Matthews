@@ -266,6 +266,7 @@ const data = {
           note: "One task, six phases, from directing the agent to revising after it goes wrong. Click a phase.",
           map: {
             src: "maps/journey-map.svg",
+            enlarge: false,
             hotspots: {
               "jm-direction": { title: "Direction", note: "She gives the agent the spec and context. Clear constraints help, but gathering context takes time." },
               "jm-generation": { title: "Generation", note: "She watches the agent build. Optimistic about the speed, anxious about whether it's right, with little visibility into what it's doing." },

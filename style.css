@@ -295,8 +295,9 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
   z-index: 2;
   display: flex;
   flex-direction: column;
-  background: var(--pmr-scrim);
-  backdrop-filter: blur(2px);
+  /* Nearly solid, so the tree doesn't show beside a narrow (portrait) map card. */
+  background: color-mix(in srgb, var(--pmr-canvas) 94%, transparent);
+  backdrop-filter: blur(6px);
   opacity: 0;
   transform: scale(0.98);
   transition: opacity 0.2s ease, transform 0.2s ease;
@@ -327,12 +328,16 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
   flex: 1;
   min-height: 0;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 24px;
   cursor: grab;
 }
 #map-canvas:active { cursor: grabbing; }
 #map-canvas > svg {
   display: block;
+  flex: none;
   width: 100%;
   height: 100%;
   transform-origin: 0 0;
@@ -612,3 +617,7 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
 .edit-cancel { color: var(--text); background: var(--pmr-btn-2); border: 1px solid var(--pmr-btn-2-stroke); }
 .edit-actions button:focus-visible, .edit-open:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .edit-status { flex-basis: 100%; margin: 0; font-size: 0.8rem; color: var(--muted); }
+
+/* No word left alone on a last line. */
+.map-hint, .enlarged-hint, #detail-map-hint { text-wrap: balance; }
+#detail-note p, .enlarged-note p, .enlarged-aside h2, #detail-title { text-wrap: pretty; }

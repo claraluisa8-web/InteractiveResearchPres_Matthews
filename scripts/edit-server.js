@@ -35,7 +35,8 @@ function ser(node, ind) {
     if (k === "map") {
       const hs = Object.entries(v.hotspots || {}).map(([id, h]) =>
         `${pad}      ${q(id)}: { title: ${q(h.title)}, note: ${q(h.note)}${h.zoom ? `, zoom: ${q(h.zoom)}` : ""} }`).join(",\n");
-      return `map: {\n${pad}    src: ${q(v.src)},\n${pad}    hotspots: {\n${hs}\n${pad}    }\n${pad}  }`;
+      const enlarge = v.enlarge === false ? `\n${pad}    enlarge: false,` : "";
+      return `map: {\n${pad}    src: ${q(v.src)},${enlarge}\n${pad}    hotspots: {\n${hs}\n${pad}    }\n${pad}  }`;
     }
     if (k === "prototype") return `prototype: { src: ${q(v.src)}, title: ${q(v.title)} }`;
     if (k === "quote") return `quote: { text: ${q(v.text)}, who: ${q(v.who)} }`;

@@ -576,14 +576,16 @@ let selected;
 let guide;
 
 // While a map is open, the notes card says how to use it and offers "Show hotspots".
-function setMapHint(on) {
-  document.getElementById("detail-map-hint").hidden = !on;
+function setMapHint(on, d) {
+  const hint = document.getElementById("detail-map-hint");
+  hint.textContent = d?.data.map?.enlarge === false ? "Click a highlighted area to read about it." : "Click a highlighted area to see it larger and read about it.";
+  hint.hidden = !on;
   document.getElementById("detail-show-hotspots").hidden = !on;
 }
 
 const mapViewer = createMapViewer({
   onHotspot: showHotspot,
-  onOpen: () => setMapHint(true),
+  onOpen: d => setMapHint(true, d),
   onClose: () => { setMapHint(false); showDetails(selected); }
 });
 

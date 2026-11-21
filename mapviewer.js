@@ -18,6 +18,25 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
   d3.select(canvas).call(zoom).on("dblclick.zoom", null);
   const quick = () => (matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 200);
 
+  // The light card takes the map's own proportions (a tall map gets a portrait card), as large
+  // as the space allows, so there are no wide empty margins around it.
+  function fitCard() {
+    const svg = canvas.querySelector("svg");
+    const vb = svg?.viewBox?.baseVal;
+    if (!vb || !vb.width) return;
+    const cs = getComputedStyle(canvas);
+    const W = canvas.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const H = canvas.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    const aspect = vb.width / vb.height;
+    let w = W, h = W / aspect;
+    if (h > H) { h = H; w = H * aspect; }
+    svg.style.width = `${Math.floor(w)}px`;
+    svg.style.height = `${Math.floor(h)}px`;
+    // Zoom and pan are worked out from the canvas's corner, so scale from there too.
+    svg.style.transformOrigin = `${-svg.offsetLeft}px ${-svg.offsetTop}px`;
+  }
+  new ResizeObserver(fitCard).observe(canvas);
+
   async function load(src) {
     if (!cache.has(src)) {
       cache.set(src, fetch(src).then(r => {
@@ -30,6 +49,9 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
 
   async function open(d) {
     const map = d.data.map;
+    document.querySelector(".map-hint").textContent = map.enlarge === false
+      ? "Click a highlighted area to read about it. Drag to pan; zoom with the buttons or by scrolling."
+      : "Click a highlighted area to see it larger. Drag to pan; zoom with the buttons or by scrolling.";
     current = d;
     title.textContent = d.data.name;
     canvas.replaceChildren();
@@ -66,6 +88,7 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
     svg.removeAttribute("width");
     svg.removeAttribute("height");
     canvas.append(svg);
+    fitCard();
 
     // Each hotspot is a button: focusable, named from its title, opened by click, Enter or Space.
     for (const [id, info] of Object.entries(map.hotspots || {})) {
@@ -79,7 +102,8 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
         svg.querySelectorAll(".hotspot.active").forEach(h => h.classList.remove("active"));
         el.classList.add("active");
         onHotspot(d, info);
-        enlarge(svg, el, info);
+        // Some maps (the Journey Map's very long phases) don't open a zoomed view; the note is enough.
+        if (map.enlarge !== false) enlarge(svg, el, info);
       };
       el.addEventListener("click", activate);
       el.addEventListener("keydown", event => {
