@@ -27,17 +27,16 @@ const data = {
       name: "Research Approach",
       note: "Who I talked to and how I analyzed what I heard, before any mapping or design.",
       children: [
-        { name: "Who I talked to", note: "7 participants: 3 engineers, 3 product designers and 1 product manager.",
+        {
+          name: "Who I talked to",
+          note: "7 participants: 3 engineers, 3 product designers and 1 product manager.",
           children: [
             { name: "3 Engineers", note: "102 quotes in the analysis." },
             { name: "3 Product Designers", note: "108 quotes in the analysis." },
             { name: "1 Product Manager", note: "27 quotes in the analysis." }
           ]
         },
-        {
-          name: "How I listened",
-          note: "Semi-structured interviews with engineers, designers and a product manager."
-        },
+        { name: "How I listened", note: "Semi-structured interviews with engineers, designers and a product manager." },
         {
           name: "How I analyzed it",
           note: "Quotes were grouped by hand, the groups were named as themes, and the themes were rolled up into metathemes: 237 quotes, 20 groups, 8 themes and 3 metathemes."
@@ -292,22 +291,42 @@ const data = {
                         {
                           name: "Prompt",
                           children: [
-                            { name: "Ambiguous/incomplete instructions", children: [response("Reset")] },
+                            {
+                              name: "Ambiguous/incomplete instructions",
+                              children: [
+                                response("Reset")
+                              ]
+                            },
                             { name: "Conflicting instructions" }
                           ]
                         },
                         {
                           name: "Session Management",
                           children: [
-                            { name: "Handoff gaps", children: [response("Ask a coworker")] },
-                            { name: "Context window drift", children: [response("Ask original ticket author")] }
+                            {
+                              name: "Handoff gaps",
+                              children: [
+                                response("Ask a coworker")
+                              ]
+                            },
+                            {
+                              name: "Context window drift",
+                              children: [
+                                response("Ask original ticket author")
+                              ]
+                            }
                           ]
                         },
                         {
                           name: "Requirements & Scope",
                           children: [
                             { name: "Under-specification" },
-                            { name: "Scope creep", children: [response("Manual check/review")] }
+                            {
+                              name: "Scope creep",
+                              children: [
+                                response("Manual check/review")
+                              ]
+                            }
                           ]
                         },
                         {
@@ -320,14 +339,29 @@ const data = {
                         {
                           name: "Libraries",
                           children: [
-                            { name: "Deprecated/mismatched version", children: [response("Manual check/review")] },
-                            { name: "Unapproved library introduction", children: [response("Flagged by manager")] }
+                            {
+                              name: "Deprecated/mismatched version",
+                              children: [
+                                response("Manual check/review")
+                              ]
+                            },
+                            {
+                              name: "Unapproved library introduction",
+                              children: [
+                                response("Flagged by manager")
+                              ]
+                            }
                           ]
                         },
                         {
                           name: "Repositories",
                           children: [
-                            { name: "Outdated pattern referenced", children: [response("Ask a coworker")] },
+                            {
+                              name: "Outdated pattern referenced",
+                              children: [
+                                response("Ask a coworker")
+                              ]
+                            },
                             { name: "Wrong repo/model used for reference" }
                           ]
                         },
@@ -346,35 +380,65 @@ const data = {
                         {
                           name: "Domain/Business Logic",
                           children: [
-                            { name: "Business logic mismatch", children: [response("Ask domain expert")] },
+                            {
+                              name: "Business logic mismatch",
+                              children: [
+                                response("Ask domain expert")
+                              ]
+                            },
                             { name: "Edge case blindness" }
                           ]
                         },
                         {
                           name: "Code Quality/Redundancy",
                           children: [
-                            { name: "Dead-unreachable code", children: [response("Manual check/review")] },
+                            {
+                              name: "Dead-unreachable code",
+                              children: [
+                                response("Manual check/review")
+                              ]
+                            },
                             { name: "Duplicate code" }
                           ]
                         },
                         {
                           name: "Memory/Continuity",
                           children: [
-                            { name: "Dropped/forgotten constraints", children: [response("Manual check/review")] },
-                            { name: "Memory errors", children: [response("Reset")] }
+                            {
+                              name: "Dropped/forgotten constraints",
+                              children: [
+                                response("Manual check/review")
+                              ]
+                            },
+                            {
+                              name: "Memory errors",
+                              children: [
+                                response("Reset")
+                              ]
+                            }
                           ]
                         },
                         {
                           name: "Error Handling/Robustness",
                           children: [
-                            { name: "Lack of error communication", children: [response("Manual check/review")] }
+                            {
+                              name: "Lack of error communication",
+                              children: [
+                                response("Manual check/review")
+                              ]
+                            }
                           ]
                         },
                         {
                           name: "Fabrication/Confidence",
                           children: [
                             { name: "Overconfidence, no uncertainty signal" },
-                            { name: "Hallucination/fabricated detail", children: [response("Retry in new model + Manual check/review")] },
+                            {
+                              name: "Hallucination/fabricated detail",
+                              children: [
+                                response("Retry in new model + Manual check/review")
+                              ]
+                            },
                             { name: "Lies/false claim maintained under challenge" }
                           ]
                         },
@@ -385,7 +449,12 @@ const data = {
                               name: "API & External service integration",
                               children: [
                                 { name: "Fake inputs" },
-                                { name: "Wrong endpoint/version assumed", children: [response("Manual check/review")] }
+                                {
+                                  name: "Wrong endpoint/version assumed",
+                                  children: [
+                                    response("Manual check/review")
+                                  ]
+                                }
                               ]
                             }
                           ]
@@ -393,8 +462,18 @@ const data = {
                         {
                           name: "Codebase Awareness/Scale",
                           children: [
-                            { name: "Creates algorithm from scratch → file overwhelm", children: [response("Manual check/review")] },
-                            { name: "Misses existing utility → reinvents", children: [response("Manual check/review")] }
+                            {
+                              name: "Creates algorithm from scratch → file overwhelm",
+                              children: [
+                                response("Manual check/review")
+                              ]
+                            },
+                            {
+                              name: "Misses existing utility → reinvents",
+                              children: [
+                                response("Manual check/review")
+                              ]
+                            }
                           ]
                         }
                       ]
@@ -415,7 +494,12 @@ const data = {
                       name: "Capture Timing",
                       children: [
                         { name: "No retroactive capture for backlog" },
-                        { name: "Only live, lost after merge", children: [response("Only live, lost after merge")] }
+                        {
+                          name: "Only live, lost after merge",
+                          children: [
+                            response("Only live, lost after merge")
+                          ]
+                        }
                       ]
                     },
                     {
