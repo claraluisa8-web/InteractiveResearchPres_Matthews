@@ -38,7 +38,7 @@ const data = {
         },
         { name: "How I listened", note: "Semi-structured interviews with engineers, designers and a product manager." },
         {
-          name: "How I analyzed it",
+          name: "How I analyzed the interviews",
           note: "Quotes were grouped by hand, the groups were named as themes, and the themes were rolled up into metathemes: 237 quotes, 20 groups, 8 themes and 3 metathemes."
         }
       ]
@@ -50,7 +50,7 @@ const data = {
       children: [
         {
           name: "Responsibility Outpaces Visibility",
-          note: "Practitioners are still on the hook for AI-assisted work, but their tools don't show what the agent did, why, or from what. Trust, traceability and context all have to be built by hand.",
+          note: "Practitioners are still on the hook for AI-assisted work, but their tools don't always show what the agent did, why, or from what. If they do, they're custom built by the engineer. Trust, traceability and context all have to be built by hand.",
           children: [
             {
               name: "Accountability Without Authorship",
@@ -75,7 +75,7 @@ const data = {
             },
             {
               name: "Earned Trust",
-              note: "Trust in AI is built gradually through review routines, not granted up front. People adjust how much they hand over based on risk, experience and confidence, and some deliberately stay hands-on. (5 participants)",
+              note: "Trust in AI is built gradually through review routines, not granted up front. People adjust how much they delegate based on risk, experience and confidence, and some deliberately stay hands-on. (5 participants)",
               children: [
                 {
                   name: "Trust but Verify",
@@ -123,7 +123,7 @@ const data = {
           children: [
             {
               name: "From Maker to Director",
-              note: "Across every role, the human job is moving from producing the work to directing, prompting and reviewing it. Some build elaborate infrastructure to support that shift, while others see heavy setup as more trouble than it's worth. (7 participants)",
+              note: "Across every role, the human job is moving from producing the work to directing, prompting and reviewing. Some build elaborate infrastructure to support that shift, while others see heavy setup as more trouble than it's worth. (7 participants)",
               children: [
                 {
                   name: "AI Conductor",
@@ -132,8 +132,8 @@ const data = {
                 },
                 {
                   name: "AI Scaffolding",
-                  note: "Systems, agents and setups people build to make AI useful, and whether that setup is worth it.",
-                  quote: { text: "You need to build confidence in the agent's work so you can delegate more. Now I can run 10 agents in parallel, because the way I set it up, I can quickly get the context when I need it.", who: "Engineer" }
+                  note: "Systems, agents and setups people build to make AI useful, plus the tradeoffs.",
+                  quote: { text: "You need to build confidence in the agent's work so you can delegate more. Now I can run 10 agents in parallel, because the way I set it up, I can quickly get the context...", who: "Engineer" }
                 }
               ]
             },
@@ -173,7 +173,7 @@ const data = {
         },
         {
           name: "Speed Meets Its Limits",
-          note: "AI speeds up building, but experience quality, research, organizational rules and people's real readiness push back on how far speed alone can go.",
+          note: "AI speeds up building, but experience quality, research, organizational rules and people's real readiness push back on how far speed alone can take the workflow before problems appear.",
           children: [
             {
               name: "Speed Over Substance",
