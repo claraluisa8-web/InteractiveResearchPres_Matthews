@@ -532,6 +532,7 @@ const data = {
           note: "Who she is, how she works today, what she's trying to achieve, and how she thinks about agents. Click a column.",
           map: {
             src: "maps/user-model.svg",
+            step: "section",
             hotspots: {
               "um-who": { title: "Who", note: "A senior to principal engineer in a large, often regulated enterprise. She still codes, but spends more of her day directing and checking agents than writing.", zoom: "maps/img/user-model-who.png" },
               "um-workflow": { title: "Current workflow", note: "Define, set up and plan, build, verify, hand off and ship. Agents speed up building; review is where the time goes.", zoom: "maps/img/user-model-workflow.png" },
