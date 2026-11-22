@@ -8,8 +8,10 @@ const root = path.join(__dirname, "..");
 const data = new Function(fs.readFileSync(path.join(root, "data.js"), "utf8") + ";return data;")();
 
 const maps = [];
+const galleries = []; // map.gallery: images shown one at a time, each with its own file
 (function walk(n) {
-  if (n.map) maps.push({topic: n.name, src: n.map.src, ids: Object.keys(n.map.hotspots || {}), hotspots: n.map.hotspots || {}});
+  if (n.map?.gallery) galleries.push({topic: n.name, slides: Object.entries(n.map.hotspots || {})});
+  else if (n.map) maps.push({topic: n.name, src: n.map.src, ids: Object.keys(n.map.hotspots || {}), hotspots: n.map.hotspots || {}});
   (n.children || []).forEach(walk);
 })(data);
 
@@ -32,6 +34,14 @@ for (const m of maps) {
   }
   for (const [, href] of svg.matchAll(/<image\b[^>]*\shref="([^"]+)"/g)) {
     if (!fs.existsSync(path.join(root, href))) report(`image not found: ${href}`);
+  }
+}
+
+for (const g of galleries) {
+  console.log(`${g.topic} (gallery): ${g.slides.length} images`);
+  for (const [id, h] of g.slides) {
+    if (!h.image) report(`${id}: no image`);
+    else if (!fs.existsSync(path.join(root, h.image))) report(`${id}: image not found: ${h.image}`);
   }
 }
 

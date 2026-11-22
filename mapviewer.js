@@ -1,4 +1,10 @@
 // Map viewer: opens a topic's SVG map over the chart, with pan/zoom and clickable hotspots.
+// A topic whose map is a gallery (map.gallery: true) opens one image at a time instead, with
+// arrows, dots and the arrow keys to move between them; each image's note shows in the notes card.
+
+// The gallery icon (pictures in a frame), used beside "View gallery" and on the tree's badge.
+const galleryIcon = () => `<svg class="map-icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="currentColor"><path d="${GALLERY_ICON_PATH}"/></svg>`;
+const GALLERY_ICON_PATH = "M2.5 2h11l.5.5v11l-.5.5h-11l-.5-.5v-11l.5-.5zM3 3v7.3l2.65-2.65h.7L9 10.3l1.65-1.65h.7L13 10.3V3H3zm0 10h10v-1.3l-2-2-1.65 1.65h-.7L6 8.7l-3 3V13zm7.5-6.5a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5z";
 
 function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
   const viewer = document.getElementById("map-viewer");
@@ -7,9 +13,12 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
   const closeButton = document.getElementById("map-close");
   const cache = new Map();
   let current = null;
+  const mark = document.querySelector("#map-viewer .map-mark");
+  const MAP_ICON = mark.innerHTML;
 
   // Drag to pan and scroll to zoom. The map is moved with a CSS transform.
   const zoom = d3.zoom()
+      .filter(event => !current?.data.map.gallery && (!event.ctrlKey || event.type === "wheel") && !event.button)
       .scaleExtent([0.5, 4]) // the big maps (stakeholder, ecosystem, journey) need about 4x to read
       .on("zoom", ({transform}) => {
         const svg = canvas.firstElementChild;
@@ -21,7 +30,7 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
   // The light card takes the map's own proportions (a tall map gets a portrait card), as large
   // as the space allows, so there are no wide empty margins around it.
   function fitCard() {
-    const svg = canvas.querySelector("svg");
+    const svg = canvas.querySelector(":scope > svg");
     const vb = svg?.viewBox?.baseVal;
     if (!vb || !vb.width) return;
     const cs = getComputedStyle(canvas);
@@ -49,15 +58,21 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
 
   async function open(d) {
     const map = d.data.map;
-    document.querySelector(".map-hint").textContent = map.enlarge === false
+    document.querySelector(".map-hint").textContent = map.gallery
+      ? "Use the arrows, the dots or the arrow keys to move between images."
+      : map.enlarge === false
       ? "Click a highlighted area to read about it. Drag to pan; zoom with the buttons or by scrolling."
       : "Click a highlighted area to see it larger. Drag to pan; zoom with the buttons or by scrolling.";
     current = d;
     title.textContent = d.data.name;
     canvas.replaceChildren();
+    viewer.classList.toggle("is-gallery", !!map.gallery);
+    mark.innerHTML = map.gallery ? galleryIcon() : MAP_ICON;
+    gallery = null;
     viewer.hidden = false;
     requestAnimationFrame(() => viewer.classList.add("open"));
     d3.select(canvas).call(zoom.transform, d3.zoomIdentity);
+    if (map.gallery) return openGallery(d);
 
     let text;
     try {
@@ -118,6 +133,64 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
     }
     onOpen(d);
   }
+
+  // A gallery: one image at a time, sized to fit, with Previous / Next arrows and a dot per image.
+  // The image's title and note go to the notes card, like a map section's.
+  const CHEVRON = dir => `<svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="${dir < 0
+    ? "M5.928 7.976l4.357 4.357-.618.62L5 8.284v-.618L9.667 3l.618.619-4.357 4.357z"
+    : "M10.072 8.024L5.715 3.667l.618-.62L11 7.716v.618L6.333 13l-.618-.619 4.357-4.357z"}"/></svg>`;
+  let gallery = null; // {d, slides, index, img, dots, prev, next, count}
+  function openGallery(d) {
+    const slides = Object.values(d.data.map.hotspots || {});
+    const wrap = document.createElement("div");
+    wrap.className = "gallery";
+    wrap.innerHTML = `
+      <figure class="gallery-stage"><img alt=""></figure>
+      <div class="gallery-nav">
+        <button type="button" class="gallery-arrow" data-step="-1" aria-label="Previous image">${CHEVRON(-1)}</button>
+        <ol class="gallery-dots"></ol>
+        <button type="button" class="gallery-arrow" data-step="1" aria-label="Next image">${CHEVRON(1)}</button>
+      </div>
+      <p class="gallery-count" aria-live="polite"></p>`;
+    const dots = slides.map((info, i) => {
+      const li = document.createElement("li");
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "gallery-dot";
+      b.setAttribute("aria-label", `${i + 1}: ${info.title}`);
+      b.addEventListener("click", () => showSlide(i));
+      li.append(b);
+      return li;
+    });
+    wrap.querySelector(".gallery-dots").append(...dots);
+    canvas.append(wrap);
+    gallery = {d, slides, index: -1, img: wrap.querySelector("img"), dots: dots.map(li => li.firstChild),
+      prev: wrap.querySelector('[data-step="-1"]'), next: wrap.querySelector('[data-step="1"]'), count: wrap.querySelector(".gallery-count")};
+    wrap.querySelectorAll(".gallery-arrow").forEach(b => b.addEventListener("click", () => showSlide(gallery.index + Number(b.dataset.step))));
+    onOpen(d);
+    showSlide(0);
+  }
+  function showSlide(i) {
+    const g = gallery;
+    if (!g || i < 0 || i >= g.slides.length) return;
+    g.index = i;
+    const info = g.slides[i];
+    g.img.src = info.image;
+    g.img.alt = info.title;
+    g.dots.forEach((b, k) => (k === i ? b.setAttribute("aria-current", "step") : b.removeAttribute("aria-current")));
+    g.prev.disabled = i === 0;
+    g.next.disabled = i === g.slides.length - 1;
+    g.count.textContent = `${i + 1} of ${g.slides.length} · ${info.title}`;
+    onHotspot(g.d, info);
+  }
+  // Left and right arrows move through the gallery while it's open (before the tree's own arrow keys).
+  window.addEventListener("keydown", event => {
+    if (!gallery || !current || (event.key !== "ArrowLeft" && event.key !== "ArrowRight")) return;
+    if (event.target.closest?.("input, textarea, [contenteditable]")) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    showSlide(gallery.index + (event.key === "ArrowRight" ? 1 : -1));
+  }, true);
 
   // Clicking a section opens it enlarged: a full-window view of just that part of the map, with
   // its title and note. Esc, the close button or a click outside closes it and returns focus.
@@ -338,7 +411,7 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
   // "Show hotspots": outline every hotspot for a moment.
   let flashTimer;
   function flashHotspots() {
-    const svg = canvas.querySelector("svg");
+    const svg = canvas.querySelector(":scope > svg");
     if (!svg) return;
     clearTimeout(flashTimer);
     svg.classList.add("show-hotspots");
@@ -349,6 +422,7 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
     if (!current) return;
     closeEnlarged();
     current = null;
+    gallery = null;
     viewer.classList.remove("open");
     viewer.hidden = true;
     onClose();

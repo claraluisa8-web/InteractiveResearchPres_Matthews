@@ -631,3 +631,37 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
 .enlarged-steps button:hover:not(:disabled) { filter: brightness(1.08); }
 .enlarged-steps button:disabled { cursor: default; color: var(--muted); background: var(--pmr-btn-disabled); border-color: var(--pmr-stroke); }
 .enlarged-steps button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Gallery (mapviewer.js, map.gallery): one image at a time on a white card, sized to fit, with
+   arrows and a dot per image beneath it. No zoom or drag; the arrow keys move between images. */
+#map-viewer.is-gallery .map-zoom { display: none; }
+#map-viewer.is-gallery #map-canvas { cursor: default; padding: 24px 32px 16px; }
+/* The controls sit right under the image; the image takes whatever height is left (100cqh less
+   the arrows, the count and the gaps). */
+.gallery { container-type: size; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; width: 100%; height: 100%; min-height: 0; }
+.gallery-stage { margin: 0; display: flex; justify-content: center; width: 100%; }
+.gallery-stage img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100cqh - 105px);
+  object-fit: contain;
+  padding: 16px;
+  background: #FFFFFF;
+  border-radius: 16px;
+  box-shadow: var(--pmr-shadow);
+}
+.gallery-nav { display: flex; align-items: center; gap: 8px; }
+.gallery-arrow {
+  display: grid; place-items: center; width: 40px; height: 40px; padding: 0;
+  color: var(--text); background: var(--pmr-btn-2); border: 1px solid var(--pmr-btn-2-stroke); border-radius: 50%; cursor: pointer;
+}
+.gallery-arrow:hover:not(:disabled) { filter: brightness(1.08); }
+.gallery-arrow:disabled { cursor: default; color: var(--muted); background: var(--pmr-btn-disabled); border-color: var(--pmr-stroke); }
+.gallery-dots { display: flex; gap: 4px; margin: 0; padding: 0 4px; list-style: none; }
+.gallery-dot { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; background: none; border: 0; cursor: pointer; }
+.gallery-dot::before { content: ""; width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--pmr-text-2); }
+.gallery-dot:hover::before { background: var(--pmr-text-2); }
+.gallery-dot[aria-current="step"]::before { width: 12px; height: 12px; background: var(--pmr-stem-active); border-color: var(--pmr-stem-active); }
+.gallery-arrow:focus-visible, .gallery-dot:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.gallery-dot:focus-visible { border-radius: 50%; outline-offset: 0; }
+.gallery-count { margin: 0; font-size: 0.8rem; color: var(--muted); }

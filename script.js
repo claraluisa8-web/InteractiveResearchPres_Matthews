@@ -261,8 +261,8 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
           onOpenMap(d);
         });
     mapBadge.append("rect").attr("width", 20).attr("height", 20).attr("x", -2).attr("y", -2);
-    mapBadge.append("path").attr("d", "M2.5 5.77705V12.0978L5.5 10.2228V3.90205L2.5 5.77705ZM6.5 3.90205V10.2228L9.5 12.0978V5.77705L6.5 3.90205ZM6 11.0896L2.265 13.4239L1.5 12.9999V5.49993L1.735 5.07593L5.735 2.57593H6.265L10 4.9103L13.735 2.57593L14.5 2.99993V10.4999L14.265 10.9239L10.265 13.4239H9.735L6 11.0896ZM10.5 5.77705V12.0978L13.5 10.2228V3.90205L10.5 5.77705Z");
-    mapBadge.append("title").text("View map");
+    mapBadge.append("path").attr("d", d => d.data.map.gallery ? GALLERY_ICON_PATH : "M2.5 5.77705V12.0978L5.5 10.2228V3.90205L2.5 5.77705ZM6.5 3.90205V10.2228L9.5 12.0978V5.77705L6.5 3.90205ZM6 11.0896L2.265 13.4239L1.5 12.9999V5.49993L1.735 5.07593L5.735 2.57593H6.265L10 4.9103L13.735 2.57593L14.5 2.99993V10.4999L14.265 10.9239L10.265 13.4239H9.735L6 11.0896ZM10.5 5.77705V12.0978L13.5 10.2228V3.90205L10.5 5.77705Z");
+    mapBadge.append("title").text(d => d.data.map.gallery ? "View gallery" : "View map");
 
     // The root (the problem statement) gets a small eyebrow label above its text, so the long
     // statement reads as what it is. It uses the topic's short name.
@@ -535,6 +535,13 @@ function showDetails(d) {
   document.getElementById("detail-title").textContent = d.data.name;
   setNote(d.data.note, d.data.quote);
   document.getElementById("detail-map").hidden = !d.data.map;
+  if (d.data.map) {
+    // The button says what it opens: a map, or a gallery of images.
+    const button = document.getElementById("detail-map");
+    button.dataset.mapIcon ??= button.querySelector(".map-mark").innerHTML;
+    button.querySelector(".map-mark").innerHTML = d.data.map.gallery ? galleryIcon() : button.dataset.mapIcon;
+    document.getElementById("detail-map-label").textContent = d.data.map.gallery ? "View gallery" : "View map";
+  }
   document.getElementById("detail-open-all").hidden = !d._children;
   // The local editor (editmode.js) listens for what the panel is showing.
   document.dispatchEvent(new CustomEvent("details:shown", {detail: {d}}));
@@ -578,9 +585,11 @@ let guide;
 // While a map is open, the notes card says how to use it and offers "Show hotspots".
 function setMapHint(on, d) {
   const hint = document.getElementById("detail-map-hint");
-  hint.textContent = d?.data.map?.enlarge === false ? "Click a highlighted area to read about it." : "Click a highlighted area to see it larger and read about it.";
+  const isGallery = !!d?.data.map?.gallery;
+  hint.textContent = isGallery ? "Use the arrows, the dots or the arrow keys to move through the images."
+    : d?.data.map?.enlarge === false ? "Click a highlighted area to read about it." : "Click a highlighted area to see it larger and read about it.";
   hint.hidden = !on;
-  document.getElementById("detail-show-hotspots").hidden = !on;
+  document.getElementById("detail-show-hotspots").hidden = !on || isGallery;
 }
 
 const mapViewer = createMapViewer({
