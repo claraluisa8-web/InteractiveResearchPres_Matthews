@@ -18,7 +18,7 @@
 const response = name => ({ name, response: true });
 
 const data = {
-  name: "The Ask",
+  name: "How has the spec-driven development workflow changed with AI agents, and how could it work better for engineers?",
   short: "The Ask",
   note: "As agentic systems grow more capable and more affordable for enterprise teams, the software engineer's role in spec-driven development has changed dramatically.\nThis service design project looks at how that workflow has changed and how it could evolve to better support developers. It proposes an agentic solution that makes verification more effective and meets developers where they are, however comfortable they are with AI and however far they've adopted it.",
   children: [
@@ -545,8 +545,12 @@ const data = {
     {
       stage: 4,
       name: "Problem Definition",
-      note: "Senior software engineers need a way to increase the verification efficacy of agent-generated outputs in order to extend agent trust while still being able to answer for what it produces.",
+      note: "Mapping the ecosystem, the journey and the user narrowed 237 quotes down to one point of view. From there, the problem became four questions to design for.",
       children: [
+        {
+          name: "POV Statement",
+          note: "Senior software engineers need a way to increase the verification efficacy of agent-generated outputs in order to extend agent trust while still being able to answer for what it produces."
+        },
         {
           name: "How Might We...",
           note: "Four questions that turn the problem into design opportunities. Each note says where the prototype answers it.",
@@ -582,22 +586,33 @@ const data = {
       note: "A constellation, not a chat window: the engineer adds agents and teammates around her, sees disagreements as red lines between them, and verifies the code section by section before it merges.",
       children: [
         {
+          name: "User Story",
+          note: "As a senior software engineer coding collaboratively with AI, I want to catch mistakes in its code before it merges so that I can avoid costly rework down the line and deliver more consistent, trustworthy productivity."
+        },
+        {
           name: "User Flow",
           note: "The engineer starts as a single dot in a spatial grid and builds a team around it: build, review and testing agents, plus human teammates. Each dot is configured with its own model and rules. Work flows along the lines between dots, and when two collaborators disagree, the issue shows up in red on the line between them. The engineer zooms into that line to resolve it, opens a pull request with a receipt of who wrote and verified each section, and merges once a teammate approves.",
           map: {
             src: "maps/user-flow.svg",
-            step: "screen",
+            flow: true,
             hotspots: {
-              "uf-space": { title: "The Constellation", note: "Start a session in the space.\nThe editor gives way to a perspective grid.\nYou appear as a single dot, with the approved spec attached.\nCode stays one click away and floats in when opened.\nThe engineer starts from their own intent, not a file tree." },
-              "uf-add-node": { title: "Add a Node", note: "Add and configure a collaborator.\nClick + next to any dot.\nPick a type: build, review or testing agent, or a human teammate.\nSet its model, the spec it checks, how strict it is and what it can change.\nEvery collaborator, human or agent, is placed and set up the same way." },
-              "uf-build": { title: "Build in the Space", note: "Build alongside the agents.\nLines pulse as work passes between dots.\nOpen any dot to see its code floating over the grid.\nEvery change is tagged to the dot that wrote it.\nAuthorship is captured as work happens, so nothing is reconstructed later." },
-              "uf-approve": { title: "Approve a Recommendation", note: "Approve or decline a suggested node.\nThe proposed dot appears ghosted, dashed to the agent that suggested it.\nSee why, e.g. the review agent wants a testing agent for the contract.\nApprove, adjust its settings, or decline.\nAgents can grow the team, but the engineer decides who joins." },
-              "uf-line-zoom": { title: "Line Zoom", note: "Resolve an issue on a line.\nClick the red mark; the camera zooms in between the two dots.\nEach side of the disagreement sits at its end, with the spec in the middle.\nThe code floats in: accept, edit it yourself, or reject with a reason.\nEach issue is judged in context, between the two collaborators who disagree." },
-              "uf-trace": { title: "Trace on the Line", note: "Trace a failure back to where it started.\nThe failing test lights up the testing dot and the line it came from.\nFollow it to the section, prompt and session.\nOnly that line reopens; everything else stays verified.\nThe root cause is found without re-reviewing the whole branch." },
-              "uf-all-clear": { title: "All Clear", note: "Confirm the space is clear.\nEach line settles to neutral once its issues are resolved.\nA receipt records which dot wrote, reviewed and tested each section.\nZoom out to see the whole team at a glance.\nThe engineer can show who wrote and who verified every section." },
-              "uf-open-pr": { title: "Open a Pull Request", note: "Bring in a human reviewer.\nAdd a teammate as a human dot.\nThe pull request opens with the receipt attached.\nTheir line stays pending until they approve.\nThe human reviewer sees the same space, not a wall of diffs." },
-              "uf-teammate": { title: "Teammate Review", note: "Wait for the human reviewer.\nYour teammate’s dot opens the same space and the receipt.\nTheir comments appear on their line, marked as theirs instead of red.\nApproval settles their line and clears the space.\nThe pull request is reviewed in the same space it was built in." },
-              "uf-recap": { title: "Productivity Recap", note: "See what catching issues early saved.\nIssues caught on each line, by pair of collaborators.\nEstimated hours of rework saved.\nRepeat pull requests avoided this month.\nThe payoff of early review is tied to the team the engineer built." }
+              "uf-start": { title: "Engineer opens a branch with an approved spec", note: "", next: "uf-space" },
+              "uf-space": { title: "The Constellation", note: "Start a session in the space.\nThe editor gives way to a perspective grid.\nYou appear as a single dot, with the approved spec attached.\nCode stays one click away and floats in when opened.\nThe engineer starts from their own intent, not a file tree.", next: "uf-add-node" },
+              "uf-add-node": { title: "Add a Node", note: "Add and configure a collaborator.\nClick + next to any dot.\nPick a type: build, review or testing agent, or a human teammate.\nSet its model, the spec it checks, how strict it is and what it can change.\nEvery collaborator, human or agent, is placed and set up the same way.", next: "uf-d-another" },
+              "uf-d-another": { title: "Add another node?", note: "", yes: "uf-add-node", no: "uf-build" },
+              "uf-build": { title: "Build in the Space", note: "Build alongside the agents.\nLines pulse as work passes between dots.\nOpen any dot to see its code floating over the grid.\nEvery change is tagged to the dot that wrote it.\nAuthorship is captured as work happens, so nothing is reconstructed later.", next: "uf-d-recommend" },
+              "uf-d-recommend": { title: "Does an agent recommend a new node?", note: "", yes: "uf-approve", no: "uf-d-issue" },
+              "uf-approve": { title: "Approve a Recommendation", note: "Approve or decline a suggested node.\nThe proposed dot appears ghosted, dashed to the agent that suggested it.\nSee why, e.g. the review agent wants a testing agent for the contract.\nApprove, adjust its settings, or decline.\nAgents can grow the team, but the engineer decides who joins.", next: "uf-build" },
+              "uf-d-issue": { title: "Is a line showing an issue?", note: "", yes: "uf-line-zoom", no: "uf-all-clear" },
+              "uf-line-zoom": { title: "Line Zoom", note: "Resolve an issue on a line.\nClick the red mark; the camera zooms in between the two dots.\nEach side of the disagreement sits at its end, with the spec in the middle.\nThe code floats in: accept, edit it yourself, or reject with a reason.\nEach issue is judged in context, between the two collaborators who disagree.", next: "uf-d-red" },
+              "uf-d-red": { title: "Are any lines still red?", note: "", yes: "uf-line-zoom", no: "uf-all-clear" },
+              "uf-all-clear": { title: "All Clear", note: "Confirm the space is clear.\nEach line settles to neutral once its issues are resolved.\nA receipt records which dot wrote, reviewed and tested each section.\nZoom out to see the whole team at a glance.\nThe engineer can show who wrote and who verified every section.", next: "uf-open-pr" },
+              "uf-open-pr": { title: "Open a Pull Request", note: "Bring in a human reviewer.\nAdd a teammate as a human dot.\nThe pull request opens with the receipt attached.\nTheir line stays pending until they approve.\nThe human reviewer sees the same space, not a wall of diffs.", next: "uf-teammate" },
+              "uf-teammate": { title: "Teammate Review", note: "Wait for the human reviewer.\nYour teammate’s dot opens the same space and the receipt.\nTheir comments appear on their line, marked as theirs instead of red.\nApproval settles their line and clears the space.\nThe pull request is reviewed in the same space it was built in.", next: "uf-d-approve" },
+              "uf-d-approve": { title: "Did the teammate approve?", note: "", yes: "uf-recap", no: "uf-line-zoom" },
+              "uf-recap": { title: "Productivity Recap", note: "See what catching issues early saved.\nIssues caught on each line, by pair of collaborators.\nEstimated hours of rework saved.\nRepeat pull requests avoided this month.\nThe payoff of early review is tied to the team the engineer built.", next: "uf-end" },
+              "uf-end": { title: "Code merges trusted, with its receipt", note: "" },
+              "uf-trace": { title: "Trace on the Line", note: "Trace a failure back to where it started.\nThe failing test lights up the testing dot and the line it came from.\nFollow it to the section, prompt and session.\nOnly that line reopens; everything else stays verified.\nThe root cause is found without re-reviewing the whole branch.", next: "uf-line-zoom" }
             }
           }
         },
@@ -611,7 +626,10 @@ const data = {
               map: {
                 gallery: true,
                 hotspots: {
-                  "v1-sketch": { title: "Sketch", note: "", image: "maps/img/sketches/v1-sketch.png" },
+                  "v1-sketch-1": { title: "Sketch 1", note: "The engineer can review. They go to click on the “must review” section.", image: "maps/img/sketches/v1-sketch-1.jpg" },
+                  "v1-sketch-2": { title: "Sketch 2", note: "The engineer starts reviewing “must review” items and can edit, accept, or reject agent-generated sections.", image: "maps/img/sketches/v1-sketch-2.jpg" },
+                  "v1-sketch-3": { title: "Sketch 3", note: "Later, the engineer initiates the pull request for merge into the main branch with verification files attached.", image: "maps/img/sketches/v1-sketch-3.jpg" },
+                  "v1-sketch-4": { title: "Sketch 4", note: "The merge begins.", image: "maps/img/sketches/v1-sketch-4.jpg" },
                   "v1-lowfi": { title: "Low-fi wireframe", note: "The first concept lived in a VS Code sidebar: the agent's code grouped into sections to review by priority, with accept, edit or reject per finding.", image: "maps/img/evo-1-v1-lowfi.png" },
                   "v1-midfi": { title: "Mid-fi wireframe", note: "In createPlan, the spec opens inline next to the drift, and she settles a disagreement between the build agent and the reviewer.", image: "maps/img/v1-midfi.png" },
                   "v1-hifi": { title: "Hi-fi screen", note: "Section review beside the code, with the spec shown inline and a reason asked for every rejection. It still treated review as one person checking one agent.", image: "maps/img/evo-2-v1-hifi.png" }
@@ -624,9 +642,12 @@ const data = {
               map: {
                 gallery: true,
                 hotspots: {
-                  "v2-sketch": { title: "Sketch", note: "Engineer adds a build agent to the grid.\nEngineer adds a review agent to the grid.\nAgent adds a testing agent to the grid.", image: "maps/img/sketches/v2-sketch.jpg" },
+                  "v2-sketch-1": { title: "Sketch 1", note: "The engineer adds a build agent to the grid.", image: "maps/img/sketches/v2-sketch-1.jpg" },
+                  "v2-sketch-2": { title: "Sketch 2", note: "The engineer adds a review agent to the grid.", image: "maps/img/sketches/v2-sketch-2.jpg" },
+                  "v2-sketch-3": { title: "Sketch 3", note: "The agent adds a testing agent to the grid after the review agent recommends adding one.", image: "maps/img/sketches/v2-sketch-3.jpg" },
+                  "v2-sketch-4": { title: "Sketch 4", note: "An additional sketch for the code viewer during review and verification.", image: "maps/img/sketches/v2-sketch-4.png" },
                   "v2-lowfi": { title: "Low-fi wireframe", note: "The pivot: the engineer becomes one dot in a team of agents and people, and problems appear on the lines between them, where collaborators disagree.", image: "maps/img/evo-3-v2-lowfi.png" },
-                  "v2-midfi": { title: "Mid-fi wireframe", note: "Clicking the issue zooms in between the two agents, with each side’s argument at its end and the spec in the middle. Leila clicks into the code to edit it directly, then saves.", image: "maps/img/v2-midfi.png" },
+                  "v2-midfi": { title: "Mid-fi wireframe", note: "An early mid-fi wireframe that was changed for the final prototype. \nClicking the issue zooms in between the two agents, with each side’s argument at its end and the spec in the middle. Leila clicks into the code to edit it directly, then saves.", image: "maps/img/v2-midfi.png" },
                   "v2-hifi-sections": { title: "Hi-fi: sections", note: "The section view returns as the bridge between a simple constellation and complex code. Clicking a red line lists the sections it touches, in plain names.", image: "maps/img/evo-4-v2-sections.png" },
                   "v2-hifi-code": { title: "Hi-fi: code", note: "Each section opens just its own code, with the builder's view, the spec and the reviewer's view beside it. The engineer saves, both agents recheck, and she verifies.", image: "maps/img/evo-5-v2-code.png" }
                 }
