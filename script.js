@@ -15,10 +15,10 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
   const maxLineChars = 34;
   const lineHeight = 16;
 
-  // Radius of the pearl orb, and how far its label sits from the centre.
+  // The pearl orb is drawn at 17px and scaled down to sit in a row like any other topic.
   const pearlRadius = 17;
-  // The prototype's label starts under the orb and its reflection.
-  const protoLabelTop = pearlRadius + 22;
+  const pearlScale = 12 / 17;
+  const orbR = pearlRadius * pearlScale; // its size on screen
 
   // Rows are separated by multiples of dx pixels, columns by dy pixels. (dx is a height and
   // dy a width, because the tree is laid out sideways with the root on the left.)
@@ -27,22 +27,27 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
   const dy = 280;
 
   root.each(d => d.lines = wrap(d.data.name));
-  // The prototype's label sits under its orb on two short lines, with the pill below, so it never
-  // runs into the next column when a neighbouring branch opens. It takes the height of this many lines.
-  const protoRows = 14;
-  root.each(d => {
-    if (!d.data.prototype) return;
-    const i = d.data.name.indexOf(":");
-    d.lines = i > 0 ? [d.data.name.slice(0, i + 1), d.data.name.slice(i + 1).trim()] : wrap(d.data.name);
-  });
-  const rows = d => (d.data.prototype ? protoRows : d.lines.length);
+  const rows = d => d.lines.length;
 
   // Define the tree layout and the shape for links. Neighbouring nodes are spaced by how
   // many lines their labels take up, plus a gap (bigger between different parents).
   const tree = d3.tree()
       .nodeSize([dx, dy])
       .separation((a, b) => (rows(a) + rows(b)) / 2 + (a.parent === b.parent ? 0.8 : 1.6));
-  const diagonal = d3.linkHorizontal().x(d => d.y).y(d => d.x);
+  // Links leave the parent straight along its own row, bend only in the clear gap between two
+  // columns' labels, then run straight into the child. So a line never cuts across a label beside
+  // it. (colRight / colLeft come from placeColumns: where each column's labels end and begin.)
+  let colRight = [], colLeft = [];
+  function diagonal({source: s, target: t}) {
+    const k = (s.depth ?? 0);
+    let xa = s.y, xb = t.y;
+    if (t.depth !== undefined && s !== t && t.y > s.y) {
+      xa = Math.min(colRight[k] ?? s.y, t.y);
+      xb = Math.max(xa, Math.min(colLeft[k + 1] ?? t.y, t.y));
+    }
+    const mid = (xa + xb) / 2;
+    return `M${s.y},${s.x}H${xa}C${mid},${s.x} ${mid},${t.x} ${xb},${t.x}H${t.y}`;
+  }
 
   // Create the SVG container, a zoomable layer, and inside it a layer for the links and
   // a layer for the nodes.
@@ -97,23 +102,13 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
       const lastLine = ((d.lines.length - 1) / 2) * lineHeight;
       d3.select(this).attr("transform", `translate(${right + 6},${lastLine - 8})`);
     });
-    svg.selectAll(".prototype-cta").each(function(d) {
-      const words = this.querySelector("text");
-      // The SVG is built before it's on the page, where text measures 0: estimate until it can be measured.
-      const len = words.getComputedTextLength() || words.textContent.length * 7.6;
-      const w = 28 + len + 14;
-      d3.select(this).select("rect").attr("width", w);
-      // Centred under the label's last line.
-      const top = protoLabelTop + (d.lines.length - 1) * lineHeight + 14;
-      d3.select(this).attr("transform", `translate(${-w / 2},${top})`);
-    });
   }
   // Once Red Hat has loaded, lay out again with its real widths.
   document.fonts?.ready.then(() => { update(null, root); requestAnimationFrame(placeCtas); });
 
   // Columns are spaced by their labels, so no label ever runs into another column, whichever
   // branches are open. A topic with children has its label on its left; one without, on its right
-  // (plus the map icon); the orb's label and pill sit centered under it. Each gap fits the widest
+  // (plus the map icon); the orb's label sits on its right too. Each gap fits the widest
   // right-side label of one column plus the widest left-side label of the next, plus a margin.
   const measureCtx = document.createElement("canvas").getContext("2d");
   const fontFamily = () => getComputedStyle(document.body).fontFamily || "sans-serif";
@@ -126,7 +121,7 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
     if (d.depth === 1 && d.data.stage) w += textWidth("00  ", 500, 12, "'Red Hat Mono', monospace");
     return w * 1.04; // headroom for the selected (heavier) weight and font loading
   }
-  const columnGap = 36;
+  const columnGap = 64; // room for the lines to bend between columns
   const minColumn = 120;
   function placeColumns(visible) {
     const left = [], right = [];
@@ -135,9 +130,8 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
       left[k] ??= 0;
       right[k] ??= 0;
       if (d.data.prototype) {
-        const half = Math.max(pearlRadius + 8, labelWidth(d) / 2, (textWidth("Try the prototype") + 42) / 2);
-        left[k] = Math.max(left[k], half);
-        right[k] = Math.max(right[k], half);
+        left[k] = Math.max(left[k], orbR + 8);
+        right[k] = Math.max(right[k], orbR + 8 + labelWidth(d) + 10);
       } else if (d._children) {
         left[k] = Math.max(left[k], labelWidth(d) + 10);
         right[k] = Math.max(right[k], 8);
@@ -150,6 +144,9 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
       x[k] = x[k - 1] + Math.max(minColumn, (right[k - 1] || 0) + (left[k] || 0) + columnGap);
     }
     for (const d of visible) d.y = x[d.depth];
+    // Where each column's right-side labels end and its left-side labels begin (for the links).
+    colRight = x.map((xk, k) => xk + (right[k] || 0) + 4);
+    colLeft = x.map((xk, k) => xk - (left[k] || 0) - 4);
   }
 
   // The guided path moves the view briefly (200 ms), and not at all with reduced motion.
@@ -201,15 +198,12 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
           select(d, event);
           onOpenPrototype(d);
         });
-    orb.append("ellipse")
-        .attr("class", "pearl-reflection")
-        .attr("cy", pearlRadius + 7)
-        .attr("rx", pearlRadius * 0.8)
-        .attr("ry", 3);
     orb.append("circle")
         .attr("class", "pearl-ring")
-        .attr("r", pearlRadius + 6);
+        .attr("r", orbR + 4);
     const body = orb.append("g")
+        .attr("transform", `scale(${pearlScale})`)
+      .append("g")
         .attr("class", "pearl")
         .attr("filter", "url(#pearl-glow)");
     body.append("circle")
@@ -229,16 +223,21 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
     body.append("circle")
         .attr("class", "pearl-edge")
         .attr("r", pearlRadius - 0.5);
+    // A play mark on the orb says it opens the prototype (clicking the orb or its label does).
+    orb.append("path")
+        .attr("class", "pearl-play")
+        .attr("d", "M-2.6 -4.2 L4.4 0 L-2.6 4.2 Z");
+    orb.append("title").text("Open the Pre-Merge Review prototype");
 
     // One line per tspan, vertically centred on the node.
     const text = nodeEnter.append("text")
-        .attr("text-anchor", d => d.data.prototype ? "middle" : d._children ? "end" : "start");
+        .attr("text-anchor", d => !d.data.prototype && d._children ? "end" : "start");
 
     text.selectAll("tspan")
       .data(d => d.lines.map((line, i) => ({line, i, d})))
       .join("tspan")
-        .attr("x", ({d}) => d.data.prototype ? 0 : d._children ? -10 : 10)
-        .attr("y", ({i, d}) => d.data.prototype ? protoLabelTop + i * lineHeight : (i - (d.lines.length - 1) / 2) * lineHeight)
+        .attr("x", ({d}) => d.data.prototype ? orbR + 8 : d._children ? -10 : 10)
+        .attr("y", ({i, d}) => (i - (d.lines.length - 1) / 2) * lineHeight)
         .attr("dy", "0.31em")
         .each(function({line, i, d}) {
           // A guided-path stage shows its number first ("03"), in Red Hat Mono.
@@ -274,31 +273,7 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
         .attr("dy", "0.31em")
         .text(d => (d.data.short || "Problem statement").toUpperCase());
 
-    // The prototype topic's call to action: a pill button after its label (it replaced a bare
-    // "Open prototype" text badge). The orb node stays the keyboard button; the pill is for the pointer.
-    text.filter(d => d.data.prototype).each(function(d) {
-      const cta = d3.select(this.parentNode).append("g")
-          .attr("class", "prototype-cta")
-          .attr("aria-hidden", "true")
-          .on("click", (event) => {
-            event.stopPropagation();
-            goTo(d, event);
-            onOpenPrototype(d);
-          });
-      const pill = cta.append("rect").attr("height", 28).attr("rx", 14);
-      cta.append("path")
-          .attr("class", "prototype-cta__icon")
-          .attr("d", "M0 0 L8 5 L0 10 Z")
-          .attr("transform", "translate(13,9)");
-      cta.append("text")
-          .attr("x", 28)
-          .attr("y", 14)
-          .attr("dy", "0.35em")
-          .text("Try the prototype");
-      cta.append("title").text("Open the Pre-Merge Review prototype");
-    });
-    // Measure once the text is laid out (and again when the web font arrives): the pill sits
-    // 14px after the label and is as wide as its own words.
+    // Measure once the text is laid out (and again when the web font arrives).
     placeCtas();
     requestAnimationFrame(placeCtas);
 
@@ -325,7 +300,7 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
     // Enter any new links at the parent's previous position.
     const linkEnter = link.enter().append("path")
         .attr("d", d => {
-          const o = {x: source.x0, y: source.y0};
+          const o = {x: source.x0, y: source.y0, depth: source.depth};
           return diagonal({source: o, target: o});
         });
 
@@ -336,7 +311,7 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
     // Transition exiting links to the parent's new position.
     link.exit().transition(transition).remove()
         .attr("d", d => {
-          const o = {x: source.x, y: source.y};
+          const o = {x: source.x, y: source.y, depth: source.depth};
           return diagonal({source: o, target: o});
         });
 
@@ -532,7 +507,8 @@ function createTree(data, {onSelect, onOpenMap, onOpenPrototype = () => {}, onCh
 function showDetails(d) {
   const path = d.ancestors().reverse().map(n => n.data.name);
   document.getElementById("detail-path").textContent = path.slice(1, -1).join(" › ");
-  document.getElementById("detail-title").textContent = d.data.name;
+  // The root's card is titled by its short name ("The Ask"); the tree shows its full question.
+  document.getElementById("detail-title").textContent = d.depth === 0 && d.data.short ? d.data.short : d.data.name;
   setNote(d.data.note, d.data.quote);
   document.getElementById("detail-map").hidden = !d.data.map;
   if (d.data.map) {
@@ -543,6 +519,8 @@ function showDetails(d) {
     document.getElementById("detail-map-label").textContent = d.data.map.gallery ? "View gallery" : "View map";
   }
   document.getElementById("detail-open-all").hidden = !d._children;
+  const flowPanel = document.getElementById("detail-flow");
+  if (flowPanel) flowPanel.hidden = true;
   // The local editor (editmode.js) listens for what the panel is showing.
   document.dispatchEvent(new CustomEvent("details:shown", {detail: {d}}));
 }
@@ -587,6 +565,7 @@ function setMapHint(on, d) {
   const hint = document.getElementById("detail-map-hint");
   const isGallery = !!d?.data.map?.gallery;
   hint.textContent = isGallery ? "Use the arrows, the dots or the arrow keys to move through the images."
+    : d?.data.map?.flow ? "Click any step, arrow or yes / no on the flow, or use the buttons above. The arrow keys move forward and back."
     : d?.data.map?.enlarge === false ? "Click a highlighted area to read about it." : "Click a highlighted area to see it larger and read about it.";
   hint.hidden = !on;
   document.getElementById("detail-show-hotspots").hidden = !on || isGallery;
@@ -595,6 +574,7 @@ function setMapHint(on, d) {
 const mapViewer = createMapViewer({
   onHotspot: showHotspot,
   onOpen: d => setMapHint(true, d),
+  onTopic: d => showDetails(d),
   onClose: () => { setMapHint(false); showDetails(selected); }
 });
 

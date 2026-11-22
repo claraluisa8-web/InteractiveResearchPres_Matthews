@@ -10,7 +10,10 @@
 </head>
 <body>
   <nav id="sidebar" aria-label="Topics">
-    <h1>Interactive Research Presentation</h1>
+    <div class="sidebar-head">
+      <h1>Interactive Research Presentation</h1>
+      <button id="sidebar-hide" class="sidebar-toggle" type="button" aria-controls="sidebar" aria-expanded="true" aria-label="Hide sidebar" title="Hide sidebar"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="1.5"/><path d="M6 2.6v10.8"/></svg></button>
+    </div>
 
     <div class="search">
       <input id="search" type="search" placeholder="Search topics…" autocomplete="off"
@@ -43,6 +46,7 @@
   </nav>
 
   <main id="chart">
+    <button id="sidebar-show" class="sidebar-toggle" type="button" aria-controls="sidebar" aria-expanded="false" aria-label="Show sidebar" title="Show sidebar" hidden><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1.6" y="2.6" width="12.8" height="10.8" rx="1.5"/><path d="M6 2.6v10.8"/></svg></button>
     <button id="reset" type="button">Show all</button>
 
     <div id="map-viewer" role="dialog" aria-labelledby="map-title" hidden>
@@ -107,6 +111,7 @@
   <script src="vendor/d3.v7.9.0.min.js"></script>
   <script src="data.js"></script>
   <script src="sidebar.js"></script>
+  <script src="sidebartoggle.js"></script>
   <script src="mapviewer.js"></script>
   <script src="prototypeviewer.js"></script>
   <script src="guidedpath.js"></script>

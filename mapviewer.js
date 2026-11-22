@@ -6,7 +6,7 @@
 const galleryIcon = () => `<svg class="map-icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="currentColor"><path d="${GALLERY_ICON_PATH}"/></svg>`;
 const GALLERY_ICON_PATH = "M2.5 2h11l.5.5v11l-.5.5h-11l-.5-.5v-11l.5-.5zM3 3v7.3l2.65-2.65h.7L9 10.3l1.65-1.65h.7L13 10.3V3H3zm0 10h10v-1.3l-2-2-1.65 1.65h-.7L6 8.7l-3 3V13zm7.5-6.5a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5z";
 
-function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
+function createMapViewer({onHotspot, onClose, onOpen = () => {}, onTopic = () => {}}) {
   const viewer = document.getElementById("map-viewer");
   const title = document.getElementById("map-title");
   const canvas = document.getElementById("map-canvas");
@@ -42,7 +42,9 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
     svg.style.width = `${Math.floor(w)}px`;
     svg.style.height = `${Math.floor(h)}px`;
     // Zoom and pan are worked out from the canvas's corner, so scale from there too.
-    svg.style.transformOrigin = `${-svg.offsetLeft}px ${-svg.offsetTop}px`;
+    // (An <svg> has no offsetLeft; it's centered in the canvas, so work its corner out.)
+    const left = (canvas.clientWidth - Math.floor(w)) / 2, top = (canvas.clientHeight - Math.floor(h)) / 2;
+    svg.style.transformOrigin = `${-left}px ${-top}px`;
   }
   new ResizeObserver(fitCard).observe(canvas);
 
@@ -60,6 +62,7 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
     const map = d.data.map;
     document.querySelector(".map-hint").textContent = map.gallery
       ? "Use the arrows, the dots or the arrow keys to move between images."
+      : map.flow ? "Click any step, arrow or yes / no to move through the flow. The notes card shows where each step goes."
       : map.enlarge === false
       ? "Click a highlighted area to read about it. Drag to pan; zoom with the buttons or by scrolling."
       : "Click a highlighted area to see it larger. Drag to pan; zoom with the buttons or by scrolling.";
@@ -69,6 +72,7 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
     viewer.classList.toggle("is-gallery", !!map.gallery);
     mark.innerHTML = map.gallery ? galleryIcon() : MAP_ICON;
     gallery = null;
+    endFlow();
     viewer.hidden = false;
     requestAnimationFrame(() => viewer.classList.add("open"));
     d3.select(canvas).call(zoom.transform, d3.zoomIdentity);
@@ -116,6 +120,7 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
       el.setAttribute("role", "button");
       el.setAttribute("aria-label", info.title);
       const activate = () => {
+        if (map.flow) return flowGo(id);
         svg.querySelectorAll(".hotspot.active").forEach(h => h.classList.remove("active"));
         el.classList.add("active");
         onHotspot(d, info);
@@ -131,8 +136,141 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
         activate();
       });
     }
+    if (map.flow) startFlow(svg, d);
     onOpen(d);
+    if (map.flow) flowOverview();
   }
+
+  // A flow (map.flow: the User Flow): it opens on the whole diagram. Clicking any step, arrow or
+  // yes/no badge moves there and zooms to it (hover is the only highlight), and the notes card offers the way(s) on (Next, or Yes / No at a decision), Back and
+  // Start over. Right arrow takes the only way on; left arrow goes back.
+  let flow = null; // {svg, d, at, history}
+  const flowPanel = () => {
+    let el = document.getElementById("detail-flow");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "detail-flow";
+      document.getElementById("detail-note").after(el);
+    }
+    return el;
+  };
+  function startFlow(svg, d) {
+    flow = {svg, d, at: null, history: []};
+    svg.querySelectorAll(".pmr-flow-edge").forEach(edge => {
+      edge.addEventListener("click", event => {
+        event.stopPropagation();
+        flowGo(edge.dataset.to);
+      });
+    });
+  }
+  function flowWays(id) {
+    const info = flow.d.data.map.hotspots[id];
+    if (!info) return [];
+    if (info.yes || info.no) return [["Yes", info.yes], ["No", info.no]].filter(([, to]) => to);
+    return info.next ? [["Next", info.next]] : [];
+  }
+  function flowGo(id, {fresh = false, back = false} = {}) {
+    if (!flow || !flow.d.data.map.hotspots[id]) return;
+    if (fresh) flow.history = [];
+    else if (!back && flow.at && flow.at !== id) flow.history.push(flow.at);
+    flow.at = id;
+    const {svg, d} = flow;
+    // No lasting selection on the diagram: the zoom shows which step it is, and outlines and
+    // arrows only light up on hover.
+    const info = d.data.map.hotspots[id];
+    onHotspot(d, info);
+    renderFlowPanel();
+    frameStep(id);
+  }
+  // Frame the step the person just moved to, close enough to read: the step and where it goes
+  // next if they fit at a legible size, otherwise the step itself, centered. This moves only in
+  // answer to a click or key (never on its own); with reduced motion it jumps instead of gliding.
+  // Fit (or the zoom buttons) still shows the whole flow.
+  const LEGIBLE = 300; // a step box (378 units wide) is at least this many screen pixels wide
+  function frameStep(id) {
+    const svg = flow.svg;
+    const vb = svg.viewBox.baseVal;
+    const sw = parseFloat(svg.style.width), sh = parseFloat(svg.style.height);
+    const s0 = sw / vb.width; // screen px per unit at "Fit"
+    const box = el => el?.firstElementChild?.getBBox();
+    const ids = [id, ...flowWays(id).map(([, to]) => to)];
+    const boxes = ids.map(i => box(svg.querySelector(`#${CSS.escape(i)}`))).filter(Boolean);
+    if (!boxes.length || !s0) return;
+    const cw = canvas.clientWidth, ch = canvas.clientHeight, pad = 48;
+    const legible = Math.min(4, LEGIBLE / (378 * s0));
+    const union = boxes.reduce((a, b) => ({x0: Math.min(a.x0, b.x), y0: Math.min(a.y0, b.y), x1: Math.max(a.x1, b.x + b.width), y1: Math.max(a.y1, b.y + b.height)}),
+      {x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity});
+    const fitUnion = Math.min((cw - 2 * pad) / ((union.x1 - union.x0) * s0), (ch - 2 * pad) / ((union.y1 - union.y0) * s0));
+    const useUnion = fitUnion >= legible;
+    const k = useUnion ? Math.min(fitUnion, legible * 1.3, 4) : legible;
+    const b = useUnion ? union : {x0: boxes[0].x, y0: boxes[0].y, x1: boxes[0].x + boxes[0].width, y1: boxes[0].y + boxes[0].height};
+    const cx = (b.x0 + b.x1) / 2 - vb.x, cy = (b.y0 + b.y1) / 2 - vb.y;
+    // The card is centered in the canvas, and zoom scales from the canvas's corner.
+    const left = (cw - sw) / 2, top = (ch - sh) / 2;
+    const t = d3.zoomIdentity.translate(cw / 2 - k * (left + cx * s0), ch / 2 - k * (top + cy * s0)).scale(k);
+    d3.select(canvas).transition().duration(quick() ? 450 : 0).call(zoom.transform, t);
+  }
+  // The whole flow with nothing selected: what it opens on, and what Start over returns to.
+  function flowOverview() {
+    if (!flow) return;
+    flow.at = null;
+    flow.history = [];
+    onTopic(flow.d); // the notes card goes back to the User Flow topic itself
+    renderFlowPanel();
+    d3.select(canvas).transition().duration(quick() ? 450 : 0).call(zoom.transform, d3.zoomIdentity);
+  }
+  function renderFlowPanel() {
+    const panel = flowPanel();
+    panel.hidden = false;
+    const hotspots = flow.d.data.map.hotspots;
+    const button = (label, cls, onClick) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = cls;
+      b.innerHTML = label;
+      b.addEventListener("click", onClick);
+      return b;
+    };
+    // One way on is the primary button; at a decision, Yes and No look alike.
+    const choice = flowWays(flow.at).length > 1 ? " is-choice" : "";
+    if (!flow.at) {
+      const first = Object.keys(hotspots)[0];
+      const heading = document.createElement("p");
+      heading.className = "flow-heading";
+      heading.textContent = "Start at the beginning, or click any step";
+      const start = button('<span class="flow-word">Start</span><span class="flow-to"></span>', "flow-way", () => flowGo(first));
+      start.querySelector(".flow-to").textContent = hotspots[first].title;
+      panel.replaceChildren(heading, start);
+      return;
+    }
+    const ways = flowWays(flow.at).map(([word, to]) => button(
+      `<span class="flow-word">${word}</span><span class="flow-to"></span>`, `flow-way${choice}`, () => flowGo(to)));
+    flowWays(flow.at).forEach(([, to], i) => { ways[i].querySelector(".flow-to").textContent = hotspots[to].title; });
+    const row = document.createElement("div");
+    row.className = "flow-row";
+    const back = button("Back", "flow-small", () => flowGo(flow.history.pop(), {back: true}));
+    back.disabled = !flow.history.length;
+    row.append(back, button("Show whole flow", "flow-small", flowOverview));
+    const heading = document.createElement("p");
+    heading.className = "flow-heading";
+    heading.textContent = ways.length ? (ways.length > 1 ? "Choose an answer" : "Where it goes next") : "End of the flow";
+    panel.replaceChildren(heading, ...ways, row);
+  }
+  function endFlow() {
+    flow = null;
+    const panel = document.getElementById("detail-flow");
+    if (panel) panel.hidden = true;
+  }
+  window.addEventListener("keydown", event => {
+    if (!flow || !current || !box.hidden || (event.key !== "ArrowLeft" && event.key !== "ArrowRight")) return;
+    if (event.target.closest?.("input, textarea, [contenteditable]")) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    if (event.key === "ArrowLeft") { if (flow.history.length) flowGo(flow.history.pop(), {back: true}); return; }
+    if (!flow.at) return flowGo(Object.keys(flow.d.data.map.hotspots)[0]);
+    const ways = flowWays(flow.at);
+    if (ways.length === 1) flowGo(ways[0][1]);
+  }, true);
 
   // A gallery: one image at a time, sized to fit, with Previous / Next arrows and a dot per image.
   // The image's title and note go to the notes card, like a map section's.
@@ -423,6 +561,7 @@ function createMapViewer({onHotspot, onClose, onOpen = () => {}}) {
     closeEnlarged();
     current = null;
     gallery = null;
+    endFlow();
     viewer.classList.remove("open");
     viewer.hidden = true;
     onClose();

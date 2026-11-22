@@ -433,17 +433,13 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
 .tree .prototype .pearl-body { fill: url(#pearl-gradient); stroke: none; transform: none; }
 .tree .prototype .pearl-edge { fill: none; stroke: rgb(255 255 255 / 0.22); stroke-width: 1; transform: none; }
 .tree .prototype .pearl-ring { fill: none; stroke: transparent; stroke-width: 2; transform: none; }
-.tree .prototype .pearl-reflection { fill: rgb(185 168 255 / 0.35); filter: blur(2px); }
 .tree .prototype .pearl { transition: filter 0.15s ease; }
 .tree .prototype:hover .pearl, .tree .prototype:focus-visible .pearl { filter: url(#pearl-glow) brightness(1.08) drop-shadow(0 0 4px rgb(185 168 255 / 0.55)); }
 .tree .prototype:focus { outline: none; }
+.tree .prototype { cursor: pointer; }
+.tree .prototype .pearl-play { fill: var(--pmr-text-on-accent); stroke: none; pointer-events: none; transform: none; }
 .tree .prototype:focus-visible .pearl-ring { stroke: var(--accent); }
 .tree .root-eyebrow { fill: var(--pmr-text-2); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; }
-.tree .prototype-cta { cursor: pointer; }
-.tree .prototype-cta rect { fill: var(--pmr-button); transition: filter 0.15s ease; }
-.tree .prototype-cta:hover rect { filter: brightness(1.08); }
-.tree .prototype-cta text { fill: var(--pmr-text-on-accent); stroke: none; font-weight: 600; font-size: 13px; }
-.tree .prototype-cta__icon { fill: var(--pmr-text-on-accent); }
 .pearl-dot {
   flex: none;
   width: 10px;
@@ -665,3 +661,57 @@ mark { color: inherit; background: rgba(138, 130, 253, 0.32); border-radius: 2px
 .gallery-arrow:focus-visible, .gallery-dot:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .gallery-dot:focus-visible { border-radius: 50%; outline-offset: 0; }
 .gallery-count { margin: 0; font-size: 0.8rem; color: var(--muted); }
+
+/* User flow (mapviewer.js, map.flow): every step, arrow and yes / no badge is clickable; hovering
+   one highlights it. Nothing stays selected (the zoom shows the current step). */
+#map-canvas .pmr-flow-edge { cursor: pointer; }
+#map-canvas .flow-hit { stroke-width: 18px; vector-effect: non-scaling-stroke; pointer-events: stroke; }
+#map-canvas .flow-badge { pointer-events: all; }
+#map-canvas .flow-line { pointer-events: none; stroke: var(--pmr-lavender); stroke-width: 5px; vector-effect: non-scaling-stroke; transition: stroke-opacity 0.15s ease; }
+#map-canvas .pmr-flow-edge:not([data-answer]):hover .flow-line { stroke-opacity: 0.45; }
+/* At a decision the yes / no badge is the way on, not the line: only the badge is clickable, and
+   hovering it rings the badge only (the line never highlights). */
+#map-canvas .pmr-flow-edge[data-answer] { cursor: default; }
+#map-canvas .pmr-flow-edge[data-answer] .flow-hit { pointer-events: none; }
+#map-canvas .pmr-flow-edge[data-answer] .flow-badge { cursor: pointer; stroke: var(--pmr-lavender); stroke-width: 4px; stroke-opacity: 0; vector-effect: non-scaling-stroke; transition: stroke-opacity 0.15s ease; }
+#map-canvas .pmr-flow-edge[data-answer]:hover .flow-badge { stroke-opacity: 1; }
+@media (prefers-reduced-motion: reduce) { #map-canvas .flow-line, #map-canvas .flow-badge { transition: none; } }
+
+#detail-flow { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--pmr-divider); display: grid; gap: 8px; }
+#detail-flow[hidden] { display: none; }
+.flow-heading { margin: 0; font-size: 0.75rem; font-weight: 600; color: var(--muted); }
+.flow-way {
+  display: grid; grid-template-columns: auto 1fr; align-items: baseline; gap: 8px; width: 100%;
+  padding: 8px 12px; text-align: left; font: 500 0.8rem/1.35 var(--pmr-font);
+  color: var(--pmr-text-on-accent); background: var(--pmr-button); border: 0; border-radius: var(--pmr-r-input); cursor: pointer;
+}
+.flow-way.is-choice { color: var(--text); background: var(--pmr-btn-2); border: 1px solid var(--pmr-btn-2-stroke); }
+.flow-way:hover { filter: brightness(1.08); }
+.flow-word { font-weight: 700; }
+.flow-row { display: flex; gap: 8px; }
+.flow-small {
+  flex: 1; height: 32px; padding: 0 8px; font: 500 0.8rem var(--pmr-font);
+  color: var(--text); background: var(--pmr-btn-2); border: 1px solid var(--pmr-btn-2-stroke); border-radius: var(--pmr-r-input); cursor: pointer;
+}
+.flow-small:disabled { cursor: default; color: var(--muted); background: var(--pmr-btn-disabled); border-color: var(--pmr-stroke); }
+.flow-way:focus-visible, .flow-small:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Collapsible sidebar (sidebartoggle.js): hidden, the tree takes the whole width and a small
+   button at the chart's top left brings the sidebar back. */
+.sidebar-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.sidebar-toggle {
+  flex: none; display: grid; place-items: center; width: 32px; height: 32px; padding: 0;
+  color: var(--muted); background: var(--pmr-btn-2); border: 1px solid var(--pmr-btn-2-stroke); border-radius: var(--pmr-r-input); cursor: pointer;
+}
+.sidebar-toggle:hover { color: var(--text); }
+.sidebar-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#sidebar-show { position: absolute; top: 16px; left: 16px; z-index: 4; }
+#sidebar-show[hidden] { display: none; }
+body.sidebar-collapsed { grid-template-columns: minmax(0, 1fr); }
+body.sidebar-collapsed #sidebar { display: none; }
+/* Keep the map viewer's title clear of the show-sidebar button. */
+body.sidebar-collapsed .map-header { padding-left: 60px; }
+@media (max-width: 760px) {
+  .sidebar-toggle { display: none; }
+  body.sidebar-collapsed #sidebar { display: flex; }
+}

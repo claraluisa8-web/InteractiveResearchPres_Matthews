@@ -34,11 +34,12 @@ function ser(node, ind) {
     if (k === "children") return `children: [\n${v.map(c => pad + "    " + ser(c, ind + 4)).join(",\n")}\n${pad}  ]`;
     if (k === "map") {
       const hs = Object.entries(v.hotspots || {}).map(([id, h]) =>
-        `${pad}      ${q(id)}: { title: ${q(h.title)}, note: ${q(h.note)}${h.zoom ? `, zoom: ${q(h.zoom)}` : ""}${h.image ? `, image: ${q(h.image)}` : ""} }`).join(",\n");
+        `${pad}      ${q(id)}: { title: ${q(h.title)}, note: ${q(h.note)}${h.zoom ? `, zoom: ${q(h.zoom)}` : ""}${h.image ? `, image: ${q(h.image)}` : ""}${["next", "yes", "no"].map(k => (h[k] ? `, ${k}: ${q(h[k])}` : "")).join("")} }`).join(",\n");
+      const flow = v.flow ? `\n${pad}    flow: true,` : "";
       const enlarge = v.enlarge === false ? `\n${pad}    enlarge: false,` : "";
       const step = v.step ? `\n${pad}    step: ${q(v.step)},` : "";
       const head = v.gallery ? `\n${pad}    gallery: true,` : `\n${pad}    src: ${q(v.src)},`;
-      return `map: {${head}${enlarge}${step}\n${pad}    hotspots: {\n${hs}\n${pad}    }\n${pad}  }`;
+      return `map: {${head}${flow}${enlarge}${step}\n${pad}    hotspots: {\n${hs}\n${pad}    }\n${pad}  }`;
     }
     if (k === "prototype") return `prototype: { src: ${q(v.src)}, title: ${q(v.title)} }`;
     if (k === "quote") return `quote: { text: ${q(v.text)}, who: ${q(v.who)} }`;

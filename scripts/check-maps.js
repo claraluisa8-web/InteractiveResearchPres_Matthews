@@ -27,6 +27,13 @@ for (const m of maps) {
   const allIds = new Set([...svg.matchAll(/\bid="([^"]+)"/g)].map(x => x[1]));
   for (const id of m.ids) if (!allIds.has(id)) report(`in data.js, not in the SVG: ${id}`);
   for (const id of groups) if (!m.ids.includes(id)) report(`hotspot in the SVG, no note in data.js: ${id}`);
+  // A flow: every arrow and every next / yes / no must point at a step that exists.
+  for (const [, from, to] of svg.matchAll(/data-from="([^"]+)" data-to="([^"]+)"/g)) {
+    if (!m.ids.includes(from) || !m.ids.includes(to)) report(`arrow ${from} -> ${to}: no such step`);
+  }
+  for (const [id, h] of Object.entries(m.hotspots)) {
+    for (const k of ["next", "yes", "no"]) if (h[k] && !m.ids.includes(h[k])) report(`${id}.${k}: no such step ${h[k]}`);
+  }
   // A hotspot's own enlarged-view image (exported from Figma).
   const node = maps.find(x => x.src === m.src);
   for (const [id, h] of Object.entries(node.hotspots)) {
