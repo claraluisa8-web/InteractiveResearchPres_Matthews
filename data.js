@@ -577,10 +577,9 @@ const data = {
     },
     {
       stage: 5,
-      name: "The Solution: The Pre-Merge Review",
+      name: "The Solution",
       short: "The solution",
       note: "A constellation, not a chat window: the engineer adds agents and teammates around her, sees disagreements as red lines between them, and verifies the code section by section before it merges.",
-      prototype: { src: "prototype/index.html", title: "The Pre-Merge Review" },
       children: [
         {
           name: "User Flow",
@@ -604,17 +603,40 @@ const data = {
         },
         {
           name: "Design Evolution",
-          note: "From a review panel inside VS Code to a team of collaborators. Click a frame.",
-          map: {
-            src: "maps/design-evolution.svg",
-            hotspots: {
-              "evo-1": { title: "Round 1, low-fi", note: "The first concept lived in a VS Code sidebar: the agent's code grouped into sections to review by priority, with accept, edit or reject per finding." },
-              "evo-2": { title: "Round 1, hi-fi", note: "Section review beside the code, with the spec shown inline and a reason asked for every rejection. It still treated review as one person checking one agent." },
-              "evo-3": { title: "Round 2, low-fi", note: "The pivot: the engineer becomes one dot in a team of agents and people, and problems appear on the lines between them, where collaborators disagree." },
-              "evo-4": { title: "Round 2, hi-fi: sections", note: "The section view returns as the bridge between a simple constellation and complex code. Clicking a red line lists the sections it touches, in plain names." },
-              "evo-5": { title: "Round 2, hi-fi: code", note: "Each section opens just its own code, with the builder's view, the spec and the reviewer's view beside it. The engineer saves, both agents recheck, and she verifies." }
+          note: "From a review panel inside VS Code to a team of collaborators.",
+          children: [
+            {
+              name: "Version 1",
+              note: "A review panel inside VS Code.",
+              map: {
+                gallery: true,
+                hotspots: {
+                  "v1-sketch": { title: "Sketch", note: "", image: "maps/img/sketches/v1-sketch.png" },
+                  "v1-lowfi": { title: "Low-fi wireframe", note: "The first concept lived in a VS Code sidebar: the agent's code grouped into sections to review by priority, with accept, edit or reject per finding.", image: "maps/img/evo-1-v1-lowfi.png" },
+                  "v1-midfi": { title: "Mid-fi wireframe", note: "In createPlan, the spec opens inline next to the drift, and she settles a disagreement between the build agent and the reviewer.", image: "maps/img/v1-midfi.png" },
+                  "v1-hifi": { title: "Hi-fi screen", note: "Section review beside the code, with the spec shown inline and a reason asked for every rejection. It still treated review as one person checking one agent.", image: "maps/img/evo-2-v1-hifi.png" }
+                }
+              }
+            },
+            {
+              name: "Version 2: Final",
+              note: "A team of collaborators.",
+              map: {
+                gallery: true,
+                hotspots: {
+                  "v2-sketch": { title: "Sketch", note: "Engineer adds a build agent to the grid.\nEngineer adds a review agent to the grid.\nAgent adds a testing agent to the grid.", image: "maps/img/sketches/v2-sketch.jpg" },
+                  "v2-lowfi": { title: "Low-fi wireframe", note: "The pivot: the engineer becomes one dot in a team of agents and people, and problems appear on the lines between them, where collaborators disagree.", image: "maps/img/evo-3-v2-lowfi.png" },
+                  "v2-midfi": { title: "Mid-fi wireframe", note: "Clicking the issue zooms in between the two agents, with each side’s argument at its end and the spec in the middle. Leila clicks into the code to edit it directly, then saves.", image: "maps/img/v2-midfi.png" },
+                  "v2-hifi-sections": { title: "Hi-fi: sections", note: "The section view returns as the bridge between a simple constellation and complex code. Clicking a red line lists the sections it touches, in plain names.", image: "maps/img/evo-4-v2-sections.png" },
+                  "v2-hifi-code": { title: "Hi-fi: code", note: "Each section opens just its own code, with the builder's view, the spec and the reviewer's view beside it. The engineer saves, both agents recheck, and she verifies.", image: "maps/img/evo-5-v2-code.png" }
+                }
+              }
             }
-          }
+          ]
+        },
+        {
+          name: "The Pre-Merge Review",
+          prototype: { src: "prototype/index.html", title: "The Pre-Merge Review" }
         },
         {
           name: "Key decisions",
