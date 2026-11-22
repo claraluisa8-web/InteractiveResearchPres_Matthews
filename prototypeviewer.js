@@ -40,10 +40,13 @@ function createPrototypeViewer({onClose}) {
     if (current === d) return iframe?.focus();
     current = d;
     title.textContent = proto.title || d.data.name;
-    newTab.href = proto.src;
+    newTab.href = `${proto.src}?reset`; // full screen starts fresh too
     iframe = document.createElement("iframe");
     iframe.title = proto.title || d.data.name;
-    iframe.src = `${proto.src}?embed=1`;
+    // `reset` clears the prototype's saved progress (it keeps it in localStorage, which this site
+    // shares), the same as its own Start over: no team, no saved constellations, no reviewer.
+    // Every open, in the window or full screen, starts from the beginning.
+    iframe.src = `${proto.src}?embed=1&reset`;
     frameBox.replaceChildren(iframe);
     viewer.hidden = false;
     // Sized right away (not in an animation frame, which a background tab may never run).
