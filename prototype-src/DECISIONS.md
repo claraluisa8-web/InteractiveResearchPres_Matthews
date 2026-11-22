@@ -258,3 +258,12 @@ The rest:
 - **Zoomed views: white, with more margin.** The zoomed view's background (and the dimming around a ring or quadrant) is white, matching the User Model frame in Figma (#FFFFFF), instead of #F5F5FA. The margin around each section doubled from 4% to 8% of its shorter side.
 - **Journey Map outlines fit the columns.** Measured from the image: each phase column is 591px wide with 47px gaps. The outlines were 43px narrower on each side, so their stroke ran over the cards; they now sit 18px outside each column (in the gaps) and run from the phase header to the bottom of the longest column.
 - **Next ring / Next segment.** In the stakeholder and ecosystem maps' zoomed views, Previous and Next buttons step through the sections in order (center outward; center then clockwise), with a count ("2 of 5"), so the zoomed view doesn't have to be closed. The left and right arrow keys step too while it's open. The label comes from `map.step` in data.js ("ring", "segment"); the editor keeps it.
+
+## Tree map: User Flow map (2026-11-21)
+- Added "User Flow" under 06 The Solution, before Design Evolution. Image: Figma V3 "Ideal User Flow (Spatial)" (411:1698) exported at 1x (maps/img/user-flow.png); wrapper maps/user-flow.svg crops the empty margin (viewBox 220 200 3160 3040).
+- One hotspot per screen (10), stepped in flow order with "Previous/Next screen". Decision diamonds and the start/end pills are not clickable: they read fine at the map's own size.
+- Copy is Clara's own Figma text: the map note is the flow's description paragraph; each screen's title is its page name, and its note is the Action, the Steps (bullet glyphs dropped, each step its own paragraph ending in a period) and the Response (leading asterisk dropped).
+
+## Tree map: findings move into Research Approach (2026-11-22)
+- Clara's call: the thematic analysis belongs to the research approach. The 3 metathemes are now a branch of 01 Research Approach called "What I Found" (her pick), after "How I analyzed the interviews", with the Pain Point Map after it. The separate stage 02 is gone, so there are 7 stages (Mapping is now 02 ... What's Next 07); the guided path and #stage-n links follow the stage numbers automatically.
+- Then merged "How I analyzed the interviews" into "What I Found" (Clara's call): one branch whose note is the method note (it already carries the counts); the shorter "Three metathemes came out of 7 interviews..." note was dropped as a repeat.

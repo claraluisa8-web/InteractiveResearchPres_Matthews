@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="220 200 3160 3040">
+  <!-- user-flow.svg: raster export of Clara's Figma frame "Ideal User Flow (Spatial)" (V3, 411:1698) with one clickable hotspot per screen. Image paths are relative to index.html. -->
+  <image href="maps/img/user-flow.png" xlink:href="maps/img/user-flow.png" x="0" y="0" width="3600" height="3500" preserveAspectRatio="none"/>
+  <g id="uf-space" class="pmr-hotspot"><rect x="913" y="354" width="412" height="279" rx="16" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="uf-add-node" class="pmr-hotspot"><rect x="1513" y="345" width="412" height="297" rx="16" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="uf-build" class="pmr-hotspot"><rect x="2713" y="363" width="412" height="261" rx="16" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="uf-approve" class="pmr-hotspot"><rect x="2713" y="793" width="412" height="297" rx="16" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="uf-line-zoom" class="pmr-hotspot"><rect x="1513" y="1384" width="412" height="315" rx="16" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="uf-trace" class="pmr-hotspot"><rect x="2113" y="1890" width="412" height="279" rx="16" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="uf-all-clear" class="pmr-hotspot"><rect x="313" y="1402" width="412" height="279" rx="16" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="uf-open-pr" class="pmr-hotspot"><rect x="313" y="2287" width="412" height="261" rx="16" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="uf-teammate" class="pmr-hotspot"><rect x="913" y="2270" width="412" height="297" rx="16" fill="#000" fill-opacity="0" stroke="none"/></g>
+  <g id="uf-recap" class="pmr-hotspot"><rect x="2713" y="2287" width="412" height="261" rx="16" fill="#000" fill-opacity="0" stroke="none"/></g>
+</svg>

@@ -18,9 +18,9 @@
 const response = name => ({ name, response: true });
 
 const data = {
-  name: "Senior software engineers need a way to increase the verification efficacy of agent-generated outputs in order to extend agent trust while still being able to answer for what it produces.",
-  short: "Problem statement",
-  note: "This is the problem the research arrived at. Follow the stages in order, or open any branch to explore.",
+  name: "The Ask",
+  short: "The Ask",
+  note: "As agentic systems grow more capable and more affordable for enterprise teams, the software engineer's role in spec-driven development has changed dramatically.\nThis service design project looks at how that workflow has changed and how it could evolve to better support developers. It proposes an agentic solution that makes verification more effective and meets developers where they are, however comfortable they are with AI and however far they've adopted it.",
   children: [
     {
       stage: 1,
@@ -38,177 +38,172 @@ const data = {
         },
         { name: "How I listened", note: "Semi-structured interviews with engineers, designers and a product manager." },
         {
-          name: "How I analyzed the interviews",
-          note: "Quotes were grouped by hand, the groups were named as themes, and the themes were rolled up into metathemes: 237 quotes, 20 groups, 8 themes and 3 metathemes."
-        }
-      ]
-    },
-    {
-      stage: 2,
-      name: "What I Heard",
-      note: "Three metathemes came out of 7 interviews: 237 quotes, sorted into 20 groups and 8 themes.",
-      children: [
-        {
-          name: "Responsibility Outpaces Visibility",
-          note: "Practitioners are still on the hook for AI-assisted work, but their tools don't always show what the agent did, why, or from what. If they do, they're custom built by the engineer. Trust, traceability and context all have to be built by hand.",
+          name: "What I Found",
+          note: "During thematic analysis, quotes were grouped by hand, the groups were named as themes, and the themes were rolled up into metathemes: 237 quotes, 20 groups, 8 themes and 3 metathemes.",
           children: [
             {
-              name: "Accountability Without Authorship",
-              note: "People remain fully answerable for AI-assisted work, but the record of what the AI wrote, why, and from what inputs is thin or missing. Participants either build their own trail back to the source or rely on memory and conventions like co-author tags. (5 participants)",
+              name: "Responsibility Outpaces Visibility",
+              note: "Practitioners are still on the hook for AI-assisted work, but their tools don't always show what the agent did, why, or from what. If they do, they're custom built by the engineer. Trust, traceability and context all have to be built by hand.",
               children: [
                 {
-                  name: "Human Accountability",
-                  note: "The person stays answerable for AI-assisted work and has to understand it well enough to stand behind it.",
-                  quote: { text: "You're the one orchestrating those agents. You're the one giving them the instructions. So if they are not meeting expectations, you're responsible at the end of the day.", who: "Engineer" }
+                  name: "Accountability Without Authorship",
+                  note: "People remain fully answerable for AI-assisted work, but the record of what the AI wrote, why, and from what inputs is thin or missing. Participants either build their own trail back to the source or rely on memory and conventions like co-author tags. (5 participants)",
+                  children: [
+                    {
+                      name: "Human Accountability",
+                      note: "The person stays answerable for AI-assisted work and has to understand it well enough to stand behind it.",
+                      quote: { text: "You're the one orchestrating those agents. You're the one giving them the instructions. So if they are not meeting expectations, you're responsible at the end of the day.", who: "Engineer" }
+                    },
+                    {
+                      name: "Authorship",
+                      note: "Telling human-written work from AI-written work, and how ownership feels.",
+                      quote: { text: "There's no way for me to look at the pull request and see, oh, this was my code and this was AI's code. It's all the same, so as you're inputting, you need to review.", who: "Engineer" }
+                    },
+                    {
+                      name: "AI Provenance",
+                      note: "Tracing AI work back to its inputs, sessions and decisions.",
+                      quote: { text: "For me to have traceability — I can go back and search for the session that worked on this. Let me see the outputs it created. Let me see the inputs it got.", who: "Engineer" }
+                    }
+                  ]
                 },
                 {
-                  name: "Authorship",
-                  note: "Telling human-written work from AI-written work, and how ownership feels.",
-                  quote: { text: "There's no way for me to look at the pull request and see, oh, this was my code and this was AI's code. It's all the same, so as you're inputting, you need to review.", who: "Engineer" }
+                  name: "Earned Trust",
+                  note: "Trust in AI is built gradually through review routines, not granted up front. People adjust how much they delegate based on risk, experience and confidence, and some deliberately stay hands-on. (5 participants)",
+                  children: [
+                    {
+                      name: "Trust but Verify",
+                      note: "Never accepting AI output without checking it.",
+                      quote: { text: "If Claude writes me something, I'm definitely not going to just cut and paste and use it. Trust but verify.", who: "Product manager" }
+                    },
+                    {
+                      name: "Autonomy Calibration",
+                      note: "How much independence to give agents, and how that grows with trust.",
+                      quote: { text: "Trust has to be built in that process. These are high-risk tasks, especially in security, so rightly there was wariness to say, hey agent, take this big task and go do it, even though the agents were able to do it.", who: "Designer" }
+                    },
+                    {
+                      name: "Delegate?",
+                      note: "Choosing what to hand to AI and what to keep doing yourself.",
+                      quote: { text: "I'm not a big fan of long conversations with it. I'd rather have short prompts here and there and then try to figure it out myself. That's the most productive way I can do it.", who: "Engineer" }
+                    }
+                  ]
                 },
                 {
-                  name: "AI Provenance",
-                  note: "Tracing AI work back to its inputs, sessions and decisions.",
-                  quote: { text: "For me to have traceability — I can go back and search for the session that worked on this. Let me see the outputs it created. Let me see the inputs it got.", who: "Engineer" }
+                  name: "Context or Chaos",
+                  note: "Agent output is only as reliable as the context behind it. Without instruction files, knowledge bases and clear requirements, agents assume, drift and hallucinate, and giving them more context costs more. (5 participants)",
+                  children: [
+                    {
+                      name: "Context First",
+                      note: "Agents are only as good as the context they're given: instruction files, requirements, knowledge bases.",
+                      quote: { text: "Some engineers didn't have the context of the things they were building. Here's the requirements, they just pass it to the AI, and when the AI finished, they say, yeah, it's ready.", who: "Engineer" }
+                    },
+                    {
+                      name: "Agent Derailment",
+                      note: "How agent output goes wrong: false assumptions, drift, hallucination, sweeping changes.",
+                      quote: { text: "You can start an agent session, give it an instruction and access to the code, and it can go bananas and change as many things as possible. And you can lose track of it.", who: "Engineer" }
+                    },
+                    {
+                      name: "Cost",
+                      note: "The token and money cost of giving agents more context.",
+                      quote: { text: "The more context the agents need to understand, the more tokens they use, which [means] spending more money.", who: "Engineer" }
+                    }
+                  ]
                 }
               ]
             },
             {
-              name: "Earned Trust",
-              note: "Trust in AI is built gradually through review routines, not granted up front. People adjust how much they delegate based on risk, experience and confidence, and some deliberately stay hands-on. (5 participants)",
+              name: "The Shape of Work Is Being Renegotiated",
+              note: "AI is changing who does what. Individuals shift from making to directing, disciplines cross into each other's work, and the handoffs between them are being rebuilt.",
               children: [
                 {
-                  name: "Trust but Verify",
-                  note: "Never accepting AI output without checking it.",
-                  quote: { text: "If Claude writes me something, I'm definitely not going to just cut and paste and use it. Trust but verify.", who: "Product manager" }
+                  name: "From Maker to Director",
+                  note: "Across every role, the human job is moving from producing the work to directing, prompting and reviewing. Some build elaborate infrastructure to support that shift, while others see heavy setup as more trouble than it's worth. (7 participants)",
+                  children: [
+                    {
+                      name: "AI Conductor",
+                      note: "The person's job shifting from making the work to directing, prompting and reviewing AI.",
+                      quote: { text: "If something I'm doing is more procedural and there's already a laid-out pattern in the application, sometimes my job is honestly more AI supervisor than an actual developer.", who: "Engineer" }
+                    },
+                    {
+                      name: "AI Scaffolding",
+                      note: "Systems, agents and setups people build to make AI useful, plus the tradeoffs.",
+                      quote: { text: "You need to build confidence in the agent's work so you can delegate more. Now I can run 10 agents in parallel, because the way I set it up, I can quickly get the context...", who: "Engineer" }
+                    }
+                  ]
                 },
                 {
-                  name: "Autonomy Calibration",
-                  note: "How much independence to give agents, and how that grows with trust.",
-                  quote: { text: "Trust has to be built in that process. These are high-risk tasks, especially in security, so rightly there was wariness to say, hey agent, take this big task and go do it, even though the agents were able to do it.", who: "Designer" }
+                  name: "Roles Without Borders",
+                  note: "Designers write code, PMs build prototypes, and engineers make UI. Boundaries between disciplines are blurring, raising questions about how far each role should reach and what each one uniquely contributes. (6 participants)",
+                  children: [
+                    {
+                      name: "Role Scope",
+                      note: "Disciplines crossing into each other's work, and how far each role should stretch.",
+                      quote: { text: "Just because I can doesn't mean I will.", who: "Designer" }
+                    },
+                    {
+                      name: "Knowledge Sharing",
+                      note: "How people learn from and teach each other across roles.",
+                      quote: { text: "[Engineers] come to me if they're doing UX or UI work, which I'm finding they're doing more and more on their own to build out features. They'll come to me for feedback.", who: "Designer" }
+                    }
+                  ]
                 },
                 {
-                  name: "Delegate?",
-                  note: "Choosing what to hand to AI and what to keep doing yourself.",
-                  quote: { text: "I'm not a big fan of long conversations with it. I'd rather have short prompts here and there and then try to figure it out myself. That's the most productive way I can do it.", who: "Engineer" }
+                  name: "The Design–Engineering Seam",
+                  note: "Handoff, acceptance and the source of truth are being rebuilt. AI can close the old gap between design and build, but it also lets work move ahead without the right people consulted, and leaves open who decides when something is done. (6 participants)",
+                  children: [
+                    {
+                      name: "Design - Engineering Gap",
+                      note: "How work moves between design, product and engineering, and where it breaks: handoff, acceptance, source of truth, and who decides.",
+                      quote: { text: "It has happened that they'll do something and be so far along in development that we just can't make changes to it.", who: "Designer" }
+                    },
+                    {
+                      name: "Team/Process",
+                      note: "Team structures, meetings and tools that shape how decisions get made.",
+                      quote: { text: "That comes with working on a larger team where everyone has an opinion. It sometimes impacts the development cycle negatively.", who: "Engineer" }
+                    }
+                  ]
                 }
               ]
             },
             {
-              name: "Context or Chaos",
-              note: "Agent output is only as reliable as the context behind it. Without instruction files, knowledge bases and clear requirements, agents assume, drift and hallucinate, and giving them more context costs more. (5 participants)",
+              name: "Speed Meets Its Limits",
+              note: "AI speeds up building, but experience quality, research, organizational rules and people's real readiness push back on how far speed alone can take the workflow before problems appear.",
               children: [
                 {
-                  name: "Context First",
-                  note: "Agents are only as good as the context they're given: instruction files, requirements, knowledge bases.",
-                  quote: { text: "Some engineers didn't have the context of the things they were building. Here's the requirements, they just pass it to the AI, and when the AI finished, they say, yeah, it's ready.", who: "Engineer" }
+                  name: "Speed Over Substance",
+                  note: "Faster building tempts teams to build everything and treat \"it works\" as done. Scoping, discovery, research and experience quality are what get squeezed. (6 participants)",
+                  children: [
+                    {
+                      name: "Time",
+                      note: "Speed gains and what they push out: discovery, research, review, care.",
+                      quote: { text: "I definitely can't spend as much time on discovery or divergent thinking — exploring multiple ways of doing the same thing.", who: "Designer" }
+                    },
+                    {
+                      name: "Product Purpose",
+                      note: "Building more because you can, versus deciding what's worth building and for whom.",
+                      quote: { text: "There's a reaction to building everything just because you can, instead of scoping your work to the least amount we can do to prove it out and deliver a really great experience.", who: "Designer" }
+                    },
+                    {
+                      name: "Operation vs. Experience",
+                      note: "Working isn't the same as a good experience.",
+                      quote: { text: "Done for them means that it works. It doesn't mean experience.", who: "Designer" }
+                    }
+                  ]
                 },
                 {
-                  name: "Agent Derailment",
-                  note: "How agent output goes wrong: false assumptions, drift, hallucination, sweeping changes.",
-                  quote: { text: "You can start an agent session, give it an instruction and access to the code, and it can go bananas and change as many things as possible. And you can lose track of it.", who: "Engineer" }
-                },
-                {
-                  name: "Cost",
-                  note: "The token and money cost of giving agents more context.",
-                  quote: { text: "The more context the agents need to understand, the more tokens they use, which [means] spending more money.", who: "Engineer" }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          name: "The Shape of Work Is Being Renegotiated",
-          note: "AI is changing who does what. Individuals shift from making to directing, disciplines cross into each other's work, and the handoffs between them are being rebuilt.",
-          children: [
-            {
-              name: "From Maker to Director",
-              note: "Across every role, the human job is moving from producing the work to directing, prompting and reviewing. Some build elaborate infrastructure to support that shift, while others see heavy setup as more trouble than it's worth. (7 participants)",
-              children: [
-                {
-                  name: "AI Conductor",
-                  note: "The person's job shifting from making the work to directing, prompting and reviewing AI.",
-                  quote: { text: "If something I'm doing is more procedural and there's already a laid-out pattern in the application, sometimes my job is honestly more AI supervisor than an actual developer.", who: "Engineer" }
-                },
-                {
-                  name: "AI Scaffolding",
-                  note: "Systems, agents and setups people build to make AI useful, plus the tradeoffs.",
-                  quote: { text: "You need to build confidence in the agent's work so you can delegate more. Now I can run 10 agents in parallel, because the way I set it up, I can quickly get the context...", who: "Engineer" }
-                }
-              ]
-            },
-            {
-              name: "Roles Without Borders",
-              note: "Designers write code, PMs build prototypes, and engineers make UI. Boundaries between disciplines are blurring, raising questions about how far each role should reach and what each one uniquely contributes. (6 participants)",
-              children: [
-                {
-                  name: "Role Scope",
-                  note: "Disciplines crossing into each other's work, and how far each role should stretch.",
-                  quote: { text: "Just because I can doesn't mean I will.", who: "Designer" }
-                },
-                {
-                  name: "Knowledge Sharing",
-                  note: "How people learn from and teach each other across roles.",
-                  quote: { text: "[Engineers] come to me if they're doing UX or UI work, which I'm finding they're doing more and more on their own to build out features. They'll come to me for feedback.", who: "Designer" }
-                }
-              ]
-            },
-            {
-              name: "The Design–Engineering Seam",
-              note: "Handoff, acceptance and the source of truth are being rebuilt. AI can close the old gap between design and build, but it also lets work move ahead without the right people consulted, and leaves open who decides when something is done. (6 participants)",
-              children: [
-                {
-                  name: "Design - Engineering Gap",
-                  note: "How work moves between design, product and engineering, and where it breaks: handoff, acceptance, source of truth, and who decides.",
-                  quote: { text: "It has happened that they'll do something and be so far along in development that we just can't make changes to it.", who: "Designer" }
-                },
-                {
-                  name: "Team/Process",
-                  note: "Team structures, meetings and tools that shape how decisions get made.",
-                  quote: { text: "That comes with working on a larger team where everyone has an opinion. It sometimes impacts the development cycle negatively.", who: "Engineer" }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          name: "Speed Meets Its Limits",
-          note: "AI speeds up building, but experience quality, research, organizational rules and people's real readiness push back on how far speed alone can take the workflow before problems appear.",
-          children: [
-            {
-              name: "Speed Over Substance",
-              note: "Faster building tempts teams to build everything and treat \"it works\" as done. Scoping, discovery, research and experience quality are what get squeezed. (6 participants)",
-              children: [
-                {
-                  name: "Time",
-                  note: "Speed gains and what they push out: discovery, research, review, care.",
-                  quote: { text: "I definitely can't spend as much time on discovery or divergent thinking — exploring multiple ways of doing the same thing.", who: "Designer" }
-                },
-                {
-                  name: "Product Purpose",
-                  note: "Building more because you can, versus deciding what's worth building and for whom.",
-                  quote: { text: "There's a reaction to building everything just because you can, instead of scoping your work to the least amount we can do to prove it out and deliver a really great experience.", who: "Designer" }
-                },
-                {
-                  name: "Operation vs. Experience",
-                  note: "Working isn't the same as a good experience.",
-                  quote: { text: "Done for them means that it works. It doesn't mean experience.", who: "Designer" }
-                }
-              ]
-            },
-            {
-              name: "Adoption Within Limits",
-              note: "AI use happens inside organizational rules, such as approved tools, access gating and compliance, and alongside uneven readiness. There's no single right way to work with AI, and not everyone will become an expert. (5 participants)",
-              children: [
-                {
-                  name: "Guardrails",
-                  note: "Organizational rules on which AI tools can be used, who can access what, and compliance.",
-                  quote: { text: "We have a very strict policy in-house around AI. We can only use AI-approved tools. No shadow AI.", who: "Product manager" }
-                },
-                {
-                  name: "Rooted in Reality",
-                  note: "Realistic views of adoption: no single answer, and not everyone becomes an expert.",
-                  quote: { text: "We have this mentality as an industry that the whole world is going to become AI experts. If we look at history, the whole world hasn't become computer experts yet.", who: "Designer" }
+                  name: "Adoption Within Limits",
+                  note: "AI use happens inside organizational rules, such as approved tools, access gating and compliance, and alongside uneven readiness. There's no single right way to work with AI, and not everyone will become an expert. (5 participants)",
+                  children: [
+                    {
+                      name: "Guardrails",
+                      note: "Organizational rules on which AI tools can be used, who can access what, and compliance.",
+                      quote: { text: "We have a very strict policy in-house around AI. We can only use AI-approved tools. No shadow AI.", who: "Product manager" }
+                    },
+                    {
+                      name: "Rooted in Reality",
+                      note: "Realistic views of adoption: no single answer, and not everyone becomes an expert.",
+                      quote: { text: "We have this mentality as an industry that the whole world is going to become AI experts. If we look at history, the whole world hasn't become computer experts yet.", who: "Designer" }
+                    }
+                  ]
                 }
               ]
             }
@@ -229,7 +224,7 @@ const data = {
       ]
     },
     {
-      stage: 3,
+      stage: 2,
       name: "Mapping",
       note: "Four maps of the system around the senior engineer: who influences her, what she touches, how her work unfolds, and why things go wrong.",
       children: [
@@ -272,7 +267,7 @@ const data = {
             hotspots: {
               "jm-direction": { title: "Direction", note: "She gives the agent the spec and context. Clear constraints help, but gathering context takes time." },
               "jm-generation": { title: "Generation", note: "She watches the agent build. Optimistic about the speed, anxious about whether it's right, with little visibility into what it's doing." },
-              "jm-pre-merge-review": { title: "Pre-merge review", note: "Review is meticulous and line by line, and judgment lands entirely on her. This is the moment the concept is designed for." },
+              "jm-pre-merge-review": { title: "Pre-merge review", note: "Review is meticulous and line by line, and judgment lands entirely on her. This is the space where the solution lives." },
               "jm-integration": { title: "Integration", note: "She commits the code. Her work and the agent's become indistinguishable, and overlooked mistakes get buried." },
               "jm-realization": { title: "Realization", note: "She finds the agent took a wrong path that review missed. Trust in the agent, and in herself, drops. The low point of the journey." },
               "jm-revision": { title: "Revision", note: "She fixes the context or prompt and reruns. Repetitive and tiring, but each fix can make the next run better." }
@@ -527,7 +522,7 @@ const data = {
       ]
     },
     {
-      stage: 4,
+      stage: 3,
       name: "The User",
       note: "Who the concept is for: the senior engineer who directs agents and answers for their output.",
       children: [
@@ -548,39 +543,65 @@ const data = {
       ]
     },
     {
-      stage: 5,
-      name: "How Might We...",
-      note: "Four questions that turn the problem into design opportunities. Each note says where the prototype answers it.",
+      stage: 4,
+      name: "Problem Definition",
+      note: "Senior software engineers need a way to increase the verification efficacy of agent-generated outputs in order to extend agent trust while still being able to answer for what it produces.",
       children: [
         {
-          name: "...help users differentiate their code from agent code?",
-          revised: "...help users differentiate their code from agent code?",
-          note: "In the prototype: dashed lines mark agent-written code and solid lines mark yours, the editor says who wrote and who edited each file, and the verification receipt records who wrote each section."
-        },
-        {
-          name: "...demonstrate user-based vs. agent errors when output is unexpected or broken?",
-          revised: "...show where an unexpected result came from: the spec, the context the user gave, or the agent?",
-          note: "In the prototype: a red line appears between the two agents that disagree, and each issue shows what the builder says, what the spec says and what the reviewer says, side by side, so the spec settles it."
-        },
-        {
-          name: "...expand the user's prompt/context testing in multiple agent models?",
-          revised: "...give users an independent second check on agent output without leaving their workflow?",
-          note: "In the prototype: a reviewer agent checks the builder's work against the spec, a tester covers what neither caught, and a human teammate reviews the pull request. All agents run on one approved model, IBM Bob."
-        },
-        {
-          name: "...allow the user to course-correct a derailed agent session without losing the verification they've already established?",
-          revised: "...let users correct an agent's work without losing the verification they've already done?",
-          note: "In the prototype: code is verified section by section. Editing one section rechecks only that section, so everything already verified stays verified."
+          name: "How Might We...",
+          note: "Four questions that turn the problem into design opportunities. Each note says where the prototype answers it.",
+          children: [
+            {
+              name: "...help users differentiate their code from agent code?",
+              revised: "...help users differentiate their code from agent code?",
+              note: "In the prototype: dashed lines mark agent-written code and solid lines mark yours, the editor says who wrote and who edited each file, and the verification receipt records who wrote each section."
+            },
+            {
+              name: "...demonstrate user-based vs. agent errors when output is unexpected or broken?",
+              revised: "...show where an unexpected result came from: the spec, the context the user gave, or the agent?",
+              note: "In the prototype: a red line appears between the two agents that disagree, and each issue shows what the builder says, what the spec says and what the reviewer says, side by side, so the spec settles it."
+            },
+            {
+              name: "...expand the user's prompt/context testing in multiple agent models?",
+              revised: "...give users an independent second check on agent output without leaving their workflow?",
+              note: "In the prototype: a reviewer agent checks the builder's work against the spec, a tester covers what neither caught, and a human teammate reviews the pull request. All agents run on one approved model, IBM Bob."
+            },
+            {
+              name: "...allow the user to course-correct a derailed agent session without losing the verification they've already established?",
+              revised: "...let users correct an agent's work without losing the verification they've already done?",
+              note: "In the prototype: code is verified section by section. Editing one section rechecks only that section, so everything already verified stays verified."
+            }
+          ]
         }
       ]
     },
     {
-      stage: 6,
+      stage: 5,
       name: "The Solution: The Pre-Merge Review",
       short: "The solution",
       note: "A constellation, not a chat window: the engineer adds agents and teammates around her, sees disagreements as red lines between them, and verifies the code section by section before it merges.",
       prototype: { src: "prototype/index.html", title: "The Pre-Merge Review" },
       children: [
+        {
+          name: "User Flow",
+          note: "The engineer starts as a single dot in a spatial grid and builds a team around it: build, review and testing agents, plus human teammates. Each dot is configured with its own model and rules. Work flows along the lines between dots, and when two collaborators disagree, the issue shows up in red on the line between them. The engineer zooms into that line to resolve it, opens a pull request with a receipt of who wrote and verified each section, and merges once a teammate approves.",
+          map: {
+            src: "maps/user-flow.svg",
+            step: "screen",
+            hotspots: {
+              "uf-space": { title: "The Constellation", note: "Start a session in the space.\nThe editor gives way to a perspective grid.\nYou appear as a single dot, with the approved spec attached.\nCode stays one click away and floats in when opened.\nThe engineer starts from their own intent, not a file tree." },
+              "uf-add-node": { title: "Add a Node", note: "Add and configure a collaborator.\nClick + next to any dot.\nPick a type: build, review or testing agent, or a human teammate.\nSet its model, the spec it checks, how strict it is and what it can change.\nEvery collaborator, human or agent, is placed and set up the same way." },
+              "uf-build": { title: "Build in the Space", note: "Build alongside the agents.\nLines pulse as work passes between dots.\nOpen any dot to see its code floating over the grid.\nEvery change is tagged to the dot that wrote it.\nAuthorship is captured as work happens, so nothing is reconstructed later." },
+              "uf-approve": { title: "Approve a Recommendation", note: "Approve or decline a suggested node.\nThe proposed dot appears ghosted, dashed to the agent that suggested it.\nSee why, e.g. the review agent wants a testing agent for the contract.\nApprove, adjust its settings, or decline.\nAgents can grow the team, but the engineer decides who joins." },
+              "uf-line-zoom": { title: "Line Zoom", note: "Resolve an issue on a line.\nClick the red mark; the camera zooms in between the two dots.\nEach side of the disagreement sits at its end, with the spec in the middle.\nThe code floats in: accept, edit it yourself, or reject with a reason.\nEach issue is judged in context, between the two collaborators who disagree." },
+              "uf-trace": { title: "Trace on the Line", note: "Trace a failure back to where it started.\nThe failing test lights up the testing dot and the line it came from.\nFollow it to the section, prompt and session.\nOnly that line reopens; everything else stays verified.\nThe root cause is found without re-reviewing the whole branch." },
+              "uf-all-clear": { title: "All Clear", note: "Confirm the space is clear.\nEach line settles to neutral once its issues are resolved.\nA receipt records which dot wrote, reviewed and tested each section.\nZoom out to see the whole team at a glance.\nThe engineer can show who wrote and who verified every section." },
+              "uf-open-pr": { title: "Open a Pull Request", note: "Bring in a human reviewer.\nAdd a teammate as a human dot.\nThe pull request opens with the receipt attached.\nTheir line stays pending until they approve.\nThe human reviewer sees the same space, not a wall of diffs." },
+              "uf-teammate": { title: "Teammate Review", note: "Wait for the human reviewer.\nYour teammate’s dot opens the same space and the receipt.\nTheir comments appear on their line, marked as theirs instead of red.\nApproval settles their line and clears the space.\nThe pull request is reviewed in the same space it was built in." },
+              "uf-recap": { title: "Productivity Recap", note: "See what catching issues early saved.\nIssues caught on each line, by pair of collaborators.\nEstimated hours of rework saved.\nRepeat pull requests avoided this month.\nThe payoff of early review is tied to the team the engineer built." }
+            }
+          }
+        },
         {
           name: "Design Evolution",
           note: "From a review panel inside VS Code to a team of collaborators. Click a frame.",
@@ -623,7 +644,7 @@ const data = {
       ]
     },
     {
-      stage: 7,
+      stage: 6,
       name: "Testing",
       note: "Round 2 tested the coded prototype with four people. Each session led to fixes, and the fixes worked: time to merge dropped from about 15 minutes to under 7.",
       children: [
@@ -663,7 +684,7 @@ const data = {
       ]
     },
     {
-      stage: 8,
+      stage: 7,
       name: "What's Next",
       children: [
         {
